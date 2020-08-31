@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="twitter:card" content="summary" /><!-- Begin Jekyll SEO tag v2.6.1 -->
+<title>Device Code Flow in Azure AD using Python’s requests module and MSAL | F5</title>
+<meta name="generator" content="Jekyll v4.0.0" />
+<meta property="og:title" content="Device Code Flow in Azure AD using Python’s requests module and MSAL" />
+<meta name="author" content="Ankit Sinha" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="Sample on how to integrate requests with MSAL to achieve device code flow" />
+<meta property="og:description" content="Sample on how to integrate requests with MSAL to achieve device code flow" />
+<link rel="canonical" href="https://ankitbko.github.io/blog/2020/08/device-code-flow-using-msal-in-python/" />
+<meta property="og:url" content="https://ankitbko.github.io/blog/2020/08/device-code-flow-using-msal-in-python/" />
+<meta property="og:site_name" content="F5" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2020-08-17T00:00:00-05:00" />
+<script type="application/ld+json">
+{"headline":"Device Code Flow in Azure AD using Python’s requests module and MSAL","dateModified":"2020-08-17T00:00:00-05:00","datePublished":"2020-08-17T00:00:00-05:00","author":{"@type":"Person","name":"Ankit Sinha"},"description":"Sample on how to integrate requests with MSAL to achieve device code flow","mainEntityOfPage":{"@type":"WebPage","@id":"https://ankitbko.github.io/blog/2020/08/device-code-flow-using-msal-in-python/"},"@type":"BlogPosting","url":"https://ankitbko.github.io/blog/2020/08/device-code-flow-using-msal-in-python/","@context":"https://schema.org"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="stylesheet" href="/blog/assets/css/style.css"><link type="application/atom+xml" rel="alternate" href="https://ankitbko.github.io/blog/feed.xml" title="F5" /><!-- the google_analytics_id gets auto inserted from the config file -->
+
+
+
+<script>(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)})(window,document,'script','//www.google-analytics.com/analytics.js','ga');ga('create','UA-75679348-1','auto');ga('require','displayfeatures');ga('send','pageview');</script>
+
+<link rel="shortcut icon" type="image/x-icon" href="/blog/images/favicon.ico"><!-- Begin Jekyll SEO tag v2.6.1 -->
+<title>Device Code Flow in Azure AD using Python’s requests module and MSAL | F5</title>
+<meta name="generator" content="Jekyll v4.0.0" />
+<meta property="og:title" content="Device Code Flow in Azure AD using Python’s requests module and MSAL" />
+<meta name="author" content="Ankit Sinha" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="Sample on how to integrate requests with MSAL to achieve device code flow" />
+<meta property="og:description" content="Sample on how to integrate requests with MSAL to achieve device code flow" />
+<link rel="canonical" href="https://ankitbko.github.io/blog/2020/08/device-code-flow-using-msal-in-python/" />
+<meta property="og:url" content="https://ankitbko.github.io/blog/2020/08/device-code-flow-using-msal-in-python/" />
+<meta property="og:site_name" content="F5" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2020-08-17T00:00:00-05:00" />
+<script type="application/ld+json">
+{"headline":"Device Code Flow in Azure AD using Python’s requests module and MSAL","dateModified":"2020-08-17T00:00:00-05:00","datePublished":"2020-08-17T00:00:00-05:00","author":{"@type":"Person","name":"Ankit Sinha"},"description":"Sample on how to integrate requests with MSAL to achieve device code flow","mainEntityOfPage":{"@type":"WebPage","@id":"https://ankitbko.github.io/blog/2020/08/device-code-flow-using-msal-in-python/"},"@type":"BlogPosting","url":"https://ankitbko.github.io/blog/2020/08/device-code-flow-using-msal-in-python/","@context":"https://schema.org"}</script>
+<!-- End Jekyll SEO tag -->
+
+<link href="https://unpkg.com/@primer/css/dist/primer.css" rel="stylesheet" />
+<link rel="stylesheet" href="//use.fontawesome.com/releases/v5.0.7/css/all.css"><link type="application/atom+xml" rel="alternate" href="https://ankitbko.github.io/blog/feed.xml" title="F5" /><!-- the google_analytics_id gets auto inserted from the config file -->
+
+
+
+<script>(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)})(window,document,'script','//www.google-analytics.com/analytics.js','ga');ga('create','UA-75679348-1','auto');ga('require','displayfeatures');ga('send','pageview');</script>
+
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.11.1/dist/katex.min.css" integrity="sha384-zB1R0rpPzHqg7Kpt0Aljp8JPLqbXI3bhnPWROx27a9N0Ll6ZP/+DiW/UqRcLbRjq" crossorigin="anonymous">
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML"> </script>
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.11.1/dist/katex.min.js" integrity="sha384-y23I5Q6l+B6vatafAwxRu/0oK/79VlbSz7Q9aiSZUvyWYIYsd+qj+o24G5ZU2zJz" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.11.1/dist/contrib/auto-render.min.js" integrity="sha384-kWPLUVMOks5AQFrykwIup5lo0m3iMkkHrD0uJ4H5cjeGihAutqP0yW0J6dpFiVkI" crossorigin="anonymous"></script>
+    <script>
+    document.addEventListener("DOMContentLoaded", function() {
+        renderMathInElement( document.body, {
+        delimiters: [
+            {left: "$$", right: "$$", display: true},
+            {left: "[%", right: "%]", display: true},
+            {left: "$", right: "$", display: false}
+        ]}
+        );
+    });
+    </script>
+
+
+<script>
+function wrap_img(fn) {
+    if (document.attachEvent ? document.readyState === "complete" : document.readyState !== "loading") {
+        var elements = document.querySelectorAll(".post img");
+        Array.prototype.forEach.call(elements, function(el, i) {
+            if (el.getAttribute("title") && (el.className != "emoji")) {
+                const caption = document.createElement('figcaption');
+                var node = document.createTextNode(el.getAttribute("title"));
+                caption.appendChild(node);
+                const wrapper = document.createElement('figure');
+                wrapper.className = 'image';
+                el.parentNode.insertBefore(wrapper, el);
+                el.parentNode.removeChild(el);
+                wrapper.appendChild(el);
+                wrapper.appendChild(caption);
+            }
+        });
+    } else { document.addEventListener('DOMContentLoaded', fn); }
+}
+window.onload = wrap_img;
+</script>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function(){
+    // add link icon to anchor tags
+    var elem = document.querySelectorAll(".anchor-link")
+    elem.forEach(e => (e.innerHTML = '<i class="fas fa-link fa-xs"></i>'));
+    });
+</script>
+</head>
+<body><header class="site-header">
+
+  <div class="wrapper"><a class="site-title" rel="author" href="/blog/">F5</a><nav class="site-nav">
+        <input type="checkbox" id="nav-trigger" class="nav-trigger" />
+        <label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewBox="0 0 18 15" width="18px" height="15px">
+              <path d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.032C17.335,0,18,0.665,18,1.484L18,1.484z M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.032C17.335,6.031,18,6.696,18,7.516L18,7.516z M18,13.516C18,14.335,17.335,15,16.516,15H1.484 C0.665,15,0,14.335,0,13.516l0,0c0-0.82,0.665-1.483,1.484-1.483h15.032C17.335,12.031,18,12.695,18,13.516L18,13.516z"/>
+            </svg>
+          </span>
+        </label>
+
+        <div class="trigger"><a class="page-link" href="/blog/about/">About Me</a><a class="page-link" href="/blog/search/">Search</a><a class="page-link" href="/blog/categories/">Tags</a></div>
+      </nav></div>
+</header>
+<main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title p-name" itemprop="name headline">Device Code Flow in Azure AD using Python&#39;s requests module and MSAL</h1><p class="page-description">Sample on how to integrate requests with MSAL to achieve device code flow</p><p class="post-meta post-meta-title"><time class="dt-published" datetime="2020-08-17T00:00:00-05:00" itemprop="datePublished">
+        Aug 17, 2020
+      </time>
+       • <span class="read-time" title="Estimated read time">
+    
+    
+      1 min read
+    
+</span></p>
+
+    
+      <p class="category-tags"><i class="fas fa-tags category-tags-icon"></i></i> 
+      
+        <a class="category-tags-link" href="/blog/categories/#Python">Python</a>
+        &nbsp;
+      
+        <a class="category-tags-link" href="/blog/categories/#azure">azure</a>
+        &nbsp;
+      
+        <a class="category-tags-link" href="/blog/categories/#oauth">oauth</a>
+        &nbsp;
+      
+        <a class="category-tags-link" href="/blog/categories/#msal">msal</a>
+        &nbsp;
+      
+        <a class="category-tags-link" href="/blog/categories/#requests">requests</a>
+        &nbsp;
+      
+        <a class="category-tags-link" href="/blog/categories/#device code">device code</a>
+        
+      
+      </p>
+    
+
+    </header>
+
+  <div class="post-content e-content" itemprop="articleBody">
+    <blockquote>
+  <p>Repo: <a href="https://github.com/ankitbko/python-requests-msal">https://github.com/ankitbko/python-requests-msal</a>.</p>
+</blockquote>
+
+<p>If you have created any Python application that required integration with Azure Active Directory you would have most likely used an excellent library from Azure AD team called <a href="https://github.com/AzureAD/microsoft-authentication-library-for-python">MSAL for Python</a>. However there is no easy way to integrate it with <a href="https://requests.readthedocs.io/en/master/">requests</a> library which is a very popular HTTP library for Python.</p>
+
+<p>I have written a sample application and reusable class to integrate Python requests library with MSAL to get AD token using <a href="https://docs.microsoft.com/en-us/azure/active-directory/develop/v2-oauth2-device-code">Device Code Flow</a>. Device Code Flow is typically used in a client side applications such as CLI. Therefore I have also implemented a <em>TokenCache</em> serialization/deserialization logic to persist the token in file system. This is similar to how <a href="https://docs.microsoft.com/en-us/cli/azure/get-started-with-azure-cli">Azure CLI</a> persists the token in <code class="highlighter-rouge">~/.azure</code> folder.</p>
+
+<p>Feel free to copy and use <code class="highlighter-rouge">auth.py</code> and <code class="highlighter-rouge">rest_service.py</code> in your own project. The files depends upon following PyPI -</p>
+<ul>
+  <li><a href="https://pypi.org/project/msal/">msal</a></li>
+  <li><a href="https://pypi.org/project/requests/">requests</a></li>
+</ul>
+
+<p>Initialize <code class="highlighter-rouge">DeviceCodeFlowTokenAuth</code> by passing <code class="highlighter-rouge">auth_config</code> object to it. <code class="highlighter-rouge">auth_config</code> must have</p>
+<ul>
+  <li>client_id: Azure AD Application ID</li>
+  <li>authority: Azure AD authority</li>
+  <li>scope: Scope to send while requesting for token</li>
+</ul>
+
+<p>Pass the initialized <code class="highlighter-rouge">DeviceCodeFlowTokenAuth</code> to <code class="highlighter-rouge">RestService</code>. <code class="highlighter-rouge">RestService</code> will use it to set Authorization token before sending request.</p>
+
+<p>In addition to above, change <em>_DEFAULT_TOKEN_CACHE_DIR</em> in <code class="highlighter-rouge">DeviceCodeFlowTokenAuth</code> to any folder of your choosing where you would like the token to be chached. More details below.</p>
+
+<h2 id="how-does-it-work">How does it work</h2>
+
+<p><code class="highlighter-rouge">DeviceCodeFlowTokenAuth</code> accepts configuration which contains client_id, authority and scope to get access token. It first checks if a valid access token or refresh token is present in cache. The in-memory cache is serialized and stored as a file named <em>token</em> in a folder specified by <code class="highlighter-rouge">_DEFAULT_TOKEN_CACHE_DIR</code> variable in home folder (default <em>~/.myapp</em>).</p>
+
+<p>The code will try to read the token from the folder above and populate its <em>TokenCache</em>. If valid access token exist it will use it. Otherwise if a valid refresh token exists it will use it to get a fresh access token and save it in the cache. If neither of them are valid it will initiate <strong>device code flow</strong> to fetch fresh tokens. The <strong>device code flow</strong> will print the code generated to console.</p>
+
+  </div><!-- from https://github.com/utterance/utterances -->
+<script src="https://utteranc.es/client.js"
+        repo="ankitbko/blog"
+        issue-term="title"
+        label="blogpost-comment"
+        theme="github-light"
+        crossorigin="anonymous"
+        async>
+</script><a class="u-url" href="/blog/2020/08/device-code-flow-using-msal-in-python/" hidden></a>
+</article>
+      </div>
+    </main><footer class="site-footer h-card">
+  <data class="u-url" href="/blog/"></data>
+
+  <div class="wrapper">
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col">
+        <p class="feed-subscribe">
+          <a href="/blog/feed.xml">
+            <svg class="svg-icon orange">
+              <use xlink:href="/blog/assets/minima-social-icons.svg#rss"></use>
+            </svg><span>Subscribe</span>
+          </a>
+        </p>
+        <ul class="contact-list">
+          <li class="p-name">Ankit Sinha</li>
+          
+        </ul>
+      </div>
+      <div class="footer-col">
+        <p>A technology blog focusing on random stuff</p>
+      </div>
+    </div>
+
+    <div class="social-links"><ul class="social-media-list"><li><a rel="me" href="https://github.com/ankitbko" title="ankitbko"><svg class="svg-icon grey"><use xlink:href="/blog/assets/minima-social-icons.svg#github"></use></svg></a></li><li><a rel="me" href="https://twitter.com/ankitbko" title="ankitbko"><svg class="svg-icon grey"><use xlink:href="/blog/assets/minima-social-icons.svg#twitter"></use></svg></a></li></ul>
+</div>
+
+  </div>
+
+</footer>
+</body>
+
+</html>

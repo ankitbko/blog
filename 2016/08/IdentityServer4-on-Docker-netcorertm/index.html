@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="twitter:card" content="summary" /><!-- Begin Jekyll SEO tag v2.6.1 -->
+<title>IdentityServer4 on Docker (ASP.NET Core 1.0) | F5</title>
+<meta name="generator" content="Jekyll v4.0.0" />
+<meta property="og:title" content="IdentityServer4 on Docker (ASP.NET Core 1.0)" />
+<meta name="author" content="Ankit Sinha" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="A tutorial on how to host IdentityServer 4 on Docker targeting ASP.NET Core 1.0" />
+<meta property="og:description" content="A tutorial on how to host IdentityServer 4 on Docker targeting ASP.NET Core 1.0" />
+<link rel="canonical" href="https://ankitbko.github.io/blog/2016/08/IdentityServer4-on-Docker-netcorertm/" />
+<meta property="og:url" content="https://ankitbko.github.io/blog/2016/08/IdentityServer4-on-Docker-netcorertm/" />
+<meta property="og:site_name" content="F5" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2016-08-18T00:00:00-05:00" />
+<script type="application/ld+json">
+{"headline":"IdentityServer4 on Docker (ASP.NET Core 1.0)","dateModified":"2016-08-18T00:00:00-05:00","datePublished":"2016-08-18T00:00:00-05:00","author":{"@type":"Person","name":"Ankit Sinha"},"description":"A tutorial on how to host IdentityServer 4 on Docker targeting ASP.NET Core 1.0","mainEntityOfPage":{"@type":"WebPage","@id":"https://ankitbko.github.io/blog/2016/08/IdentityServer4-on-Docker-netcorertm/"},"@type":"BlogPosting","url":"https://ankitbko.github.io/blog/2016/08/IdentityServer4-on-Docker-netcorertm/","@context":"https://schema.org"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="stylesheet" href="/blog/assets/css/style.css"><link type="application/atom+xml" rel="alternate" href="https://ankitbko.github.io/blog/feed.xml" title="F5" /><!-- the google_analytics_id gets auto inserted from the config file -->
+
+
+
+<script>(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)})(window,document,'script','//www.google-analytics.com/analytics.js','ga');ga('create','UA-75679348-1','auto');ga('require','displayfeatures');ga('send','pageview');</script>
+
+<link rel="shortcut icon" type="image/x-icon" href="/blog/images/favicon.ico"><!-- Begin Jekyll SEO tag v2.6.1 -->
+<title>IdentityServer4 on Docker (ASP.NET Core 1.0) | F5</title>
+<meta name="generator" content="Jekyll v4.0.0" />
+<meta property="og:title" content="IdentityServer4 on Docker (ASP.NET Core 1.0)" />
+<meta name="author" content="Ankit Sinha" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="A tutorial on how to host IdentityServer 4 on Docker targeting ASP.NET Core 1.0" />
+<meta property="og:description" content="A tutorial on how to host IdentityServer 4 on Docker targeting ASP.NET Core 1.0" />
+<link rel="canonical" href="https://ankitbko.github.io/blog/2016/08/IdentityServer4-on-Docker-netcorertm/" />
+<meta property="og:url" content="https://ankitbko.github.io/blog/2016/08/IdentityServer4-on-Docker-netcorertm/" />
+<meta property="og:site_name" content="F5" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2016-08-18T00:00:00-05:00" />
+<script type="application/ld+json">
+{"headline":"IdentityServer4 on Docker (ASP.NET Core 1.0)","dateModified":"2016-08-18T00:00:00-05:00","datePublished":"2016-08-18T00:00:00-05:00","author":{"@type":"Person","name":"Ankit Sinha"},"description":"A tutorial on how to host IdentityServer 4 on Docker targeting ASP.NET Core 1.0","mainEntityOfPage":{"@type":"WebPage","@id":"https://ankitbko.github.io/blog/2016/08/IdentityServer4-on-Docker-netcorertm/"},"@type":"BlogPosting","url":"https://ankitbko.github.io/blog/2016/08/IdentityServer4-on-Docker-netcorertm/","@context":"https://schema.org"}</script>
+<!-- End Jekyll SEO tag -->
+
+<link href="https://unpkg.com/@primer/css/dist/primer.css" rel="stylesheet" />
+<link rel="stylesheet" href="//use.fontawesome.com/releases/v5.0.7/css/all.css"><link type="application/atom+xml" rel="alternate" href="https://ankitbko.github.io/blog/feed.xml" title="F5" /><!-- the google_analytics_id gets auto inserted from the config file -->
+
+
+
+<script>(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)})(window,document,'script','//www.google-analytics.com/analytics.js','ga');ga('create','UA-75679348-1','auto');ga('require','displayfeatures');ga('send','pageview');</script>
+
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.11.1/dist/katex.min.css" integrity="sha384-zB1R0rpPzHqg7Kpt0Aljp8JPLqbXI3bhnPWROx27a9N0Ll6ZP/+DiW/UqRcLbRjq" crossorigin="anonymous">
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML"> </script>
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.11.1/dist/katex.min.js" integrity="sha384-y23I5Q6l+B6vatafAwxRu/0oK/79VlbSz7Q9aiSZUvyWYIYsd+qj+o24G5ZU2zJz" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.11.1/dist/contrib/auto-render.min.js" integrity="sha384-kWPLUVMOks5AQFrykwIup5lo0m3iMkkHrD0uJ4H5cjeGihAutqP0yW0J6dpFiVkI" crossorigin="anonymous"></script>
+    <script>
+    document.addEventListener("DOMContentLoaded", function() {
+        renderMathInElement( document.body, {
+        delimiters: [
+            {left: "$$", right: "$$", display: true},
+            {left: "[%", right: "%]", display: true},
+            {left: "$", right: "$", display: false}
+        ]}
+        );
+    });
+    </script>
+
+
+<script>
+function wrap_img(fn) {
+    if (document.attachEvent ? document.readyState === "complete" : document.readyState !== "loading") {
+        var elements = document.querySelectorAll(".post img");
+        Array.prototype.forEach.call(elements, function(el, i) {
+            if (el.getAttribute("title") && (el.className != "emoji")) {
+                const caption = document.createElement('figcaption');
+                var node = document.createTextNode(el.getAttribute("title"));
+                caption.appendChild(node);
+                const wrapper = document.createElement('figure');
+                wrapper.className = 'image';
+                el.parentNode.insertBefore(wrapper, el);
+                el.parentNode.removeChild(el);
+                wrapper.appendChild(el);
+                wrapper.appendChild(caption);
+            }
+        });
+    } else { document.addEventListener('DOMContentLoaded', fn); }
+}
+window.onload = wrap_img;
+</script>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function(){
+    // add link icon to anchor tags
+    var elem = document.querySelectorAll(".anchor-link")
+    elem.forEach(e => (e.innerHTML = '<i class="fas fa-link fa-xs"></i>'));
+    });
+</script>
+</head>
+<body><header class="site-header">
+
+  <div class="wrapper"><a class="site-title" rel="author" href="/blog/">F5</a><nav class="site-nav">
+        <input type="checkbox" id="nav-trigger" class="nav-trigger" />
+        <label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewBox="0 0 18 15" width="18px" height="15px">
+              <path d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.032C17.335,0,18,0.665,18,1.484L18,1.484z M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.032C17.335,6.031,18,6.696,18,7.516L18,7.516z M18,13.516C18,14.335,17.335,15,16.516,15H1.484 C0.665,15,0,14.335,0,13.516l0,0c0-0.82,0.665-1.483,1.484-1.483h15.032C17.335,12.031,18,12.695,18,13.516L18,13.516z"/>
+            </svg>
+          </span>
+        </label>
+
+        <div class="trigger"><a class="page-link" href="/blog/about/">About Me</a><a class="page-link" href="/blog/search/">Search</a><a class="page-link" href="/blog/categories/">Tags</a></div>
+      </nav></div>
+</header>
+<main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title p-name" itemprop="name headline">IdentityServer4 on Docker (ASP.NET Core 1.0)</h1><p class="page-description">A tutorial on how to host IdentityServer 4 on Docker targeting ASP.NET Core 1.0</p><p class="post-meta post-meta-title"><time class="dt-published" datetime="2016-08-18T00:00:00-05:00" itemprop="datePublished">
+        Aug 18, 2016
+      </time>
+       • <span class="read-time" title="Estimated read time">
+    
+    
+      4 min read
+    
+</span></p>
+
+    
+      <p class="category-tags"><i class="fas fa-tags category-tags-icon"></i></i> 
+      
+        <a class="category-tags-link" href="/blog/categories/#.net core">.net core</a>
+        &nbsp;
+      
+        <a class="category-tags-link" href="/blog/categories/#docker">docker</a>
+        &nbsp;
+      
+        <a class="category-tags-link" href="/blog/categories/#IdentityServer">IdentityServer</a>
+        
+      
+      </p>
+    
+
+    </header>
+
+  <div class="post-content e-content" itemprop="articleBody">
+    <p>In my previous article I showed how to run Identity Server 4 on Docker targeting ASP.NET Core RC1. In June .NET Core 1.0 and ASP.NET Core 1.0 was released which had some breaking changes. In this post I’ll show what changes are required to run Identity Server 4 targeting ASP.NET Core 1.0 on Docker. I will take up from where we left off on my <a href="https://ankitbko.github.io/2016/03/IdentityServer4-on-Docker/">previous post</a>, so check that out before continuing.</p>
+
+<h3 id="what-changed-in-aspnet-core-10">What changed in ASP.NET Core 1.0?</h3>
+<p>There are some breaking changes in ASP.NET Core 1.0. In this guide I only focus on changes needed to run IdSrv4 on docker. For complete detail on how to migrate an application to ASP.NET Core 1.0 from RC1, check out <a href="https://docs.asp.net/en/latest/migration/rc1-to-rtm.html">official guide</a>.</p>
+
+<ul>
+  <li>The first major change you’ll notice is that <code class="highlighter-rouge">dnx</code> is gone instead .NET Core 1.0 features new <code class="highlighter-rouge">dotnet</code> CLI. This change would affect how we build and publish our application and Dockerfile.</li>
+  <li>Another change is that <code class="highlighter-rouge">dnx commands</code> are gone. This directly affects how we host our applications.</li>
+  <li>There are also small changes in <code class="highlighter-rouge">project.json</code> and <code class="highlighter-rouge">Program.cs</code> which are not of great interest to us for this guide.</li>
+  <li>Apart from these, Microsoft has also released a new docker base image for .NET Core 1.0 applications called <code class="highlighter-rouge">microsoft/dotnet:1.0.0-core</code>. We will use this to create our docker image.</li>
+</ul>
+
+<p>I have changed my sample application to target ASP.NET Core 1.0 and made all the above changes to it. You can find the source code <a href="https://github.com/ankitbko/IdentityServer4.DockerSample/tree/netcore1.0">here</a>.</p>
+
+<h3 id="changes-to-the-sample-application">Changes to the sample application</h3>
+<p>There are few changes I would like to point out before we continue.</p>
+
+<ul>
+  <li>I have updated all the projects to target ASP.NET Core 1.0. All the projects are fork of IdentityServer4 repository with some minor changes.</li>
+  <li><code class="highlighter-rouge">dnx web</code> no longer exist. Instead we self-host the application using <code class="highlighter-rouge">dotnet</code> CLI. To configure port, we use environment variable ASPNETCORE_URLS present in Dockerfile.</li>
+  <li>I have included Dockerfile in each of the project directory. The Dockerfile will automatically be copied when we publish our applications.</li>
+  <li>There are changes in the ports in which applications are hosted -
+    <ul>
+      <li>Identity Server is hosted on port 1941</li>
+      <li>Javascript Client remains hosted on 7017</li>
+      <li>Sample Api is now hosted on 3721</li>
+    </ul>
+  </li>
+</ul>
+
+<h3 id="lets-get-started">Let’s get started</h3>
+
+<p>Again before continuing, I recommend you read though my <a href="https://ankitbko.github.io/2016/03/IdentityServer4-on-Docker/">previous article</a>. It would set up the context and fill in the gaps present in this post.
+Done! Good!</p>
+
+<p>The first two steps remain same, download and install Docker Toolbox and create a Docker VM. If you have Windows 10 Pro or Enterprise, you may also give try to new Docker for Windows which has recently moved out of beta.</p>
+
+<h4 id="change-urls-in-the-code">Change URLs in the code</h4>
+
+<p>You will have to change the URLs in your code to point to the new VM URL in the following places:</p>
+
+<ul>
+  <li><code class="highlighter-rouge">IdSrvHost\Configuration\Clients.cs</code>: Change all the URL here to point to the VM. Leave the port as 7017.</li>
+  <li><code class="highlighter-rouge">SampleApi\Startup.cs</code>: Change the URL in <code class="highlighter-rouge">app.UseIdentityServerAuthentication</code>. Leave the port as 1941.</li>
+  <li><code class="highlighter-rouge">JavaScript Oidc\wwwroot\index.html</code>: There are two places in this file where URL needs to be changed. Leave the ports as it is in each place.</li>
+</ul>
+
+<h4 id="publish-the-projects">Publish the projects</h4>
+
+<p>Go to each project folder and run <code class="highlighter-rouge">dotnet publish</code> to publish in your desired folder.</p>
+
+<figure class="highlight"><pre><code class="language-powershell" data-lang="powershell"><span class="nf">dotnet</span><span class="w"> </span><span class="nx">publish</span><span class="w"> </span><span class="nt">-r</span><span class="w"> </span><span class="nx">debian.8-x64</span><span class="w"> </span><span class="nt">-o</span><span class="w"> </span><span class="err">&lt;</span><span class="nx">Path</span><span class="w"> </span><span class="nx">to</span><span class="w"> </span><span class="nx">output</span><span class="w"> </span><span class="nx">directory</span><span class="err">&gt;</span></code></pre></figure>
+
+<h4 id="changes-to-dockerfile">Changes to Dockerfile</h4>
+
+<p>I have already added Dockerfile to each of the project which should automatically get copied when you published each application in the previous step. Below I’ll explain the new Dockerfile.</p>
+
+<figure class="highlight"><pre><code class="language-shell" data-lang="shell">FROM microsoft/dotnet:1.0.0-core
+
+<span class="c"># Copy the app</span>
+COPY <span class="nb">.</span> /app
+
+<span class="c"># Set the Working Directory</span>
+WORKDIR /app
+
+<span class="c"># Configure the listening port to 80</span>
+ENV ASPNETCORE_URLS http://<span class="k">*</span>:80
+
+<span class="c"># Start the app</span>
+ENTRYPOINT dotnet &lt;DLLNAME&gt;</code></pre></figure>
+
+<ul>
+  <li><code class="highlighter-rouge">FROM microsoft/dotnet:1.0.0-core</code>: We use the newer dotnet base image from Microsoft. Docker will run all the following commands on top of this base image.</li>
+  <li><code class="highlighter-rouge">COPY . /app</code>: Copy the current folder to <code class="highlighter-rouge">/app</code> folder in container.</li>
+  <li><code class="highlighter-rouge">WORKDIR /app</code>: Set the WORKDIR to /app folder. We now no longer have approot folder. Instead all the DLL lies here. This sets the working directory in container and executes remaining command from this directory.</li>
+  <li><code class="highlighter-rouge">ENV ASPNETCORE_URLS http://*:80</code>: This adds an environment variable <code class="highlighter-rouge">ASPNETCORE_URLS</code> which directs kestrel to listen to port 80.</li>
+  <li><code class="highlighter-rouge">ENTRYPOINT dotnet &lt;DLLNAME&gt;</code>: This instruction will host the application specified in <DLLNAME>. This is how we host application in `dotnet` CLI.</DLLNAME></li>
+</ul>
+
+<h4 id="build-image">Build Image</h4>
+
+<p>This step remains as it was. Just run <code class="highlighter-rouge">docker build -t &lt;tag&gt; .</code> command in each output directory to create images.</p>
+
+<h4 id="create-the-container">Create the container</h4>
+
+<p>There are minor changes in the port mapping. Now kestrel in each container will listen on port 80, to which we bind host port as specified below</p>
+
+<figure class="highlight"><pre><code class="language-powershell" data-lang="powershell"><span class="nf">docker</span><span class="w"> </span><span class="nx">run</span><span class="w"> </span><span class="nt">-d</span><span class="w"> </span><span class="nt">-p</span><span class="w"> </span><span class="nx">1941:80</span><span class="w"> </span><span class="nt">--name</span><span class="w"> </span><span class="nx">idsrv-host</span><span class="w"> </span><span class="nx">idsrvhost</span><span class="w">
+</span><span class="nf">docker</span><span class="w"> </span><span class="nx">run</span><span class="w"> </span><span class="nt">-d</span><span class="w"> </span><span class="nt">-p</span><span class="w"> </span><span class="nx">7017:80</span><span class="w"> </span><span class="nt">--name</span><span class="w"> </span><span class="nx">client</span><span class="w"> </span><span class="nx">jsclient</span><span class="w">
+</span><span class="nf">docker</span><span class="w"> </span><span class="nx">run</span><span class="w"> </span><span class="nt">-d</span><span class="w"> </span><span class="nt">-p</span><span class="w"> </span><span class="nx">3721:80</span><span class="w"> </span><span class="nt">--name</span><span class="w"> </span><span class="nx">api</span><span class="w"> </span><span class="nx">sampleapi</span></code></pre></figure>
+
+<ul>
+  <li><code class="highlighter-rouge">docker run</code>: Creates and start a new container.</li>
+  <li><code class="highlighter-rouge">-d</code>: Run the container in background.</li>
+  <li><code class="highlighter-rouge">-p &lt;host&gt;:&lt;container&gt;</code>: Map the specified port of host to the port container.</li>
+  <li><code class="highlighter-rouge">--name &lt;ContainerName&gt;</code>: Creates the container with the specified name.</li>
+  <li>The last parameter is the name of the image from which to create the container.</li>
+</ul>
+
+<h4 id="thats-it">That’s it.</h4>
+
+<p>These are all the changes required to run IdSrv 4 on docker targeting ASP.NET Core 1.0. Open the browser and go to the URL:PORT to view each of the site.</p>
+
+<p>Leave a comment if you have any feedbacks.</p>
+
+  </div><!-- from https://github.com/utterance/utterances -->
+<script src="https://utteranc.es/client.js"
+        repo="ankitbko/blog"
+        issue-term="title"
+        label="blogpost-comment"
+        theme="github-light"
+        crossorigin="anonymous"
+        async>
+</script><a class="u-url" href="/blog/2016/08/IdentityServer4-on-Docker-netcorertm/" hidden></a>
+</article>
+      </div>
+    </main><footer class="site-footer h-card">
+  <data class="u-url" href="/blog/"></data>
+
+  <div class="wrapper">
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col">
+        <p class="feed-subscribe">
+          <a href="/blog/feed.xml">
+            <svg class="svg-icon orange">
+              <use xlink:href="/blog/assets/minima-social-icons.svg#rss"></use>
+            </svg><span>Subscribe</span>
+          </a>
+        </p>
+        <ul class="contact-list">
+          <li class="p-name">Ankit Sinha</li>
+          
+        </ul>
+      </div>
+      <div class="footer-col">
+        <p>A technology blog focusing on random stuff</p>
+      </div>
+    </div>
+
+    <div class="social-links"><ul class="social-media-list"><li><a rel="me" href="https://github.com/ankitbko" title="ankitbko"><svg class="svg-icon grey"><use xlink:href="/blog/assets/minima-social-icons.svg#github"></use></svg></a></li><li><a rel="me" href="https://twitter.com/ankitbko" title="ankitbko"><svg class="svg-icon grey"><use xlink:href="/blog/assets/minima-social-icons.svg#twitter"></use></svg></a></li></ul>
+</div>
+
+  </div>
+
+</footer>
+</body>
+
+</html>

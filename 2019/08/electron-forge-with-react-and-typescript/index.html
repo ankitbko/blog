@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="twitter:card" content="summary" /><!-- Begin Jekyll SEO tag v2.6.1 -->
+<title>Electron-Forge + React + TypeScript = Awesome! | F5</title>
+<meta name="generator" content="Jekyll v4.0.0" />
+<meta property="og:title" content="Electron-Forge + React + TypeScript = Awesome!" />
+<meta name="author" content="Ankit Sinha" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="Setup React and TypeScript with Electron Forge" />
+<meta property="og:description" content="Setup React and TypeScript with Electron Forge" />
+<link rel="canonical" href="https://ankitbko.github.io/blog/2019/08/electron-forge-with-react-and-typescript/" />
+<meta property="og:url" content="https://ankitbko.github.io/blog/2019/08/electron-forge-with-react-and-typescript/" />
+<meta property="og:site_name" content="F5" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2019-08-26T00:00:00-05:00" />
+<script type="application/ld+json">
+{"headline":"Electron-Forge + React + TypeScript = Awesome!","dateModified":"2019-08-26T00:00:00-05:00","datePublished":"2019-08-26T00:00:00-05:00","author":{"@type":"Person","name":"Ankit Sinha"},"description":"Setup React and TypeScript with Electron Forge","mainEntityOfPage":{"@type":"WebPage","@id":"https://ankitbko.github.io/blog/2019/08/electron-forge-with-react-and-typescript/"},"@type":"BlogPosting","url":"https://ankitbko.github.io/blog/2019/08/electron-forge-with-react-and-typescript/","@context":"https://schema.org"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="stylesheet" href="/blog/assets/css/style.css"><link type="application/atom+xml" rel="alternate" href="https://ankitbko.github.io/blog/feed.xml" title="F5" /><!-- the google_analytics_id gets auto inserted from the config file -->
+
+
+
+<script>(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)})(window,document,'script','//www.google-analytics.com/analytics.js','ga');ga('create','UA-75679348-1','auto');ga('require','displayfeatures');ga('send','pageview');</script>
+
+<link rel="shortcut icon" type="image/x-icon" href="/blog/images/favicon.ico"><!-- Begin Jekyll SEO tag v2.6.1 -->
+<title>Electron-Forge + React + TypeScript = Awesome! | F5</title>
+<meta name="generator" content="Jekyll v4.0.0" />
+<meta property="og:title" content="Electron-Forge + React + TypeScript = Awesome!" />
+<meta name="author" content="Ankit Sinha" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="Setup React and TypeScript with Electron Forge" />
+<meta property="og:description" content="Setup React and TypeScript with Electron Forge" />
+<link rel="canonical" href="https://ankitbko.github.io/blog/2019/08/electron-forge-with-react-and-typescript/" />
+<meta property="og:url" content="https://ankitbko.github.io/blog/2019/08/electron-forge-with-react-and-typescript/" />
+<meta property="og:site_name" content="F5" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2019-08-26T00:00:00-05:00" />
+<script type="application/ld+json">
+{"headline":"Electron-Forge + React + TypeScript = Awesome!","dateModified":"2019-08-26T00:00:00-05:00","datePublished":"2019-08-26T00:00:00-05:00","author":{"@type":"Person","name":"Ankit Sinha"},"description":"Setup React and TypeScript with Electron Forge","mainEntityOfPage":{"@type":"WebPage","@id":"https://ankitbko.github.io/blog/2019/08/electron-forge-with-react-and-typescript/"},"@type":"BlogPosting","url":"https://ankitbko.github.io/blog/2019/08/electron-forge-with-react-and-typescript/","@context":"https://schema.org"}</script>
+<!-- End Jekyll SEO tag -->
+
+<link href="https://unpkg.com/@primer/css/dist/primer.css" rel="stylesheet" />
+<link rel="stylesheet" href="//use.fontawesome.com/releases/v5.0.7/css/all.css"><link type="application/atom+xml" rel="alternate" href="https://ankitbko.github.io/blog/feed.xml" title="F5" /><!-- the google_analytics_id gets auto inserted from the config file -->
+
+
+
+<script>(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)})(window,document,'script','//www.google-analytics.com/analytics.js','ga');ga('create','UA-75679348-1','auto');ga('require','displayfeatures');ga('send','pageview');</script>
+
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.11.1/dist/katex.min.css" integrity="sha384-zB1R0rpPzHqg7Kpt0Aljp8JPLqbXI3bhnPWROx27a9N0Ll6ZP/+DiW/UqRcLbRjq" crossorigin="anonymous">
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML"> </script>
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.11.1/dist/katex.min.js" integrity="sha384-y23I5Q6l+B6vatafAwxRu/0oK/79VlbSz7Q9aiSZUvyWYIYsd+qj+o24G5ZU2zJz" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.11.1/dist/contrib/auto-render.min.js" integrity="sha384-kWPLUVMOks5AQFrykwIup5lo0m3iMkkHrD0uJ4H5cjeGihAutqP0yW0J6dpFiVkI" crossorigin="anonymous"></script>
+    <script>
+    document.addEventListener("DOMContentLoaded", function() {
+        renderMathInElement( document.body, {
+        delimiters: [
+            {left: "$$", right: "$$", display: true},
+            {left: "[%", right: "%]", display: true},
+            {left: "$", right: "$", display: false}
+        ]}
+        );
+    });
+    </script>
+
+
+<script>
+function wrap_img(fn) {
+    if (document.attachEvent ? document.readyState === "complete" : document.readyState !== "loading") {
+        var elements = document.querySelectorAll(".post img");
+        Array.prototype.forEach.call(elements, function(el, i) {
+            if (el.getAttribute("title") && (el.className != "emoji")) {
+                const caption = document.createElement('figcaption');
+                var node = document.createTextNode(el.getAttribute("title"));
+                caption.appendChild(node);
+                const wrapper = document.createElement('figure');
+                wrapper.className = 'image';
+                el.parentNode.insertBefore(wrapper, el);
+                el.parentNode.removeChild(el);
+                wrapper.appendChild(el);
+                wrapper.appendChild(caption);
+            }
+        });
+    } else { document.addEventListener('DOMContentLoaded', fn); }
+}
+window.onload = wrap_img;
+</script>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function(){
+    // add link icon to anchor tags
+    var elem = document.querySelectorAll(".anchor-link")
+    elem.forEach(e => (e.innerHTML = '<i class="fas fa-link fa-xs"></i>'));
+    });
+</script>
+</head>
+<body><header class="site-header">
+
+  <div class="wrapper"><a class="site-title" rel="author" href="/blog/">F5</a><nav class="site-nav">
+        <input type="checkbox" id="nav-trigger" class="nav-trigger" />
+        <label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewBox="0 0 18 15" width="18px" height="15px">
+              <path d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.032C17.335,0,18,0.665,18,1.484L18,1.484z M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.032C17.335,6.031,18,6.696,18,7.516L18,7.516z M18,13.516C18,14.335,17.335,15,16.516,15H1.484 C0.665,15,0,14.335,0,13.516l0,0c0-0.82,0.665-1.483,1.484-1.483h15.032C17.335,12.031,18,12.695,18,13.516L18,13.516z"/>
+            </svg>
+          </span>
+        </label>
+
+        <div class="trigger"><a class="page-link" href="/blog/about/">About Me</a><a class="page-link" href="/blog/search/">Search</a><a class="page-link" href="/blog/categories/">Tags</a></div>
+      </nav></div>
+</header>
+<main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title p-name" itemprop="name headline">Electron-Forge + React + TypeScript = Awesome!</h1><p class="page-description">Setup React and TypeScript with Electron Forge</p><p class="post-meta post-meta-title"><time class="dt-published" datetime="2019-08-26T00:00:00-05:00" itemprop="datePublished">
+        Aug 26, 2019
+      </time>
+       • <span class="read-time" title="Estimated read time">
+    
+    
+      7 min read
+    
+</span></p>
+
+    
+      <p class="category-tags"><i class="fas fa-tags category-tags-icon"></i></i> 
+      
+        <a class="category-tags-link" href="/blog/categories/#React">React</a>
+        &nbsp;
+      
+        <a class="category-tags-link" href="/blog/categories/#TypeScript">TypeScript</a>
+        &nbsp;
+      
+        <a class="category-tags-link" href="/blog/categories/#Electron">Electron</a>
+        &nbsp;
+      
+        <a class="category-tags-link" href="/blog/categories/#Javascript">Javascript</a>
+        &nbsp;
+      
+        <a class="category-tags-link" href="/blog/categories/#Electron Forge">Electron Forge</a>
+        &nbsp;
+      
+        <a class="category-tags-link" href="/blog/categories/#node">node</a>
+        
+      
+      </p>
+    
+
+    </header>
+
+  <div class="post-content e-content" itemprop="articleBody">
+    <p>Recently I wanted start a new project on Electron and chose React to design UI. Having no prior experience in developing Electron App, I sat down to do some research. The <a href="https://electronjs.org/docs/tutorial/boilerplates-and-clis">Electron Documentation</a> states two ways to start an electron project, <strong>Boilerplate</strong> or <strong>CLI</strong>, with a slight lean towards CLI.</p>
+
+<p>The documentation mentions <em>React</em> support with both the processes through <a href="https://electronforge.io/">Electron-Forge</a>(CLI) or <a href="https://github.com/chentsulin/electron-react-boilerplate">electron-react-boilerplate</a>. Electron-Forge is similar to <a href="https://github.com/facebook/create-react-app">create-react-app (CRA)</a> in terms of scaffolding the base solution and getting a ready-to-run application setup correctly. Having had an excellent experience with CRA before, I chose to start my project using electron-forge.</p>
+
+<p>Although Electron docs mentions electron-forge has ready to use templates for React, at the time of writing <a href="https://www.electronforge.io/">electron-forge</a> documentation does not list any React template nor any guide on how to setup React or TypeScript. Moreover there was surprisingly little information available on the web regarding this. Luckily I found excellent <a href="https://www.juhaelee.dev/TypeScript-electron/">blog by Ju Hae Lee</a> that helped me with setting up TypeScript+React electron App using Babel. <a href="https://babeljs.io/">Babel</a> is a great package in itself and I would recommend everyone to go through <a href="https://iamturns.com/TypeScript-babel/">this excellent article</a> on how Babel and TypeScript works together. To summarize, the way Babel works is by <em>removing</em> TypeScript and converting TypeScript into regular Javascript. This increases compile speed dramatically (one major complain from TypeScript) at the cost forgoing <em>type checking</em> at build time. There are workarounds (like type-checking during test) that are described in more details in the article above and I would recommend everyone to read it. You may or may not like this approach depending upon your project and team configuration. I, myself, wanted to maintain TypeScript’s type checking during build time and so decided to not configure babel. If you want to use Babel I would recommend you read Ju Lee’s blog.</p>
+
+<h3 id="getting-started-with-electron-forge">Getting started with Electron-Forge</h3>
+
+<p>There are two ways to setup electron-forge - vanilla installation or using a template. We will setup using <a href="https://www.electronforge.io/templates/webpack-template">Webpack template</a> (the only available template at the time of writing).</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>npx create-electron-app my-app <span class="nt">--template</span><span class="o">=</span>webpack
+</code></pre></div></div>
+
+<h3 id="setup-typescript">Setup TypeScript</h3>
+
+<h4 id="install-typescript">Install typescript</h4>
+
+<p>Next we are going to setup TypeScript. Run the following script -</p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>yarn add <span class="nt">--dev</span> typescript ts-loader fork-ts-checker-webpack-plugin
+</code></pre></div></div>
+
+<p>We use <a href="https://github.com/TypeStrong/ts-loader">ts-loader</a> as loader for webpack and <a href="https://github.com/TypeStrong/fork-ts-checker-webpack-plugin">fork-ts-checker-webpack-plugin</a> for faster builds. <strong>fork-ts-checker-webpack-plugin</strong> will run the typescript <em>type checker</em> in a separate process significantly increasing build time.</p>
+
+<h4 id="create-tsconfigjson">Create tsconfig.json</h4>
+
+<p>Since we are not using Babel, we will need to create config file for TypeScript. Create a <code class="highlighter-rouge">tsconfig.json</code> file in the root folder with following content.</p>
+
+<div class="language-json highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="p">{</span><span class="w">
+  </span><span class="nl">"compilerOptions"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="nl">"target"</span><span class="p">:</span><span class="w"> </span><span class="s2">"es5"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"lib"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">"dom"</span><span class="p">,</span><span class="w"> </span><span class="s2">"dom.iterable"</span><span class="p">,</span><span class="w"> </span><span class="s2">"esnext"</span><span class="p">],</span><span class="w">
+    </span><span class="nl">"allowJs"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"skipLibCheck"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"esModuleInterop"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"allowSyntheticDefaultImports"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"strict"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"forceConsistentCasingInFileNames"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"module"</span><span class="p">:</span><span class="w"> </span><span class="s2">"esnext"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"moduleResolution"</span><span class="p">:</span><span class="w"> </span><span class="s2">"node"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"resolveJsonModule"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"isolatedModules"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"noEmit"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"jsx"</span><span class="p">:</span><span class="w"> </span><span class="s2">"react"</span><span class="w">
+  </span><span class="p">},</span><span class="w">
+  </span><span class="nl">"include"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">"src"</span><span class="p">]</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span></code></pre></div></div>
+
+<h4 id="webpack-changes">Webpack changes</h4>
+
+<p>Next we need to modify webpack configurations to load TypeScript files.</p>
+
+<ul>
+  <li>Add the following to <code class="highlighter-rouge">webpack.rules.js</code></li>
+</ul>
+
+<div class="language-js highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="p">{</span>
+  <span class="nl">test</span><span class="p">:</span> <span class="sr">/</span><span class="se">\.</span><span class="sr">tsx</span><span class="se">?</span><span class="sr">$/</span><span class="p">,</span>
+  <span class="nx">exclude</span><span class="p">:</span> <span class="o">/</span><span class="p">(</span><span class="nx">node_modules</span><span class="o">|</span><span class="p">.</span><span class="nx">webpack</span><span class="p">)</span><span class="o">/</span><span class="p">,</span>
+  <span class="nx">loaders</span><span class="p">:</span> <span class="p">[{</span>
+    <span class="na">loader</span><span class="p">:</span> <span class="dl">'</span><span class="s1">ts-loader</span><span class="dl">'</span><span class="p">,</span>
+    <span class="na">options</span><span class="p">:</span> <span class="p">{</span>
+      <span class="na">transpileOnly</span><span class="p">:</span> <span class="kc">true</span>
+    <span class="p">}</span>
+  <span class="p">}]</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<ul>
+  <li>Create a new file called <code class="highlighter-rouge">webpack.plugins.js</code> in the root folder and put the following content. Note that I have passed <code class="highlighter-rouge">async: false</code> as an option to <code class="highlighter-rouge">fork-ts-checker-webpack-plugin</code>. This will fail the build process if there is any <em>type</em> error. In case this slows down the build performance you can change it to <code class="highlighter-rouge">async: true</code>.</li>
+</ul>
+
+<div class="language-js highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">const</span> <span class="nx">ForkTsCheckerWebpackPlugin</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="dl">'</span><span class="s1">fork-ts-checker-webpack-plugin</span><span class="dl">'</span><span class="p">);</span>
+
+<span class="nx">module</span><span class="p">.</span><span class="nx">exports</span> <span class="o">=</span> <span class="p">[</span>
+  <span class="k">new</span> <span class="nx">ForkTsCheckerWebpackPlugin</span><span class="p">({</span>
+    <span class="na">async</span><span class="p">:</span> <span class="kc">false</span>
+  <span class="p">})</span>
+<span class="p">];</span>
+</code></pre></div></div>
+
+<ul>
+  <li>Import this newly created plugin in the <code class="highlighter-rouge">webpack.renderer.config.js</code>.</li>
+</ul>
+
+<div class="language-js highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">const</span> <span class="nx">rules</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="dl">'</span><span class="s1">./webpack.rules</span><span class="dl">'</span><span class="p">);</span>
+<span class="kd">const</span> <span class="nx">plugins</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="dl">'</span><span class="s1">./webpack.plugins</span><span class="dl">'</span><span class="p">);</span>
+
+<span class="nx">rules</span><span class="p">.</span><span class="nx">push</span><span class="p">({</span>
+  <span class="na">test</span><span class="p">:</span> <span class="sr">/</span><span class="se">\.</span><span class="sr">css$/</span><span class="p">,</span>
+  <span class="na">use</span><span class="p">:</span> <span class="p">[{</span> <span class="na">loader</span><span class="p">:</span> <span class="dl">'</span><span class="s1">style-loader</span><span class="dl">'</span> <span class="p">},</span> <span class="p">{</span> <span class="na">loader</span><span class="p">:</span> <span class="dl">'</span><span class="s1">css-loader</span><span class="dl">'</span> <span class="p">}]</span>
+<span class="p">});</span>
+
+<span class="nx">module</span><span class="p">.</span><span class="nx">exports</span> <span class="o">=</span> <span class="p">{</span>
+  <span class="c1">// Put your normal webpack config below here</span>
+  <span class="na">module</span><span class="p">:</span> <span class="p">{</span>
+    <span class="nx">rules</span>
+  <span class="p">},</span>
+  <span class="na">plugins</span><span class="p">:</span> <span class="nx">plugins</span>
+<span class="p">};</span>
+</code></pre></div></div>
+
+<h3 id="setup-react">Setup React</h3>
+
+<ul>
+  <li>Install react using following script or by modifying <em>package.json</em></li>
+</ul>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>yarn add react react-dom @types/react @types/react-dom
+</code></pre></div></div>
+
+<ul>
+  <li>Next we will create <code class="highlighter-rouge">App.tsx</code> file under <em>src</em> folder which will serve as entrypoint to renderer process.</li>
+</ul>
+
+<div class="language-typescript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">import</span> <span class="o">*</span> <span class="k">as</span> <span class="nx">React</span> <span class="k">from</span> <span class="dl">'</span><span class="s1">react</span><span class="dl">'</span><span class="p">;</span>
+<span class="k">import</span> <span class="o">*</span> <span class="k">as</span> <span class="nx">ReactDOM</span> <span class="k">from</span> <span class="dl">'</span><span class="s1">react-dom</span><span class="dl">'</span><span class="p">;</span>
+
+<span class="nx">ReactDOM</span><span class="p">.</span><span class="nx">render</span><span class="p">(</span><span class="o">&lt;</span><span class="nx">div</span><span class="o">&gt;</span><span class="nx">hello</span> <span class="nx">world</span> <span class="k">from</span> <span class="nx">React</span><span class="o">!</span> <span class="o">&lt;</span><span class="sr">/div&gt;, document.getElementById</span><span class="se">(</span><span class="sr">'root'</span><span class="se">))</span><span class="err">;
+</span></code></pre></div></div>
+
+<p>Since we don’t have <strong>root</strong> element in our HTML, modify the <code class="highlighter-rouge">index.html</code> accordingly.</p>
+
+<div class="language-html highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="cp">&lt;!DOCTYPE html&gt;</span>
+<span class="nt">&lt;html&gt;</span>
+  <span class="nt">&lt;head&gt;</span>
+    <span class="nt">&lt;meta</span> <span class="na">charset=</span><span class="s">"UTF-8"</span> <span class="nt">/&gt;</span>
+    <span class="nt">&lt;title&gt;</span>Hello World!<span class="nt">&lt;/title&gt;</span>
+  <span class="nt">&lt;/head&gt;</span>
+  <span class="nt">&lt;body&gt;</span>
+    <span class="nt">&lt;div</span> <span class="na">id=</span><span class="s">"root"</span><span class="nt">&gt;&lt;/div&gt;</span>
+  <span class="nt">&lt;/body&gt;</span>
+<span class="nt">&lt;/html&gt;</span>
+</code></pre></div></div>
+
+<ul>
+  <li>Next change the <em>entrypoint</em> under the <em>forge</em> field for renderer in <code class="highlighter-rouge">package.json</code> to point to our <em>app.tsx</em> file.</li>
+</ul>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="p">{</span>
+  <span class="c1">///... other stuffs</span>
+  <span class="dl">"</span><span class="s2">config</span><span class="dl">"</span><span class="p">:</span> <span class="p">{</span>
+    <span class="dl">"</span><span class="s2">forge</span><span class="dl">"</span><span class="p">:</span> <span class="p">{</span>
+      <span class="c1">///... other stuffs</span>
+      <span class="dl">"</span><span class="s2">plugins</span><span class="dl">"</span><span class="p">:</span> <span class="p">[</span>
+        <span class="p">[</span>
+          <span class="dl">"</span><span class="s2">@electron-forge/plugin-webpack</span><span class="dl">"</span><span class="p">,</span>
+          <span class="p">{</span>
+            <span class="dl">"</span><span class="s2">mainConfig</span><span class="dl">"</span><span class="p">:</span> <span class="dl">"</span><span class="s2">./webpack.main.config.js</span><span class="dl">"</span><span class="p">,</span>
+            <span class="dl">"</span><span class="s2">renderer</span><span class="dl">"</span><span class="p">:</span> <span class="p">{</span>
+              <span class="dl">"</span><span class="s2">config</span><span class="dl">"</span><span class="p">:</span> <span class="dl">"</span><span class="s2">./webpack.renderer.config.js</span><span class="dl">"</span><span class="p">,</span>
+              <span class="dl">"</span><span class="s2">entryPoints</span><span class="dl">"</span><span class="p">:</span> <span class="p">[</span>
+                <span class="p">{</span>
+                  <span class="dl">"</span><span class="s2">html</span><span class="dl">"</span><span class="p">:</span> <span class="dl">"</span><span class="s2">./src/index.html</span><span class="dl">"</span><span class="p">,</span>
+                  <span class="dl">"</span><span class="s2">js</span><span class="dl">"</span><span class="p">:</span> <span class="dl">"</span><span class="s2">./src/app.tsx</span><span class="dl">"</span><span class="p">,</span>
+                  <span class="dl">"</span><span class="s2">name</span><span class="dl">"</span><span class="p">:</span> <span class="dl">"</span><span class="s2">main_window</span><span class="dl">"</span>
+                <span class="p">}</span>
+              <span class="p">]</span>
+            <span class="p">}</span>
+          <span class="p">}</span>
+        <span class="p">]</span>
+      <span class="p">]</span>
+    <span class="p">}</span>
+  <span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<p>Now run the application using <code class="highlighter-rouge">yarn start</code> and React should render correctly.</p>
+
+<h3 id="optional---setup-typescript-for-main-process">Optional - setup TypeScript for Main process</h3>
+
+<p>We only setup TypeScript in renderer as that is most likely place where usually development happens. However if you want to use TypeScript for developing <em>main</em> process you will need to make some additional changes</p>
+
+<h4 id="mainjs-to-maints">Main.js to Main.ts</h4>
+
+<ul>
+  <li>First rename <em>Main.js</em> to <em>Main.ts</em>. Then replace the content in the file with the one below</li>
+</ul>
+
+<div class="language-typescript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">import</span> <span class="p">{</span> <span class="nx">app</span><span class="p">,</span> <span class="nx">BrowserWindow</span> <span class="p">}</span> <span class="k">from</span> <span class="dl">'</span><span class="s1">electron</span><span class="dl">'</span><span class="p">;</span>
+<span class="nx">declare</span> <span class="kd">var</span> <span class="nx">MAIN_WINDOW_WEBPACK_ENTRY</span><span class="p">:</span> <span class="nx">any</span><span class="p">;</span>
+
+<span class="c1">// Handle creating/removing shortcuts on Windows when installing/uninstalling.</span>
+<span class="k">if</span> <span class="p">(</span><span class="nx">require</span><span class="p">(</span><span class="dl">'</span><span class="s1">electron-squirrel-startup</span><span class="dl">'</span><span class="p">))</span> <span class="p">{</span>
+  <span class="c1">// eslint-disable-line global-require</span>
+  <span class="nx">app</span><span class="p">.</span><span class="nx">quit</span><span class="p">();</span>
+<span class="p">}</span>
+
+<span class="c1">// Keep a global reference of the window object, if you don't, the window will</span>
+<span class="c1">// be closed automatically when the JavaScript object is garbage collected.</span>
+<span class="kd">let</span> <span class="nx">mainWindow</span><span class="p">:</span> <span class="nx">any</span><span class="p">;</span>
+
+<span class="kd">const</span> <span class="nx">createWindow</span> <span class="o">=</span> <span class="p">()</span> <span class="o">=&gt;</span> <span class="p">{</span>
+  <span class="c1">// Create the browser window.</span>
+  <span class="nx">mainWindow</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">BrowserWindow</span><span class="p">({</span>
+    <span class="na">width</span><span class="p">:</span> <span class="mi">800</span><span class="p">,</span>
+    <span class="na">height</span><span class="p">:</span> <span class="mi">600</span>
+  <span class="p">});</span>
+
+  <span class="c1">// and load the index.html of the app.</span>
+  <span class="nx">mainWindow</span><span class="p">.</span><span class="nx">loadURL</span><span class="p">(</span><span class="nx">MAIN_WINDOW_WEBPACK_ENTRY</span><span class="p">);</span>
+
+  <span class="c1">// Open the DevTools.</span>
+  <span class="nx">mainWindow</span><span class="p">.</span><span class="nx">webContents</span><span class="p">.</span><span class="nx">openDevTools</span><span class="p">();</span>
+
+  <span class="c1">// Emitted when the window is closed.</span>
+  <span class="nx">mainWindow</span><span class="p">.</span><span class="nx">on</span><span class="p">(</span><span class="dl">'</span><span class="s1">closed</span><span class="dl">'</span><span class="p">,</span> <span class="p">()</span> <span class="o">=&gt;</span> <span class="p">{</span>
+    <span class="c1">// Dereference the window object, usually you would store windows</span>
+    <span class="c1">// in an array if your app supports multi windows, this is the time</span>
+    <span class="c1">// when you should delete the corresponding element.</span>
+    <span class="nx">mainWindow</span> <span class="o">=</span> <span class="kc">null</span><span class="p">;</span>
+  <span class="p">});</span>
+<span class="p">};</span>
+
+<span class="c1">// This method will be called when Electron has finished</span>
+<span class="c1">// initialization and is ready to create browser windows.</span>
+<span class="c1">// Some APIs can only be used after this event occurs.</span>
+<span class="nx">app</span><span class="p">.</span><span class="nx">on</span><span class="p">(</span><span class="dl">'</span><span class="s1">ready</span><span class="dl">'</span><span class="p">,</span> <span class="nx">createWindow</span><span class="p">);</span>
+
+<span class="c1">// Quit when all windows are closed.</span>
+<span class="nx">app</span><span class="p">.</span><span class="nx">on</span><span class="p">(</span><span class="dl">'</span><span class="s1">window-all-closed</span><span class="dl">'</span><span class="p">,</span> <span class="p">()</span> <span class="o">=&gt;</span> <span class="p">{</span>
+  <span class="c1">// On OS X it is common for applications and their menu bar</span>
+  <span class="c1">// to stay active until the user quits explicitly with Cmd + Q</span>
+  <span class="k">if</span> <span class="p">(</span><span class="nx">process</span><span class="p">.</span><span class="nx">platform</span> <span class="o">!==</span> <span class="dl">'</span><span class="s1">darwin</span><span class="dl">'</span><span class="p">)</span> <span class="p">{</span>
+    <span class="nx">app</span><span class="p">.</span><span class="nx">quit</span><span class="p">();</span>
+  <span class="p">}</span>
+<span class="p">});</span>
+
+<span class="nx">app</span><span class="p">.</span><span class="nx">on</span><span class="p">(</span><span class="dl">'</span><span class="s1">activate</span><span class="dl">'</span><span class="p">,</span> <span class="p">()</span> <span class="o">=&gt;</span> <span class="p">{</span>
+  <span class="c1">// On OS X it's common to re-create a window in the app when the</span>
+  <span class="c1">// dock icon is clicked and there are no other windows open.</span>
+  <span class="k">if</span> <span class="p">(</span><span class="nx">mainWindow</span> <span class="o">===</span> <span class="kc">null</span><span class="p">)</span> <span class="p">{</span>
+    <span class="nx">createWindow</span><span class="p">();</span>
+  <span class="p">}</span>
+<span class="p">});</span>
+
+<span class="c1">// In this file you can include the rest of your app's specific main process</span>
+<span class="c1">// code. You can also put them in separate files and import them here.</span>
+</code></pre></div></div>
+
+<p>We have only changed 3 lines of code. First is to replace <code class="highlighter-rouge">require</code> statement with <code class="highlighter-rouge">import</code> statement. Then declare a global variable <em>MAIN_WINDOW_WEBPACK_ENTRY</em> as it will be initialized by webpack and contain URL for our HTML. The last step is to fix build error by explicitly setting type of variable <code class="highlighter-rouge">mainWindow</code> to <code class="highlighter-rouge">any</code>.</p>
+
+<ul>
+  <li>Lastly change the <code class="highlighter-rouge">webpack.main.config.js</code> to include plugin and modify the entrypoint to <em>main.ts</em>.</li>
+</ul>
+
+<div class="language-js highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">const</span> <span class="nx">plugins</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="dl">'</span><span class="s1">./webpack.plugins</span><span class="dl">'</span><span class="p">);</span>
+
+<span class="nx">module</span><span class="p">.</span><span class="nx">exports</span> <span class="o">=</span> <span class="p">{</span>
+  <span class="cm">/**
+   * This is the main entry point for your application, it's the first file
+   * that runs in the main process.
+   */</span>
+  <span class="na">entry</span><span class="p">:</span> <span class="dl">'</span><span class="s1">./src/main.ts</span><span class="dl">'</span><span class="p">,</span>
+  <span class="c1">// Put your normal webpack config below here</span>
+  <span class="na">module</span><span class="p">:</span> <span class="p">{</span>
+    <span class="na">rules</span><span class="p">:</span> <span class="nx">require</span><span class="p">(</span><span class="dl">'</span><span class="s1">./webpack.rules</span><span class="dl">'</span><span class="p">)</span>
+  <span class="p">},</span>
+  <span class="na">plugins</span><span class="p">:</span> <span class="nx">plugins</span>
+<span class="p">};</span>
+</code></pre></div></div>
+
+<p>Thats all that is needed to get started with Electron-Forge and React + Typescript.</p>
+
+<p><strong>UPDATE</strong> Many people are facing issue while importing other files. This is because of missing <em>extensions</em> configuration in webpack. In  both <code class="highlighter-rouge">webpack.renderer.config.js</code> and <code class="highlighter-rouge">webpack.main.config.js</code> include below configuration -</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>resolve: {
+extensions: ['.js', '.ts', '.jsx', '.tsx', '.css']
+},
+</code></pre></div></div>
+<p>Thanks for a lot of people in the comments below on bringing this to my attention.</p>
+
+
+  </div><!-- from https://github.com/utterance/utterances -->
+<script src="https://utteranc.es/client.js"
+        repo="ankitbko/blog"
+        issue-term="title"
+        label="blogpost-comment"
+        theme="github-light"
+        crossorigin="anonymous"
+        async>
+</script><a class="u-url" href="/blog/2019/08/electron-forge-with-react-and-typescript/" hidden></a>
+</article>
+      </div>
+    </main><footer class="site-footer h-card">
+  <data class="u-url" href="/blog/"></data>
+
+  <div class="wrapper">
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col">
+        <p class="feed-subscribe">
+          <a href="/blog/feed.xml">
+            <svg class="svg-icon orange">
+              <use xlink:href="/blog/assets/minima-social-icons.svg#rss"></use>
+            </svg><span>Subscribe</span>
+          </a>
+        </p>
+        <ul class="contact-list">
+          <li class="p-name">Ankit Sinha</li>
+          
+        </ul>
+      </div>
+      <div class="footer-col">
+        <p>A technology blog focusing on random stuff</p>
+      </div>
+    </div>
+
+    <div class="social-links"><ul class="social-media-list"><li><a rel="me" href="https://github.com/ankitbko" title="ankitbko"><svg class="svg-icon grey"><use xlink:href="/blog/assets/minima-social-icons.svg#github"></use></svg></a></li><li><a rel="me" href="https://twitter.com/ankitbko" title="ankitbko"><svg class="svg-icon grey"><use xlink:href="/blog/assets/minima-social-icons.svg#twitter"></use></svg></a></li></ul>
+</div>
+
+  </div>
+
+</footer>
+</body>
+
+</html>

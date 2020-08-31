@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="twitter:card" content="summary" /><!-- Begin Jekyll SEO tag v2.6.1 -->
+<title>BusyBot - Chat Bot for Skype for Business | F5</title>
+<meta name="generator" content="Jekyll v4.0.0" />
+<meta property="og:title" content="BusyBot - Chat Bot for Skype for Business" />
+<meta name="author" content="Ankit Sinha" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="A chatbot for Skype for business" />
+<meta property="og:description" content="A chatbot for Skype for business" />
+<link rel="canonical" href="https://ankitbko.github.io/blog/2017/01/BusyBot-Sykpe-For-Business-Bot/" />
+<meta property="og:url" content="https://ankitbko.github.io/blog/2017/01/BusyBot-Sykpe-For-Business-Bot/" />
+<meta property="og:site_name" content="F5" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2017-01-09T00:00:00-06:00" />
+<script type="application/ld+json">
+{"headline":"BusyBot - Chat Bot for Skype for Business","dateModified":"2017-01-09T00:00:00-06:00","datePublished":"2017-01-09T00:00:00-06:00","author":{"@type":"Person","name":"Ankit Sinha"},"description":"A chatbot for Skype for business","mainEntityOfPage":{"@type":"WebPage","@id":"https://ankitbko.github.io/blog/2017/01/BusyBot-Sykpe-For-Business-Bot/"},"@type":"BlogPosting","url":"https://ankitbko.github.io/blog/2017/01/BusyBot-Sykpe-For-Business-Bot/","@context":"https://schema.org"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="stylesheet" href="/blog/assets/css/style.css"><link type="application/atom+xml" rel="alternate" href="https://ankitbko.github.io/blog/feed.xml" title="F5" /><!-- the google_analytics_id gets auto inserted from the config file -->
+
+
+
+<script>(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)})(window,document,'script','//www.google-analytics.com/analytics.js','ga');ga('create','UA-75679348-1','auto');ga('require','displayfeatures');ga('send','pageview');</script>
+
+<link rel="shortcut icon" type="image/x-icon" href="/blog/images/favicon.ico"><!-- Begin Jekyll SEO tag v2.6.1 -->
+<title>BusyBot - Chat Bot for Skype for Business | F5</title>
+<meta name="generator" content="Jekyll v4.0.0" />
+<meta property="og:title" content="BusyBot - Chat Bot for Skype for Business" />
+<meta name="author" content="Ankit Sinha" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="A chatbot for Skype for business" />
+<meta property="og:description" content="A chatbot for Skype for business" />
+<link rel="canonical" href="https://ankitbko.github.io/blog/2017/01/BusyBot-Sykpe-For-Business-Bot/" />
+<meta property="og:url" content="https://ankitbko.github.io/blog/2017/01/BusyBot-Sykpe-For-Business-Bot/" />
+<meta property="og:site_name" content="F5" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2017-01-09T00:00:00-06:00" />
+<script type="application/ld+json">
+{"headline":"BusyBot - Chat Bot for Skype for Business","dateModified":"2017-01-09T00:00:00-06:00","datePublished":"2017-01-09T00:00:00-06:00","author":{"@type":"Person","name":"Ankit Sinha"},"description":"A chatbot for Skype for business","mainEntityOfPage":{"@type":"WebPage","@id":"https://ankitbko.github.io/blog/2017/01/BusyBot-Sykpe-For-Business-Bot/"},"@type":"BlogPosting","url":"https://ankitbko.github.io/blog/2017/01/BusyBot-Sykpe-For-Business-Bot/","@context":"https://schema.org"}</script>
+<!-- End Jekyll SEO tag -->
+
+<link href="https://unpkg.com/@primer/css/dist/primer.css" rel="stylesheet" />
+<link rel="stylesheet" href="//use.fontawesome.com/releases/v5.0.7/css/all.css"><link type="application/atom+xml" rel="alternate" href="https://ankitbko.github.io/blog/feed.xml" title="F5" /><!-- the google_analytics_id gets auto inserted from the config file -->
+
+
+
+<script>(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)})(window,document,'script','//www.google-analytics.com/analytics.js','ga');ga('create','UA-75679348-1','auto');ga('require','displayfeatures');ga('send','pageview');</script>
+
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.11.1/dist/katex.min.css" integrity="sha384-zB1R0rpPzHqg7Kpt0Aljp8JPLqbXI3bhnPWROx27a9N0Ll6ZP/+DiW/UqRcLbRjq" crossorigin="anonymous">
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML"> </script>
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.11.1/dist/katex.min.js" integrity="sha384-y23I5Q6l+B6vatafAwxRu/0oK/79VlbSz7Q9aiSZUvyWYIYsd+qj+o24G5ZU2zJz" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.11.1/dist/contrib/auto-render.min.js" integrity="sha384-kWPLUVMOks5AQFrykwIup5lo0m3iMkkHrD0uJ4H5cjeGihAutqP0yW0J6dpFiVkI" crossorigin="anonymous"></script>
+    <script>
+    document.addEventListener("DOMContentLoaded", function() {
+        renderMathInElement( document.body, {
+        delimiters: [
+            {left: "$$", right: "$$", display: true},
+            {left: "[%", right: "%]", display: true},
+            {left: "$", right: "$", display: false}
+        ]}
+        );
+    });
+    </script>
+
+
+<script>
+function wrap_img(fn) {
+    if (document.attachEvent ? document.readyState === "complete" : document.readyState !== "loading") {
+        var elements = document.querySelectorAll(".post img");
+        Array.prototype.forEach.call(elements, function(el, i) {
+            if (el.getAttribute("title") && (el.className != "emoji")) {
+                const caption = document.createElement('figcaption');
+                var node = document.createTextNode(el.getAttribute("title"));
+                caption.appendChild(node);
+                const wrapper = document.createElement('figure');
+                wrapper.className = 'image';
+                el.parentNode.insertBefore(wrapper, el);
+                el.parentNode.removeChild(el);
+                wrapper.appendChild(el);
+                wrapper.appendChild(caption);
+            }
+        });
+    } else { document.addEventListener('DOMContentLoaded', fn); }
+}
+window.onload = wrap_img;
+</script>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function(){
+    // add link icon to anchor tags
+    var elem = document.querySelectorAll(".anchor-link")
+    elem.forEach(e => (e.innerHTML = '<i class="fas fa-link fa-xs"></i>'));
+    });
+</script>
+</head>
+<body><header class="site-header">
+
+  <div class="wrapper"><a class="site-title" rel="author" href="/blog/">F5</a><nav class="site-nav">
+        <input type="checkbox" id="nav-trigger" class="nav-trigger" />
+        <label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewBox="0 0 18 15" width="18px" height="15px">
+              <path d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.032C17.335,0,18,0.665,18,1.484L18,1.484z M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.032C17.335,6.031,18,6.696,18,7.516L18,7.516z M18,13.516C18,14.335,17.335,15,16.516,15H1.484 C0.665,15,0,14.335,0,13.516l0,0c0-0.82,0.665-1.483,1.484-1.483h15.032C17.335,12.031,18,12.695,18,13.516L18,13.516z"/>
+            </svg>
+          </span>
+        </label>
+
+        <div class="trigger"><a class="page-link" href="/blog/about/">About Me</a><a class="page-link" href="/blog/search/">Search</a><a class="page-link" href="/blog/categories/">Tags</a></div>
+      </nav></div>
+</header>
+<main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title p-name" itemprop="name headline">BusyBot - Chat Bot for Skype for Business</h1><p class="page-description">A chatbot for Skype for business</p><p class="post-meta post-meta-title"><time class="dt-published" datetime="2017-01-09T00:00:00-06:00" itemprop="datePublished">
+        Jan 9, 2017
+      </time>
+       • <span class="read-time" title="Estimated read time">
+    
+    
+      4 min read
+    
+</span></p>
+
+    
+      <p class="category-tags"><i class="fas fa-tags category-tags-icon"></i></i> 
+      
+        <a class="category-tags-link" href="/blog/categories/#Microsoft Bot Framework">Microsoft Bot Framework</a>
+        &nbsp;
+      
+        <a class="category-tags-link" href="/blog/categories/#LUIS">LUIS</a>
+        &nbsp;
+      
+        <a class="category-tags-link" href="/blog/categories/#Bots">Bots</a>
+        &nbsp;
+      
+        <a class="category-tags-link" href="/blog/categories/#Chat Bots">Chat Bots</a>
+        &nbsp;
+      
+        <a class="category-tags-link" href="/blog/categories/#Conversational Apps">Conversational Apps</a>
+        &nbsp;
+      
+        <a class="category-tags-link" href="/blog/categories/#Skype For Business">Skype For Business</a>
+        &nbsp;
+      
+        <a class="category-tags-link" href="/blog/categories/#Lync">Lync</a>
+        
+      
+      </p>
+    
+
+    </header>
+
+  <div class="post-content e-content" itemprop="articleBody">
+    <p>We use Skype for Business in our organization which is a fairly common IM applications used in enterprises. The most common distraction while working is popping up of Skype message. And then it takes even more time to reply and finish the conversation, because not replying to colleagues is just rude. So I thought why not create a bot that replies to the messages for me. Unfortunately, Microsoft Bot Framework does not support Skype for Business as one of the channels so I had to find another way to make it works.</p>
+
+<p>Skype for Business has set of APIs called <a href="https://msdn.microsoft.com/en-us/skype/ucwa/unifiedcommunicationswebapi2_0">Unified Communications Web API</a> which can enable us to integrate it with a bot, however it is unnecessarily complicated (it requires 5 HTTP calls to just send 1 message). So after searching a bit, I found that Lync 2013 SDK still works with Skype for Business (courtesy to my friend Om) and found an excellent starter code at Taha Amin’s Github Repo <a href="https://github.com/tahazayed/BotConnectorSkypeForBusiness">BotConnectorSkypeForBusiness</a>.</p>
+
+<p>Lync SDK is fairly straightforward to use. It is event-based and integrates easily with Bot Framework. The only limitation is that Lync 2013/Skype for Business should be already running. Using this I created a simple bot that would let me work in peace. Source code is over <a href="https://github.com/ankitbko/SkypeForBusinessBot">here</a></p>
+
+<h3 id="dependency">Dependency</h3>
+<p>The bot has an <strong>optional</strong> dependency on Redis server. Since the bot will not be talking to Microsoft Bot Connector in any way, we would need to store bot’s context somewhere ourself. I had earlier used locally running instance of Redis. However now I have commented out <code class="highlighter-rouge">RedisStore</code> and used <code class="highlighter-rouge">InMemoryStore</code>. To use Redis store uncomment the <em>region</em> in <code class="highlighter-rouge">Program.cs</code> and comment InMemory <em>region</em>.</p>
+
+<p>You would also need Skype For Business running and signed in.</p>
+
+<h3 id="features">Features</h3>
+
+<p>So what does the bot do as of now? It accepts the incoming IM and -</p>
+
+<ul>
+  <li>Responds to greetings - Hi, Hello, Good Morning etc.</li>
+  <li>In case the person wants to call me or asks whether I am free - respond that I am busy and will talk later and set my status to Busy.</li>
+  <li>Ignore any other messages - <em>Pretend I am busy</em></li>
+  <li>Exception Filter - Bot does not reply anything if sender is present in <strong>Exception List</strong>. I don’t want to reply to my manager that I am busy if he pings me. :)</li>
+</ul>
+
+<h3 id="how-to-use">How to use</h3>
+
+<p>The bot is just a console application. The bot service is not hosted as Web Api, but runs within the console applications.
+First create a new <a href="https://www.luis.ai/">LUIS</a> application by importing the model json from <code class="highlighter-rouge">LuisModel</code> directory. Copy your LUIS model id and subscription key and paste it in <code class="highlighter-rouge">LuisModel</code> attribute in <code class="highlighter-rouge">LyncLuisDialog.cs</code>.</p>
+
+<p>The exception list is located in <code class="highlighter-rouge">App.config</code> in the console project. Values are <em>;</em> separated.</p>
+
+<div class="language-xml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nt">&lt;add</span> <span class="na">key=</span><span class="s">"ManagerList"</span> <span class="na">value=</span><span class="s">"sip:name1@domain.com;sip:name2@domain.com"</span><span class="nt">/&gt;</span>
+</code></pre></div></div>
+
+<p>Make sure your Skype for Business client is running and you are signed in and just start the console project. Ask your friend to ping you and see what happens.</p>
+
+<h3 id="how-it-works">How it works</h3>
+
+<p>Lync 2013 SDK is based on event driven programming. We just subscribe to right event <code class="highlighter-rouge">instantMessageModality.InstantMessageReceived += InstantMessageReceived;</code> and any messages will come to our <code class="highlighter-rouge">InstantMessageReceived</code> method.</p>
+
+<div class="language-csharp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">private</span> <span class="k">void</span> <span class="nf">InstantMessageReceived</span><span class="p">(</span><span class="kt">object</span> <span class="n">sender</span><span class="p">,</span> <span class="n">MessageSentEventArgs</span> <span class="n">e</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="kt">var</span> <span class="n">text</span> <span class="p">=</span> <span class="n">e</span><span class="p">.</span><span class="n">Text</span><span class="p">.</span><span class="nf">Replace</span><span class="p">(</span><span class="n">Environment</span><span class="p">.</span><span class="n">NewLine</span><span class="p">,</span> <span class="kt">string</span><span class="p">.</span><span class="n">Empty</span><span class="p">);</span>
+    <span class="kt">var</span> <span class="n">conversationService</span> <span class="p">=</span> <span class="k">new</span> <span class="nf">ConversationService</span><span class="p">((</span><span class="n">InstantMessageModality</span><span class="p">)</span><span class="n">sender</span><span class="p">);</span>
+    <span class="nf">SendToBot</span><span class="p">(</span><span class="n">conversationService</span><span class="p">,</span> <span class="n">text</span><span class="p">);</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<p>Once we get the message text, we bootstrap our bot and pass the text as properly formatted <code class="highlighter-rouge">Activity</code> message.</p>
+
+<div class="language-csharp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">private</span> <span class="k">async</span> <span class="k">void</span> <span class="nf">SendToBot</span><span class="p">(</span><span class="n">ConversationService</span> <span class="n">conversationService</span><span class="p">,</span> <span class="kt">string</span> <span class="n">text</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="n">Activity</span> <span class="n">activity</span> <span class="p">=</span> <span class="k">new</span> <span class="nf">Activity</span><span class="p">()</span>
+    <span class="p">{</span>
+        <span class="n">From</span> <span class="p">=</span> <span class="k">new</span> <span class="n">ChannelAccount</span> <span class="p">{</span> <span class="n">Id</span> <span class="p">=</span> <span class="n">conversationService</span><span class="p">.</span><span class="n">ParticipantId</span><span class="p">,</span> <span class="n">Name</span> <span class="p">=</span> <span class="n">conversationService</span><span class="p">.</span><span class="n">ParticipantName</span> <span class="p">},</span>
+        <span class="n">Conversation</span> <span class="p">=</span> <span class="k">new</span> <span class="n">ConversationAccount</span> <span class="p">{</span> <span class="n">Id</span> <span class="p">=</span> <span class="n">conversationService</span><span class="p">.</span><span class="n">ConversationId</span> <span class="p">},</span>
+        <span class="n">Recipient</span> <span class="p">=</span> <span class="k">new</span> <span class="n">ChannelAccount</span> <span class="p">{</span> <span class="n">Id</span> <span class="p">=</span> <span class="s">"Bot"</span> <span class="p">},</span>
+        <span class="n">ServiceUrl</span> <span class="p">=</span> <span class="s">"https://skype.botframework.com"</span><span class="p">,</span>
+        <span class="n">ChannelId</span> <span class="p">=</span> <span class="s">"skype"</span><span class="p">,</span>
+    <span class="p">};</span>
+
+    <span class="n">activity</span><span class="p">.</span><span class="n">Text</span> <span class="p">=</span> <span class="n">text</span><span class="p">;</span>
+
+    <span class="k">using</span> <span class="p">(</span><span class="kt">var</span> <span class="n">scope</span> <span class="p">=</span> <span class="n">Microsoft</span><span class="p">.</span><span class="n">Bot</span><span class="p">.</span><span class="n">Builder</span><span class="p">.</span><span class="n">Dialogs</span><span class="p">.</span><span class="n">Conversation</span>
+        <span class="p">.</span><span class="n">Container</span><span class="p">.</span><span class="nf">BeginLifetimeScope</span><span class="p">(</span><span class="n">DialogModule</span><span class="p">.</span><span class="n">LifetimeScopeTag</span><span class="p">,</span> <span class="n">builder</span> <span class="p">=&gt;</span> <span class="nf">Configure</span><span class="p">(</span><span class="n">builder</span><span class="p">,</span> <span class="n">conversationService</span><span class="p">)))</span>
+    <span class="p">{</span>
+        <span class="n">scope</span><span class="p">.</span><span class="n">Resolve</span><span class="p">&lt;</span><span class="n">IMessageActivity</span><span class="p">&gt;</span>
+            <span class="p">(</span><span class="n">TypedParameter</span><span class="p">.</span><span class="nf">From</span><span class="p">((</span><span class="n">IMessageActivity</span><span class="p">)</span><span class="n">activity</span><span class="p">));</span>
+        <span class="n">DialogModule_MakeRoot</span><span class="p">.</span><span class="nf">Register</span>
+            <span class="p">(</span><span class="n">scope</span><span class="p">,</span> <span class="p">()</span> <span class="p">=&gt;</span> <span class="k">new</span> <span class="n">Dialogs</span><span class="p">.</span><span class="nf">LyncLuisDialog</span><span class="p">(</span><span class="n">scope</span><span class="p">.</span><span class="n">Resolve</span><span class="p">&lt;</span><span class="n">PresenceService</span><span class="p">&gt;()));</span>
+        <span class="kt">var</span> <span class="n">postToBot</span> <span class="p">=</span> <span class="n">scope</span><span class="p">.</span><span class="n">Resolve</span><span class="p">&lt;</span><span class="n">IPostToBot</span><span class="p">&gt;();</span>
+        <span class="k">await</span> <span class="n">postToBot</span><span class="p">.</span><span class="nf">PostAsync</span><span class="p">(</span><span class="n">activity</span><span class="p">,</span> <span class="n">CancellationToken</span><span class="p">.</span><span class="n">None</span><span class="p">);</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<p>The bot then follows usual flow of sending the text to LUIS and determining the intent. Based on the context, it will then send it response back to - <code class="highlighter-rouge">BotToUserLync</code> class which implements <code class="highlighter-rouge">IBotToUser</code>. This allows us to catch the bot response and instead of sending it to the Bot Connector, we use Lync SDK once again to reply it to our counterpart.</p>
+
+<p>The <strong>Exception Filter</strong> is managed in <code class="highlighter-rouge">ManagerScorable</code> which implements <code class="highlighter-rouge">IScorable&lt;IActivity, double&gt;</code>. Scorables are the way to intercept the bot pipeline and branch off with another logic based on requirements. In our case, we check if the incoming message was sent from anyone on the filter list and if it is then we just do nothing. I may write another post on Scorables and discuss about it a little more later.</p>
+
+<h3 id="conclusion">Conclusion</h3>
+
+<p>That’s it. It took me a day to get it all done. The bot is very rudimentary but gets the job done. I now no longer have to reply toe very conversation when I am working. In any case, Skype for Business already saves all the conversation history so I can go over them once I get free. One day of work and lifetime of peace. :)</p>
+
+<p>I hope this article was helpful. If you have any questions, please post a comment below.</p>
+
+  </div><!-- from https://github.com/utterance/utterances -->
+<script src="https://utteranc.es/client.js"
+        repo="ankitbko/blog"
+        issue-term="title"
+        label="blogpost-comment"
+        theme="github-light"
+        crossorigin="anonymous"
+        async>
+</script><a class="u-url" href="/blog/2017/01/BusyBot-Sykpe-For-Business-Bot/" hidden></a>
+</article>
+      </div>
+    </main><footer class="site-footer h-card">
+  <data class="u-url" href="/blog/"></data>
+
+  <div class="wrapper">
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col">
+        <p class="feed-subscribe">
+          <a href="/blog/feed.xml">
+            <svg class="svg-icon orange">
+              <use xlink:href="/blog/assets/minima-social-icons.svg#rss"></use>
+            </svg><span>Subscribe</span>
+          </a>
+        </p>
+        <ul class="contact-list">
+          <li class="p-name">Ankit Sinha</li>
+          
+        </ul>
+      </div>
+      <div class="footer-col">
+        <p>A technology blog focusing on random stuff</p>
+      </div>
+    </div>
+
+    <div class="social-links"><ul class="social-media-list"><li><a rel="me" href="https://github.com/ankitbko" title="ankitbko"><svg class="svg-icon grey"><use xlink:href="/blog/assets/minima-social-icons.svg#github"></use></svg></a></li><li><a rel="me" href="https://twitter.com/ankitbko" title="ankitbko"><svg class="svg-icon grey"><use xlink:href="/blog/assets/minima-social-icons.svg#twitter"></use></svg></a></li></ul>
+</div>
+
+  </div>
+
+</footer>
+</body>
+
+</html>

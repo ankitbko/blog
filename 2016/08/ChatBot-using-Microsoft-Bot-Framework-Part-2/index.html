@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="twitter:card" content="summary" /><!-- Begin Jekyll SEO tag v2.6.1 -->
+<title>Chatbot using Microsoft Bot Framework - Part 2 | F5</title>
+<meta name="generator" content="Jekyll v4.0.0" />
+<meta property="og:title" content="Chatbot using Microsoft Bot Framework - Part 2" />
+<meta name="author" content="Ankit Sinha" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="A guide on how to build chat bots using Microsoft Bot Framework - Part 2" />
+<meta property="og:description" content="A guide on how to build chat bots using Microsoft Bot Framework - Part 2" />
+<link rel="canonical" href="https://ankitbko.github.io/blog/2016/08/ChatBot-using-Microsoft-Bot-Framework-Part-2/" />
+<meta property="og:url" content="https://ankitbko.github.io/blog/2016/08/ChatBot-using-Microsoft-Bot-Framework-Part-2/" />
+<meta property="og:site_name" content="F5" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2016-08-23T00:00:00-05:00" />
+<script type="application/ld+json">
+{"headline":"Chatbot using Microsoft Bot Framework - Part 2","dateModified":"2016-08-23T00:00:00-05:00","datePublished":"2016-08-23T00:00:00-05:00","author":{"@type":"Person","name":"Ankit Sinha"},"description":"A guide on how to build chat bots using Microsoft Bot Framework - Part 2","mainEntityOfPage":{"@type":"WebPage","@id":"https://ankitbko.github.io/blog/2016/08/ChatBot-using-Microsoft-Bot-Framework-Part-2/"},"@type":"BlogPosting","url":"https://ankitbko.github.io/blog/2016/08/ChatBot-using-Microsoft-Bot-Framework-Part-2/","@context":"https://schema.org"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="stylesheet" href="/blog/assets/css/style.css"><link type="application/atom+xml" rel="alternate" href="https://ankitbko.github.io/blog/feed.xml" title="F5" /><!-- the google_analytics_id gets auto inserted from the config file -->
+
+
+
+<script>(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)})(window,document,'script','//www.google-analytics.com/analytics.js','ga');ga('create','UA-75679348-1','auto');ga('require','displayfeatures');ga('send','pageview');</script>
+
+<link rel="shortcut icon" type="image/x-icon" href="/blog/images/favicon.ico"><!-- Begin Jekyll SEO tag v2.6.1 -->
+<title>Chatbot using Microsoft Bot Framework - Part 2 | F5</title>
+<meta name="generator" content="Jekyll v4.0.0" />
+<meta property="og:title" content="Chatbot using Microsoft Bot Framework - Part 2" />
+<meta name="author" content="Ankit Sinha" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="A guide on how to build chat bots using Microsoft Bot Framework - Part 2" />
+<meta property="og:description" content="A guide on how to build chat bots using Microsoft Bot Framework - Part 2" />
+<link rel="canonical" href="https://ankitbko.github.io/blog/2016/08/ChatBot-using-Microsoft-Bot-Framework-Part-2/" />
+<meta property="og:url" content="https://ankitbko.github.io/blog/2016/08/ChatBot-using-Microsoft-Bot-Framework-Part-2/" />
+<meta property="og:site_name" content="F5" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2016-08-23T00:00:00-05:00" />
+<script type="application/ld+json">
+{"headline":"Chatbot using Microsoft Bot Framework - Part 2","dateModified":"2016-08-23T00:00:00-05:00","datePublished":"2016-08-23T00:00:00-05:00","author":{"@type":"Person","name":"Ankit Sinha"},"description":"A guide on how to build chat bots using Microsoft Bot Framework - Part 2","mainEntityOfPage":{"@type":"WebPage","@id":"https://ankitbko.github.io/blog/2016/08/ChatBot-using-Microsoft-Bot-Framework-Part-2/"},"@type":"BlogPosting","url":"https://ankitbko.github.io/blog/2016/08/ChatBot-using-Microsoft-Bot-Framework-Part-2/","@context":"https://schema.org"}</script>
+<!-- End Jekyll SEO tag -->
+
+<link href="https://unpkg.com/@primer/css/dist/primer.css" rel="stylesheet" />
+<link rel="stylesheet" href="//use.fontawesome.com/releases/v5.0.7/css/all.css"><link type="application/atom+xml" rel="alternate" href="https://ankitbko.github.io/blog/feed.xml" title="F5" /><!-- the google_analytics_id gets auto inserted from the config file -->
+
+
+
+<script>(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)})(window,document,'script','//www.google-analytics.com/analytics.js','ga');ga('create','UA-75679348-1','auto');ga('require','displayfeatures');ga('send','pageview');</script>
+
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.11.1/dist/katex.min.css" integrity="sha384-zB1R0rpPzHqg7Kpt0Aljp8JPLqbXI3bhnPWROx27a9N0Ll6ZP/+DiW/UqRcLbRjq" crossorigin="anonymous">
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML"> </script>
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.11.1/dist/katex.min.js" integrity="sha384-y23I5Q6l+B6vatafAwxRu/0oK/79VlbSz7Q9aiSZUvyWYIYsd+qj+o24G5ZU2zJz" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.11.1/dist/contrib/auto-render.min.js" integrity="sha384-kWPLUVMOks5AQFrykwIup5lo0m3iMkkHrD0uJ4H5cjeGihAutqP0yW0J6dpFiVkI" crossorigin="anonymous"></script>
+    <script>
+    document.addEventListener("DOMContentLoaded", function() {
+        renderMathInElement( document.body, {
+        delimiters: [
+            {left: "$$", right: "$$", display: true},
+            {left: "[%", right: "%]", display: true},
+            {left: "$", right: "$", display: false}
+        ]}
+        );
+    });
+    </script>
+
+
+<script>
+function wrap_img(fn) {
+    if (document.attachEvent ? document.readyState === "complete" : document.readyState !== "loading") {
+        var elements = document.querySelectorAll(".post img");
+        Array.prototype.forEach.call(elements, function(el, i) {
+            if (el.getAttribute("title") && (el.className != "emoji")) {
+                const caption = document.createElement('figcaption');
+                var node = document.createTextNode(el.getAttribute("title"));
+                caption.appendChild(node);
+                const wrapper = document.createElement('figure');
+                wrapper.className = 'image';
+                el.parentNode.insertBefore(wrapper, el);
+                el.parentNode.removeChild(el);
+                wrapper.appendChild(el);
+                wrapper.appendChild(caption);
+            }
+        });
+    } else { document.addEventListener('DOMContentLoaded', fn); }
+}
+window.onload = wrap_img;
+</script>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function(){
+    // add link icon to anchor tags
+    var elem = document.querySelectorAll(".anchor-link")
+    elem.forEach(e => (e.innerHTML = '<i class="fas fa-link fa-xs"></i>'));
+    });
+</script>
+</head>
+<body><header class="site-header">
+
+  <div class="wrapper"><a class="site-title" rel="author" href="/blog/">F5</a><nav class="site-nav">
+        <input type="checkbox" id="nav-trigger" class="nav-trigger" />
+        <label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewBox="0 0 18 15" width="18px" height="15px">
+              <path d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.032C17.335,0,18,0.665,18,1.484L18,1.484z M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.032C17.335,6.031,18,6.696,18,7.516L18,7.516z M18,13.516C18,14.335,17.335,15,16.516,15H1.484 C0.665,15,0,14.335,0,13.516l0,0c0-0.82,0.665-1.483,1.484-1.483h15.032C17.335,12.031,18,12.695,18,13.516L18,13.516z"/>
+            </svg>
+          </span>
+        </label>
+
+        <div class="trigger"><a class="page-link" href="/blog/about/">About Me</a><a class="page-link" href="/blog/search/">Search</a><a class="page-link" href="/blog/categories/">Tags</a></div>
+      </nav></div>
+</header>
+<main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title p-name" itemprop="name headline">Chatbot using Microsoft Bot Framework - Part 2</h1><p class="page-description">A guide on how to build chat bots using Microsoft Bot Framework - Part 2</p><p class="post-meta post-meta-title"><time class="dt-published" datetime="2016-08-23T00:00:00-05:00" itemprop="datePublished">
+        Aug 23, 2016
+      </time>
+       • <span class="read-time" title="Estimated read time">
+    
+    
+      8 min read
+    
+</span></p>
+
+    
+      <p class="category-tags"><i class="fas fa-tags category-tags-icon"></i></i> 
+      
+        <a class="category-tags-link" href="/blog/categories/#Microsoft Bot Framework">Microsoft Bot Framework</a>
+        &nbsp;
+      
+        <a class="category-tags-link" href="/blog/categories/#LUIS">LUIS</a>
+        &nbsp;
+      
+        <a class="category-tags-link" href="/blog/categories/#Bots">Bots</a>
+        &nbsp;
+      
+        <a class="category-tags-link" href="/blog/categories/#Chat Bots">Chat Bots</a>
+        &nbsp;
+      
+        <a class="category-tags-link" href="/blog/categories/#Conversational Apps">Conversational Apps</a>
+        
+      
+      </p>
+    
+
+    </header>
+
+  <div class="post-content e-content" itemprop="articleBody">
+    <p>This is second post in the series of building a chat bot. If you haven’t gone through Part 1, you can find it <a href="https://ankitbko.github.io/2016/08/ChatBot-using-Microsoft-Bot-Framework-Part-1/">here</a>. It sets the context and talks about basics of Microsoft Bot Framework. The source code for bot can be found at my <a href="https://github.com/ankitbko/MeBot">github repo</a>.</p>
+
+<p>In this article, we will add first feature to our bot which is to answer question about me. The bot should answer questions such as “Who is Ankit”, “Who is author of this blog”, etc. As we saw previously, the bot in itself is dumb. To understand such questions we will need to take help from LUIS.</p>
+
+<h3 id="language-understanding-and-intelligence-service">Language Understanding and Intelligence Service</h3>
+
+<p><a href="https://www.luis.ai/">LUIS</a> Natural Language Processing Service is one of the cognitive services by Microsoft. In general, there are two things LUIS can possibly do -</p>
+
+<ul>
+  <li>
+    <p><strong>Intent Recognition</strong>: Whenever a user sends a message to our bot, he has an intent. For instance if user types “I want to order a pizza” his intent is “OrderPizza”, “I want to rent a car” intent is “RentCar” etc. Given a sentence, LUIS will to classify the sentence into one of the trained intents and give us probability score for each intent. The way we achieve this is by defining the intents and training the LUIS with some sentences (called utterances) by manually classifying them. This type of learning is called Supervised Learning and the algorithm which LUIS uses to classify is Logistic Regression.</p>
+  </li>
+  <li>
+    <p><strong>Entity Detection</strong>: In a sentence, we might be interested in a word or group of words. For example in “I want to order a pepperoni pizza” text “pepperoni” is the word we are interested in. Another example, “Rent a car from London airport tomorrow” - “London airport” and “Tomorrow” are the words which are contextually important to us. LUIS can help us by recognizing these words (called entities) from the sentence. LUIS uses Conditional Random Fields (CRF) algorithm to detect entities, which falls under Supervised Learning. Therefore this is again achieved by training LUIS with some words manually before it can start detecting.</p>
+  </li>
+</ul>
+
+<p>A great tutorial explaining these in detail is present at <a href="https://www.luis.ai/Help">Luis Help</a>. It is a short tutorial which I recommend you go through it later for better understanding.</p>
+
+<h4 id="create-a-luis-app">Create a LUIS App</h4>
+
+<p>Go over to <a href="https://www.luis.ai">luis.ai</a> and create a new App. By default, we get one intent called <code class="highlighter-rouge">None</code>. Any utterances which we feel does not classify into any other intent in our app should be trained under None. Training <code class="highlighter-rouge">None</code> is important, I have seen many people not training it sufficiently.</p>
+
+<h4 id="training-luis">Training Luis</h4>
+
+<p>Let us create a new intent named <code class="highlighter-rouge">AboutMe</code>. While creating intent we have to enter an example sentence that would be classified to it. Enter “Who is Ankit” and created the intent. Click on Submit to classify the sentence to the intent. We can add more utterances by entering it into input box and classifying it to the intent as shown below. Add some utterances for <code class="highlighter-rouge">None</code> intent too.</p>
+
+<p><img src="/blog/assets/images/posts/mebot-2/Intent.png" alt="Intent" /></p>
+
+<p>Train the LUIS by clicking on “Train” button on bottom left. Next, publish the app so that it is available via HTTP. We can test the app and see what result LUIS returns. LUIS will classify the query into each intent and return us probability score for each.</p>
+
+<p><img src="/blog/assets/images/posts/mebot-2/luisresult.png" alt="Luis Result" /></p>
+
+<p>I have exported the LUIS app and added the JSON to the solution.</p>
+
+<hr />
+
+<h3 id="luisdialog">LuisDialog</h3>
+
+<p>Once we have created the LUIS app, next step is to integrate it with our bot. Fortunately Bot Builder SDK provides us an easy way to integrate with LUIS. Enter <code class="highlighter-rouge">LuisDialog</code>. It derives from <code class="highlighter-rouge">IDialog</code> and does the low level plumbing work of interfacing with LUIS and deserializing the result back to <code class="highlighter-rouge">LuisResult</code>. Let’s go ahead and create a new class called <code class="highlighter-rouge">MeBotLuisDialog</code> and derive it from <code class="highlighter-rouge">LuisDialog</code>. Next we add the following method to the class -</p>
+
+<div class="language-csharp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="p">[</span><span class="nf">LuisIntent</span><span class="p">(</span><span class="s">"None"</span><span class="p">)]</span>
+<span class="k">public</span> <span class="k">async</span> <span class="n">Task</span> <span class="nf">None</span><span class="p">(</span><span class="n">IDialogContext</span> <span class="n">context</span><span class="p">,</span> <span class="n">LuisResult</span> <span class="n">result</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="k">await</span> <span class="n">context</span><span class="p">.</span><span class="nf">PostAsync</span><span class="p">(</span><span class="s">"I'm sorry. I didn't understand you."</span><span class="p">);</span>
+    <span class="n">context</span><span class="p">.</span><span class="nf">Wait</span><span class="p">(</span><span class="n">MessageReceived</span><span class="p">);</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<p>Let me explain each line in above -</p>
+
+<ul>
+  <li>
+    <p><code class="highlighter-rouge">[LuisIntent("None")]</code>: Apart from calling LUIS API, <code class="highlighter-rouge">LuisDialog</code> also takes the result returned by LUIS, calculates the best intent based on probability score and calls the corresponding method defined in our dialog decorated with <code class="highlighter-rouge">LuisIntent</code> attribute matching the intent name passed as argument with the best intent detected. So, if LUIS classifies a sentence and scores it highest to “None” intent, our above method will get called automatically.</p>
+  </li>
+  <li>
+    <p><code class="highlighter-rouge">public async Task None(IDialogContext context, LuisResult result)</code>: Our method accepts two parameters, first is of type <code class="highlighter-rouge">IDialogContext</code> which as discussed before contains the stack of active dialog. It also has helper methods to send reply back to the user which we do in the next line. The second parameter is the result returned by the LUIS which is deserialized as <code class="highlighter-rouge">LuisResult</code>.</p>
+  </li>
+  <li>
+    <p><code class="highlighter-rouge">await context.PostAsync("I'm sorry. I didn't understand you.")</code>: We use the the Dialog Context to send a reply back to the user. Since this method is called when our bot did not understand the user’s intent, we return back a friendly response. Later we will modify it to return more detailed response.</p>
+  </li>
+  <li>
+    <p><code class="highlighter-rouge">context.Wait(MessageReceived)</code>: This is important. Before exiting from dialog, we must mention which method will be called when the next message arrives. If you forget it, you will get a very ambiguous runtime error something in the line of “need ‘Wait’ have ‘Done’”. We again use dialog context to specify it. <code class="highlighter-rouge">MessageReceived</code> method is defined in <code class="highlighter-rouge">LuisDialog</code> class and is the same method which calls the LUIS endpoint, calculates the best intent from the result and calls the relevant method for the intent.</p>
+  </li>
+</ul>
+
+<p>So in short, we reply back to user saying that we didn’t understand and specify that next message should also be sent to the LUIS to understand the user intent.
+Let us add method to handle “AboutMe” intent.</p>
+
+<div class="language-csharp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="p">[</span><span class="nf">LuisIntent</span><span class="p">(</span><span class="s">"AboutMe"</span><span class="p">)]</span>
+<span class="k">public</span> <span class="k">async</span> <span class="n">Task</span> <span class="nf">AboutMe</span><span class="p">(</span><span class="n">IDialogContext</span> <span class="n">context</span><span class="p">,</span> <span class="n">LuisResult</span> <span class="n">result</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="k">await</span> <span class="n">context</span><span class="p">.</span><span class="nf">PostAsync</span><span class="p">(</span><span class="s">@"Ankit is a Software Engineer currently working in Microsoft Center of Excellence team at Mindtree. He started his professional career in 2013 after completing his graduation as Bachelor in Computer Science."</span><span class="p">);</span>
+    <span class="k">await</span> <span class="n">context</span><span class="p">.</span><span class="nf">PostAsync</span><span class="p">(</span><span class="s">@"He is a technology enthusiast and loves to dig in emerging technologies. Most of his working hours are spent on creating architecture, evaluating upcoming products and developing frameworks."</span><span class="p">);</span>
+    <span class="n">context</span><span class="p">.</span><span class="nf">Wait</span><span class="p">(</span><span class="n">MessageReceived</span><span class="p">);</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<p>This is also similar to the “None” intent handler. Instead of sending only one response, I send two since the sentences are quite big. The response is quire simple but let us keep it this way. Decorate the <code class="highlighter-rouge">MeBotLuisDialog</code> class with <code class="highlighter-rouge">[LuisModel("modelid", "subskey")]</code> with correct LUIS ModelId and Subscription Key. You can get the keys from published URL of your LUIS app.
+There is just one more place that we need to change before we can test our bot that is in <code class="highlighter-rouge">MessageController</code>. Replace the entire <code class="highlighter-rouge">If</code> section of the method with the one below -</p>
+
+<div class="language-csharp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">if</span> <span class="p">(</span><span class="n">activity</span><span class="p">.</span><span class="n">Type</span> <span class="p">==</span> <span class="n">ActivityTypes</span><span class="p">.</span><span class="n">Message</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="k">await</span> <span class="n">Conversation</span><span class="p">.</span><span class="nf">SendAsync</span><span class="p">(</span><span class="n">activity</span><span class="p">,</span> <span class="p">()</span> <span class="p">=&gt;</span> <span class="k">new</span> <span class="nf">MeBotLuisDialog</span><span class="p">());</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<p>Done. Press F5 to run the bot. Open the emulator and send a text to check if the bot is replying properly.</p>
+
+<p><img src="/blog/assets/images/posts/mebot-2/aboutme.png" alt="About me" /></p>
+
+<p>One last feature to add. When a user add/open our bot for the first time, it is good practice to show a welcome text having information about what our bot can do and how to interact with it. Let us add a small help text and send it to the user when he first interacts with our bot. The place to do it is in <code class="highlighter-rouge">ActivityTypes.ConversationUpdate</code> block in <code class="highlighter-rouge">MessageController</code>. Microsoft Bot Framework supports Markdown, which we can utilize to give a richer experience to our user. I have added the relevant welcome text as below.</p>
+
+<div class="language-csharp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">else</span> <span class="k">if</span> <span class="p">(</span><span class="n">message</span><span class="p">.</span><span class="n">Type</span> <span class="p">==</span> <span class="n">ActivityTypes</span><span class="p">.</span><span class="n">ConversationUpdate</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="c1">// Handle conversation state changes, like members being added and removed</span>
+    <span class="c1">// Use Activity.MembersAdded and Activity.MembersRemoved and Activity.Action for info</span>
+    <span class="c1">// Not available in all channels</span>
+    <span class="kt">string</span> <span class="n">replyMessage</span> <span class="p">=</span> <span class="kt">string</span><span class="p">.</span><span class="n">Empty</span><span class="p">;</span>
+    <span class="n">replyMessage</span> <span class="p">+=</span> <span class="s">$"Hi there\n\n"</span><span class="p">;</span>
+    <span class="n">replyMessage</span> <span class="p">+=</span> <span class="s">$"I am MeBot. Designed to answer questions about this blog.  \n"</span><span class="p">;</span>
+    <span class="n">replyMessage</span> <span class="p">+=</span> <span class="s">$"Currently I have following features  \n"</span><span class="p">;</span>
+    <span class="n">replyMessage</span> <span class="p">+=</span> <span class="s">$"* Ask question about the author of this blog: Try 'Who is Ankit'\n\n"</span><span class="p">;</span>
+    <span class="n">replyMessage</span> <span class="p">+=</span> <span class="s">$"I will get more intelligent in future."</span><span class="p">;</span>
+    <span class="k">return</span> <span class="n">message</span><span class="p">.</span><span class="nf">CreateReply</span><span class="p">(</span><span class="n">replyMessage</span><span class="p">);</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<h4 id="registering-the-bot">Registering the bot</h4>
+
+<p>Before registering, we need to publish our bot and make it accessible from internet over HTTPS. Once done, head over to bot <a href="https://dev.botframework.com/bots/new">registration portal</a>. An excellent article on how to register the bot is <a href="https://docs.botframework.com/en-us/csharp/builder/sdkreference/gettingstarted.html#registering">here</a>. Once registered, update the <code class="highlighter-rouge">web.config</code> with correct id and secret and publish the bot again.</p>
+
+<p>Registering the bot will auto-configure it with skype. But let us go a step further and configure the Web Chat Channel. Configuring web chat gives us an iframe which we can include in our web site. I have added the iframe to my blog and the bot appears at the bottom right corner. This is so cool.</p>
+
+<p>I have tagged the code till this point as part2 in my <a href="https://github.com/ankitbko/MeBot/tree/part2">repo</a>. In next post we will add more features to our bot.
+Meanwhile if you have any questions or feedbacks, post a comment below.</p>
+
+  </div><!-- from https://github.com/utterance/utterances -->
+<script src="https://utteranc.es/client.js"
+        repo="ankitbko/blog"
+        issue-term="title"
+        label="blogpost-comment"
+        theme="github-light"
+        crossorigin="anonymous"
+        async>
+</script><a class="u-url" href="/blog/2016/08/ChatBot-using-Microsoft-Bot-Framework-Part-2/" hidden></a>
+</article>
+      </div>
+    </main><footer class="site-footer h-card">
+  <data class="u-url" href="/blog/"></data>
+
+  <div class="wrapper">
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col">
+        <p class="feed-subscribe">
+          <a href="/blog/feed.xml">
+            <svg class="svg-icon orange">
+              <use xlink:href="/blog/assets/minima-social-icons.svg#rss"></use>
+            </svg><span>Subscribe</span>
+          </a>
+        </p>
+        <ul class="contact-list">
+          <li class="p-name">Ankit Sinha</li>
+          
+        </ul>
+      </div>
+      <div class="footer-col">
+        <p>A technology blog focusing on random stuff</p>
+      </div>
+    </div>
+
+    <div class="social-links"><ul class="social-media-list"><li><a rel="me" href="https://github.com/ankitbko" title="ankitbko"><svg class="svg-icon grey"><use xlink:href="/blog/assets/minima-social-icons.svg#github"></use></svg></a></li><li><a rel="me" href="https://twitter.com/ankitbko" title="ankitbko"><svg class="svg-icon grey"><use xlink:href="/blog/assets/minima-social-icons.svg#twitter"></use></svg></a></li></ul>
+</div>
+
+  </div>
+
+</footer>
+</body>
+
+</html>

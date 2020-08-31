@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="twitter:card" content="summary" /><!-- Begin Jekyll SEO tag v2.6.1 -->
+<title>Chatbot using Microsoft Bot Framework - Part 1 | F5</title>
+<meta name="generator" content="Jekyll v4.0.0" />
+<meta property="og:title" content="Chatbot using Microsoft Bot Framework - Part 1" />
+<meta name="author" content="Ankit Sinha" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="A guide on how to build chat bots using Microsoft Bot Framework - Part 1" />
+<meta property="og:description" content="A guide on how to build chat bots using Microsoft Bot Framework - Part 1" />
+<link rel="canonical" href="https://ankitbko.github.io/blog/2016/08/ChatBot-using-Microsoft-Bot-Framework-Part-1/" />
+<meta property="og:url" content="https://ankitbko.github.io/blog/2016/08/ChatBot-using-Microsoft-Bot-Framework-Part-1/" />
+<meta property="og:site_name" content="F5" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2016-08-22T00:00:00-05:00" />
+<script type="application/ld+json">
+{"headline":"Chatbot using Microsoft Bot Framework - Part 1","dateModified":"2016-08-22T00:00:00-05:00","datePublished":"2016-08-22T00:00:00-05:00","author":{"@type":"Person","name":"Ankit Sinha"},"description":"A guide on how to build chat bots using Microsoft Bot Framework - Part 1","mainEntityOfPage":{"@type":"WebPage","@id":"https://ankitbko.github.io/blog/2016/08/ChatBot-using-Microsoft-Bot-Framework-Part-1/"},"@type":"BlogPosting","url":"https://ankitbko.github.io/blog/2016/08/ChatBot-using-Microsoft-Bot-Framework-Part-1/","@context":"https://schema.org"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="stylesheet" href="/blog/assets/css/style.css"><link type="application/atom+xml" rel="alternate" href="https://ankitbko.github.io/blog/feed.xml" title="F5" /><!-- the google_analytics_id gets auto inserted from the config file -->
+
+
+
+<script>(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)})(window,document,'script','//www.google-analytics.com/analytics.js','ga');ga('create','UA-75679348-1','auto');ga('require','displayfeatures');ga('send','pageview');</script>
+
+<link rel="shortcut icon" type="image/x-icon" href="/blog/images/favicon.ico"><!-- Begin Jekyll SEO tag v2.6.1 -->
+<title>Chatbot using Microsoft Bot Framework - Part 1 | F5</title>
+<meta name="generator" content="Jekyll v4.0.0" />
+<meta property="og:title" content="Chatbot using Microsoft Bot Framework - Part 1" />
+<meta name="author" content="Ankit Sinha" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="A guide on how to build chat bots using Microsoft Bot Framework - Part 1" />
+<meta property="og:description" content="A guide on how to build chat bots using Microsoft Bot Framework - Part 1" />
+<link rel="canonical" href="https://ankitbko.github.io/blog/2016/08/ChatBot-using-Microsoft-Bot-Framework-Part-1/" />
+<meta property="og:url" content="https://ankitbko.github.io/blog/2016/08/ChatBot-using-Microsoft-Bot-Framework-Part-1/" />
+<meta property="og:site_name" content="F5" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2016-08-22T00:00:00-05:00" />
+<script type="application/ld+json">
+{"headline":"Chatbot using Microsoft Bot Framework - Part 1","dateModified":"2016-08-22T00:00:00-05:00","datePublished":"2016-08-22T00:00:00-05:00","author":{"@type":"Person","name":"Ankit Sinha"},"description":"A guide on how to build chat bots using Microsoft Bot Framework - Part 1","mainEntityOfPage":{"@type":"WebPage","@id":"https://ankitbko.github.io/blog/2016/08/ChatBot-using-Microsoft-Bot-Framework-Part-1/"},"@type":"BlogPosting","url":"https://ankitbko.github.io/blog/2016/08/ChatBot-using-Microsoft-Bot-Framework-Part-1/","@context":"https://schema.org"}</script>
+<!-- End Jekyll SEO tag -->
+
+<link href="https://unpkg.com/@primer/css/dist/primer.css" rel="stylesheet" />
+<link rel="stylesheet" href="//use.fontawesome.com/releases/v5.0.7/css/all.css"><link type="application/atom+xml" rel="alternate" href="https://ankitbko.github.io/blog/feed.xml" title="F5" /><!-- the google_analytics_id gets auto inserted from the config file -->
+
+
+
+<script>(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)})(window,document,'script','//www.google-analytics.com/analytics.js','ga');ga('create','UA-75679348-1','auto');ga('require','displayfeatures');ga('send','pageview');</script>
+
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.11.1/dist/katex.min.css" integrity="sha384-zB1R0rpPzHqg7Kpt0Aljp8JPLqbXI3bhnPWROx27a9N0Ll6ZP/+DiW/UqRcLbRjq" crossorigin="anonymous">
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML"> </script>
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.11.1/dist/katex.min.js" integrity="sha384-y23I5Q6l+B6vatafAwxRu/0oK/79VlbSz7Q9aiSZUvyWYIYsd+qj+o24G5ZU2zJz" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.11.1/dist/contrib/auto-render.min.js" integrity="sha384-kWPLUVMOks5AQFrykwIup5lo0m3iMkkHrD0uJ4H5cjeGihAutqP0yW0J6dpFiVkI" crossorigin="anonymous"></script>
+    <script>
+    document.addEventListener("DOMContentLoaded", function() {
+        renderMathInElement( document.body, {
+        delimiters: [
+            {left: "$$", right: "$$", display: true},
+            {left: "[%", right: "%]", display: true},
+            {left: "$", right: "$", display: false}
+        ]}
+        );
+    });
+    </script>
+
+
+<script>
+function wrap_img(fn) {
+    if (document.attachEvent ? document.readyState === "complete" : document.readyState !== "loading") {
+        var elements = document.querySelectorAll(".post img");
+        Array.prototype.forEach.call(elements, function(el, i) {
+            if (el.getAttribute("title") && (el.className != "emoji")) {
+                const caption = document.createElement('figcaption');
+                var node = document.createTextNode(el.getAttribute("title"));
+                caption.appendChild(node);
+                const wrapper = document.createElement('figure');
+                wrapper.className = 'image';
+                el.parentNode.insertBefore(wrapper, el);
+                el.parentNode.removeChild(el);
+                wrapper.appendChild(el);
+                wrapper.appendChild(caption);
+            }
+        });
+    } else { document.addEventListener('DOMContentLoaded', fn); }
+}
+window.onload = wrap_img;
+</script>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function(){
+    // add link icon to anchor tags
+    var elem = document.querySelectorAll(".anchor-link")
+    elem.forEach(e => (e.innerHTML = '<i class="fas fa-link fa-xs"></i>'));
+    });
+</script>
+</head>
+<body><header class="site-header">
+
+  <div class="wrapper"><a class="site-title" rel="author" href="/blog/">F5</a><nav class="site-nav">
+        <input type="checkbox" id="nav-trigger" class="nav-trigger" />
+        <label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewBox="0 0 18 15" width="18px" height="15px">
+              <path d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.032C17.335,0,18,0.665,18,1.484L18,1.484z M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.032C17.335,6.031,18,6.696,18,7.516L18,7.516z M18,13.516C18,14.335,17.335,15,16.516,15H1.484 C0.665,15,0,14.335,0,13.516l0,0c0-0.82,0.665-1.483,1.484-1.483h15.032C17.335,12.031,18,12.695,18,13.516L18,13.516z"/>
+            </svg>
+          </span>
+        </label>
+
+        <div class="trigger"><a class="page-link" href="/blog/about/">About Me</a><a class="page-link" href="/blog/search/">Search</a><a class="page-link" href="/blog/categories/">Tags</a></div>
+      </nav></div>
+</header>
+<main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title p-name" itemprop="name headline">Chatbot using Microsoft Bot Framework - Part 1</h1><p class="page-description">A guide on how to build chat bots using Microsoft Bot Framework - Part 1</p><p class="post-meta post-meta-title"><time class="dt-published" datetime="2016-08-22T00:00:00-05:00" itemprop="datePublished">
+        Aug 22, 2016
+      </time>
+       • <span class="read-time" title="Estimated read time">
+    
+    
+      7 min read
+    
+</span></p>
+
+    
+      <p class="category-tags"><i class="fas fa-tags category-tags-icon"></i></i> 
+      
+        <a class="category-tags-link" href="/blog/categories/#Microsoft Bot Framework">Microsoft Bot Framework</a>
+        &nbsp;
+      
+        <a class="category-tags-link" href="/blog/categories/#LUIS">LUIS</a>
+        &nbsp;
+      
+        <a class="category-tags-link" href="/blog/categories/#Bots">Bots</a>
+        &nbsp;
+      
+        <a class="category-tags-link" href="/blog/categories/#Chat Bots">Chat Bots</a>
+        &nbsp;
+      
+        <a class="category-tags-link" href="/blog/categories/#Conversational Apps">Conversational Apps</a>
+        
+      
+      </p>
+    
+
+    </header>
+
+  <div class="post-content e-content" itemprop="articleBody">
+    <p>There is a lot of buzz in market regarding Chatbots. Microsoft, in Build 2016, showcased their own bot framework and released it on <a href="https://github.com/Microsoft/BotBuilder">Github</a>. So finally we had an open source and free platform to create our own bots.</p>
+
+<p>In this and next few articles that will follow, I’ll talk about Microsoft Bot Framework and build a bot from scratch. Instead of explaining each and every feature of Bot Framework with code snippets, which would lead to a boring post, we will embark into a journey of building a silly bot to a bot that does something useful. On the way, I’ll explain some of the features of Bot SDK, and use it add more capabilities to the bot. Also I would link a lot to the official <a href="https://docs.botframework.com">documentation</a> wherever a deeper understanding is required. Documentation is pretty neat and it makes no sense to explain the detail here also, why to reinvent the wheel? However this is a new learning for me too, so if you find a better way than mine to do the same thing then comment below.</p>
+
+<h3 id="microsoft-bot-framework">Microsoft Bot Framework</h3>
+
+<p>Microsoft Bot Framework consists of 3 parts -</p>
+
+<ul>
+  <li>Bot Builder SDK: Bot Builder SDK is open source and provides us with features to model our conversation, state management, rich attachments etc. SDK is available in C# and Nodejs.</li>
+  <li>Bot Connector: Bot connector acts as an adapter between our bot and numerous channels that it supports. It also has other features such as state management, storage service, message routing etc.</li>
+  <li>Bot Directory: Bot Directory is a public directory for published bots. Bots are reviewed before being listed and publicly available on Bot Directory.</li>
+</ul>
+
+<p>Excellent overview of individual pieces are available at their official <a href="https://docs.botframework.com">documentation</a>.</p>
+
+<p><em>Note: While writing this article, Microsoft Bot Framework is in Preview.</em></p>
+
+<h4 id="bot-framework-basics">Bot Framework Basics</h4>
+
+<p>Before we continue, let me explain basics of how a bot works. When we will create a new project using the bot template, we will see the bot is nothing but a simple Web Api Project. In fact, that is all the bot is, a dumb Web API service. This Web API will be hosted and will be registered with Microsoft Bot Connector. The Bot Connector acts as an adapter between our web service and different Channels. Channels such as skype, facebook messenger, etc are platforms which our user will use to chat with the bots.</p>
+
+<p>I have put up a small diagram below showing how each component interacts. In short, a user uses a channel to send message to our bot. The message is routed through the Microsoft Bot Connector, which sends a POST request to our Bot Service. The POST request’s body will contain the original text typed by the user along with other meta-data which we will see later. Upon receiving the request, our bot can take any action such as querying database or replying back to the user. In itself, our bot is pretty dumb. The intelligence comes when we integrate with one of the Cognitive Services, in this case <a href="https://www.luis.ai">Language Understanding and Intelligence Service(LUIS)</a>. LUIS, Natural Language Processing as a Service is one of the Cognitive Services provided by Microsoft. We will see later how LUIS works. Going back to diagram, upon receiving the message from user, our bot may send the message text to LUIS to <strong>understand</strong> what user is saying and then reply back appropriately.</p>
+
+<p><img src="/blog/assets/images/posts/mebot-1/BotArch.png" alt="Bot Architecture" /></p>
+
+<p>We will get into more details later. For now, let’s get started</p>
+
+<h3 id="what-are-we-building">What are we building?</h3>
+<p>After a lot of thinking, I could just come up with a lousy idea of a bot that would answer questions about myself and this blog. So the bot will -</p>
+
+<ul>
+  <li>Answer questions about me. Essentially replacing About Me section.</li>
+  <li>Give results of recent posts I have written.</li>
+  <li>Allow users to send feedback to me.</li>
+</ul>
+
+<p>As you will see later, I am <em>very</em> bad at naming. So in lack of any good name, let’s call this bot MeBot (duh!). Source code of the bot can be found <a href="https://github.com/ankitbko/MeBot">here</a>. I will use C# to develop the bot as I am more familiar with it.</p>
+
+<h4 id="setup-project">Setup Project</h4>
+
+<p>We will add features incrementally to the bot and over multiple blog posts. But first step is to create a project using Bot Application Template. You can download the Visual Studio Template <a href="https://docs.botframework.com/en-us/downloads">here</a>. Next, update the nuget package of <code class="highlighter-rouge">Microsoft.Bot.Builder</code> to latest version. Bot Template is not updated as frequently as the SDK, so always check and update the SDK to newer version when creating a new project from the template. While you are at it, also download and install Bot Framework Emulator from the above link. The emulator will help us to test our bot locally while development.</p>
+
+<p><img src="/blog/assets/images/posts/mebot-1/Template.png" alt="New Project" /></p>
+
+<h5 id="bot-builder-sdk-basics">Bot Builder SDK Basics</h5>
+
+<p>There are three critical pieces in SDK that we need to understand before proceeding.</p>
+
+<ul>
+  <li>
+    <p><code class="highlighter-rouge">Activity</code>: Activity is the JSON data (POST Body) that we send to and receive from the Bot Connector. You can view <code class="highlighter-rouge">Activity.cs</code> class to see all the data which are reviewed and sent. The one which interests us most is <code class="highlighter-rouge">Text</code> property which will contain the message which user typed. You can get to know more about <code class="highlighter-rouge">Activity</code> in official <a href="https://docs.botframework.com/en-us/csharp/builder/sdkreference/connector.html">documentation</a></p>
+  </li>
+  <li>
+    <p><code class="highlighter-rouge">Dialog</code>: Dialogs are building blocks of the bot. Dialogs model a conversation between user and the bot. It is a serializable class which has the state and the methods through which the interactions are managed. Dialogs are created by implementing <code class="highlighter-rouge">IDialog</code> interface. Dialogs can also be composed with other dialogs, making it reusable.</p>
+  </li>
+  <li>
+    <p><code class="highlighter-rouge">Dialog Context</code>: Dialog Context maintains a stack of active dialogs. When the bot replies, it serializes the Dialog stack and sends it to the Bot Connector along with the <code class="highlighter-rouge">Activity</code> in the POST Body. The Bot Connector will store the stack internally. When the user sends another message, the Bot Connector will attach the Dialog Stack for the particular conversation and send it to our bot. The Bot Builder, upon receiving the Dialog stack, deserializes it, pops the top most dialog and executes the next method.</p>
+  </li>
+</ul>
+
+<p>You can read more details about Dialogs <a href="https://docs.botframework.com/en-us/csharp/builder/sdkreference/dialogs.html">here</a>. If any of it didn’t make sense don’t worry, we will see them in action soon.</p>
+
+<h4 id="back-to-our-project">Back to our project</h4>
+
+<p>Open the <code class="highlighter-rouge">MessageController.cs</code> and you will find single POST method which accepts <code class="highlighter-rouge">Activity</code> object. The first line <code class="highlighter-rouge">if (activity.Type == ActivityTypes.Message)</code> checks if the <code class="highlighter-rouge">Activity</code> is of type <code class="highlighter-rouge">Message</code>. <code class="highlighter-rouge">Message</code> ActivityType represents communication between a Bot &lt;–&gt; User. There are other ActivityType which are present in <code class="highlighter-rouge">HandleSystemMessage(Activity message)</code> method. The comments there are self explanatory and more information on ActivityTypes are mentioned in the <a href="https://docs.botframework.com/en-us/csharp/builder/sdkreference/activities.html">documentation</a>.</p>
+
+<p>The <code class="highlighter-rouge">If</code> block handles the case when user has sent a text message to the bot. The bot will get the incoming text, count the length of the message, reply it back to the user. Note how the reply is created and sent to the Bot Connector. The reply is sent as a separate HTTP request rather than inline to current one. The <code class="highlighter-rouge">Else</code> block handles special ActivityType which we will ignore for the moment.</p>
+
+<h4 id="run-the-project">Run the project</h4>
+
+<p>The default template creates a simple bot which echoes back number of character user typed. Before proceeding let us check if everything is working. Press F5 and run the bot in IIS Express. Open the Bot Emulator and change the Bot Url to hosted one and send any message. If everything is working, the bot should reply back the number of characters you entered which we see on the left window. On the right we see the JSON request and response for the message. This is what gets deserialized into <code class="highlighter-rouge">Activity</code> object.</p>
+
+<p><img src="/blog/assets/images/posts/mebot-1/Emulator.png" alt="Emulator" /></p>
+
+<p>Everything works fine. Good.</p>
+
+<p>I will wrap up here. In the next post we will implement first feature i.e. answering questions about who I am. To do this we will need to understand how LUIS works and integrate it with our bot.</p>
+
+<p>Meanwhile if you have any questions, post it in the comments.</p>
+
+  </div><!-- from https://github.com/utterance/utterances -->
+<script src="https://utteranc.es/client.js"
+        repo="ankitbko/blog"
+        issue-term="title"
+        label="blogpost-comment"
+        theme="github-light"
+        crossorigin="anonymous"
+        async>
+</script><a class="u-url" href="/blog/2016/08/ChatBot-using-Microsoft-Bot-Framework-Part-1/" hidden></a>
+</article>
+      </div>
+    </main><footer class="site-footer h-card">
+  <data class="u-url" href="/blog/"></data>
+
+  <div class="wrapper">
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col">
+        <p class="feed-subscribe">
+          <a href="/blog/feed.xml">
+            <svg class="svg-icon orange">
+              <use xlink:href="/blog/assets/minima-social-icons.svg#rss"></use>
+            </svg><span>Subscribe</span>
+          </a>
+        </p>
+        <ul class="contact-list">
+          <li class="p-name">Ankit Sinha</li>
+          
+        </ul>
+      </div>
+      <div class="footer-col">
+        <p>A technology blog focusing on random stuff</p>
+      </div>
+    </div>
+
+    <div class="social-links"><ul class="social-media-list"><li><a rel="me" href="https://github.com/ankitbko" title="ankitbko"><svg class="svg-icon grey"><use xlink:href="/blog/assets/minima-social-icons.svg#github"></use></svg></a></li><li><a rel="me" href="https://twitter.com/ankitbko" title="ankitbko"><svg class="svg-icon grey"><use xlink:href="/blog/assets/minima-social-icons.svg#twitter"></use></svg></a></li></ul>
+</div>
+
+  </div>
+
+</footer>
+</body>
+
+</html>

@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="twitter:card" content="summary" /><!-- Begin Jekyll SEO tag v2.6.1 -->
+<title>Skype for Business bot using UCWA | F5</title>
+<meta name="generator" content="Jekyll v4.0.0" />
+<meta property="og:title" content="Skype for Business bot using UCWA" />
+<meta name="author" content="Ankit Sinha" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="Chatbot for Skype for business online using UCWA" />
+<meta property="og:description" content="Chatbot for Skype for business online using UCWA" />
+<link rel="canonical" href="https://ankitbko.github.io/blog/2017/02/Sykpe-For-Business-Bot-Using-UCWA/" />
+<meta property="og:url" content="https://ankitbko.github.io/blog/2017/02/Sykpe-For-Business-Bot-Using-UCWA/" />
+<meta property="og:site_name" content="F5" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2017-02-26T00:00:00-06:00" />
+<script type="application/ld+json">
+{"headline":"Skype for Business bot using UCWA","dateModified":"2017-02-26T00:00:00-06:00","datePublished":"2017-02-26T00:00:00-06:00","author":{"@type":"Person","name":"Ankit Sinha"},"description":"Chatbot for Skype for business online using UCWA","mainEntityOfPage":{"@type":"WebPage","@id":"https://ankitbko.github.io/blog/2017/02/Sykpe-For-Business-Bot-Using-UCWA/"},"@type":"BlogPosting","url":"https://ankitbko.github.io/blog/2017/02/Sykpe-For-Business-Bot-Using-UCWA/","@context":"https://schema.org"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="stylesheet" href="/blog/assets/css/style.css"><link type="application/atom+xml" rel="alternate" href="https://ankitbko.github.io/blog/feed.xml" title="F5" /><!-- the google_analytics_id gets auto inserted from the config file -->
+
+
+
+<script>(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)})(window,document,'script','//www.google-analytics.com/analytics.js','ga');ga('create','UA-75679348-1','auto');ga('require','displayfeatures');ga('send','pageview');</script>
+
+<link rel="shortcut icon" type="image/x-icon" href="/blog/images/favicon.ico"><!-- Begin Jekyll SEO tag v2.6.1 -->
+<title>Skype for Business bot using UCWA | F5</title>
+<meta name="generator" content="Jekyll v4.0.0" />
+<meta property="og:title" content="Skype for Business bot using UCWA" />
+<meta name="author" content="Ankit Sinha" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="Chatbot for Skype for business online using UCWA" />
+<meta property="og:description" content="Chatbot for Skype for business online using UCWA" />
+<link rel="canonical" href="https://ankitbko.github.io/blog/2017/02/Sykpe-For-Business-Bot-Using-UCWA/" />
+<meta property="og:url" content="https://ankitbko.github.io/blog/2017/02/Sykpe-For-Business-Bot-Using-UCWA/" />
+<meta property="og:site_name" content="F5" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2017-02-26T00:00:00-06:00" />
+<script type="application/ld+json">
+{"headline":"Skype for Business bot using UCWA","dateModified":"2017-02-26T00:00:00-06:00","datePublished":"2017-02-26T00:00:00-06:00","author":{"@type":"Person","name":"Ankit Sinha"},"description":"Chatbot for Skype for business online using UCWA","mainEntityOfPage":{"@type":"WebPage","@id":"https://ankitbko.github.io/blog/2017/02/Sykpe-For-Business-Bot-Using-UCWA/"},"@type":"BlogPosting","url":"https://ankitbko.github.io/blog/2017/02/Sykpe-For-Business-Bot-Using-UCWA/","@context":"https://schema.org"}</script>
+<!-- End Jekyll SEO tag -->
+
+<link href="https://unpkg.com/@primer/css/dist/primer.css" rel="stylesheet" />
+<link rel="stylesheet" href="//use.fontawesome.com/releases/v5.0.7/css/all.css"><link type="application/atom+xml" rel="alternate" href="https://ankitbko.github.io/blog/feed.xml" title="F5" /><!-- the google_analytics_id gets auto inserted from the config file -->
+
+
+
+<script>(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)})(window,document,'script','//www.google-analytics.com/analytics.js','ga');ga('create','UA-75679348-1','auto');ga('require','displayfeatures');ga('send','pageview');</script>
+
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.11.1/dist/katex.min.css" integrity="sha384-zB1R0rpPzHqg7Kpt0Aljp8JPLqbXI3bhnPWROx27a9N0Ll6ZP/+DiW/UqRcLbRjq" crossorigin="anonymous">
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML"> </script>
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.11.1/dist/katex.min.js" integrity="sha384-y23I5Q6l+B6vatafAwxRu/0oK/79VlbSz7Q9aiSZUvyWYIYsd+qj+o24G5ZU2zJz" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.11.1/dist/contrib/auto-render.min.js" integrity="sha384-kWPLUVMOks5AQFrykwIup5lo0m3iMkkHrD0uJ4H5cjeGihAutqP0yW0J6dpFiVkI" crossorigin="anonymous"></script>
+    <script>
+    document.addEventListener("DOMContentLoaded", function() {
+        renderMathInElement( document.body, {
+        delimiters: [
+            {left: "$$", right: "$$", display: true},
+            {left: "[%", right: "%]", display: true},
+            {left: "$", right: "$", display: false}
+        ]}
+        );
+    });
+    </script>
+
+
+<script>
+function wrap_img(fn) {
+    if (document.attachEvent ? document.readyState === "complete" : document.readyState !== "loading") {
+        var elements = document.querySelectorAll(".post img");
+        Array.prototype.forEach.call(elements, function(el, i) {
+            if (el.getAttribute("title") && (el.className != "emoji")) {
+                const caption = document.createElement('figcaption');
+                var node = document.createTextNode(el.getAttribute("title"));
+                caption.appendChild(node);
+                const wrapper = document.createElement('figure');
+                wrapper.className = 'image';
+                el.parentNode.insertBefore(wrapper, el);
+                el.parentNode.removeChild(el);
+                wrapper.appendChild(el);
+                wrapper.appendChild(caption);
+            }
+        });
+    } else { document.addEventListener('DOMContentLoaded', fn); }
+}
+window.onload = wrap_img;
+</script>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function(){
+    // add link icon to anchor tags
+    var elem = document.querySelectorAll(".anchor-link")
+    elem.forEach(e => (e.innerHTML = '<i class="fas fa-link fa-xs"></i>'));
+    });
+</script>
+</head>
+<body><header class="site-header">
+
+  <div class="wrapper"><a class="site-title" rel="author" href="/blog/">F5</a><nav class="site-nav">
+        <input type="checkbox" id="nav-trigger" class="nav-trigger" />
+        <label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewBox="0 0 18 15" width="18px" height="15px">
+              <path d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.032C17.335,0,18,0.665,18,1.484L18,1.484z M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.032C17.335,6.031,18,6.696,18,7.516L18,7.516z M18,13.516C18,14.335,17.335,15,16.516,15H1.484 C0.665,15,0,14.335,0,13.516l0,0c0-0.82,0.665-1.483,1.484-1.483h15.032C17.335,12.031,18,12.695,18,13.516L18,13.516z"/>
+            </svg>
+          </span>
+        </label>
+
+        <div class="trigger"><a class="page-link" href="/blog/about/">About Me</a><a class="page-link" href="/blog/search/">Search</a><a class="page-link" href="/blog/categories/">Tags</a></div>
+      </nav></div>
+</header>
+<main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title p-name" itemprop="name headline">Skype for Business bot using UCWA</h1><p class="page-description">Chatbot for Skype for business online using UCWA</p><p class="post-meta post-meta-title"><time class="dt-published" datetime="2017-02-26T00:00:00-06:00" itemprop="datePublished">
+        Feb 26, 2017
+      </time>
+       • <span class="read-time" title="Estimated read time">
+    
+    
+      7 min read
+    
+</span></p>
+
+    
+      <p class="category-tags"><i class="fas fa-tags category-tags-icon"></i></i> 
+      
+        <a class="category-tags-link" href="/blog/categories/#Microsoft Bot Framework">Microsoft Bot Framework</a>
+        &nbsp;
+      
+        <a class="category-tags-link" href="/blog/categories/#LUIS">LUIS</a>
+        &nbsp;
+      
+        <a class="category-tags-link" href="/blog/categories/#Bots">Bots</a>
+        &nbsp;
+      
+        <a class="category-tags-link" href="/blog/categories/#Chat Bots">Chat Bots</a>
+        &nbsp;
+      
+        <a class="category-tags-link" href="/blog/categories/#Conversational Apps">Conversational Apps</a>
+        &nbsp;
+      
+        <a class="category-tags-link" href="/blog/categories/#Skype For Business">Skype For Business</a>
+        &nbsp;
+      
+        <a class="category-tags-link" href="/blog/categories/#UCWA">UCWA</a>
+        
+      
+      </p>
+    
+
+    </header>
+
+  <div class="post-content e-content" itemprop="articleBody">
+    <p>I had recently written a post on how to create a <a href="/2017/01/BusyBot-Sykpe-For-Business-Bot/">Skype for Business chatbot</a>. In that I used Lync 2013 SDK to intercept messages and pass to bot. However I mentioned in my post that there is a better way to achieve the same by using <a href="https://msdn.microsoft.com/en-us/skype/ucwa/unifiedcommunicationswebapi2_0">Unified Communications Web API 2.0</a>(UCWA). Since then I had received a lot of request to write a post on how to do the same. Though I had the code available with me(thanks to Om Shrivastava, my colleague), I did not post it because it was is a very bad shape(you will see). But since there was a lot of demand for it and after discussing with my readers(thank you Dan Williams and Hitesh), I finally got down to do some cleaning up. You can find the source code <a href="https://github.com/ankitbko/ucwa-bot">here</a>. The source code is based on <a href="https://github.com/tamhinsf/ucwa-sfbo-console">Tam Huynh UCWA Sample</a>, a really well written sample which I then made a mess of.</p>
+
+<h3 id="what-is-ucwa-and-why-should-i-care">What is UCWA and why should I care?</h3>
+<p>From Microsoft’s own words:</p>
+
+<blockquote>
+  <p>Microsoft Unified Communications Web API 2.0 is a REST API that exposes Skype for Business Server 2015 instant messaging (IM) and presence capabilities.</p>
+</blockquote>
+
+<p>Ok, so it is set of APIs, but why can’t I just keep on using Lync 2013 SDK for my bot as I created <a href="/2017/01/BusyBot-Sykpe-For-Business-Bot/">previously</a>?.</p>
+
+<p>Well, using Lync 2013 SDK has one major demerit. It requires the bot to run on the system where Skype For Business(SFB)/Lync 2013 is installed and running. That means you are tied down to a machine which would also create problems with scaling. Plus you are dependent upon 4 years old SDK which is no more recommended by Microsoft.</p>
+
+<p>UCWA solves all these problems. Using UCWA, we now no longer need a SFB client running on the system. Bot can be deployed anywhere and scaled independently.</p>
+
+<p>UCWA has a lot of capabilities. However what interests us most is how to <a href="https://msdn.microsoft.com/en-us/skype/ucwa/sendanim">send messages</a> and <a href="https://msdn.microsoft.com/en-us/skype/ucwa/receiveanim">receive messages</a>. Each of these tasks require us to send series of HTTP requests in <em>order</em> to UCWA endpoints. I recommend you read through the above links to understand how it works.</p>
+
+<h3 id="getting-started">Getting Started</h3>
+<p>Before even delving into code, you need to set up a lot of things. When developing UCWA applications you need to target either <em>Skype For Business Online</em> or <em>Skype for Business Server(On-Premise)</em>. Both have different setup procedure. I recommend you to read through <a href="https://msdn.microsoft.com/en-us/skype/ucwa/developingapplicationswithucwa">MSDN documentation</a> to understand the differences. In this article and the accompanying code, I would only work with <em>Skype For Business Online</em>. This is primarily because I don’t have an on-premise installation.</p>
+
+<p>The pre-requisite to this is that you must have Office 365 subscription and access to Azure Active Directory to which O365 is linked. Also for setting up you would need to grant permission to our app in Azure Active Directory, which only AD admin can do. Also create two users in Active Directory, one which bot would sign in as and other to test sending message to bot.</p>
+
+<p>Once you have these things ready, the next step is to create an <em>application</em> in Azure Active Directory. I recommend you follow Tam Huynh’s excellent <a href="https://github.com/tamhinsf/ucwa-sfbo-console/blob/master/README.md">guide</a>.</p>
+
+<p>Once you have the app in azure AD properly setup, keep <code class="highlighter-rouge">TenantID</code>, app’s <code class="highlighter-rouge">ClientID</code> and app’s <code class="highlighter-rouge">RedirectURI</code> handy as we would need them in the code.</p>
+
+<h3 id="understanding-the-solution-structure">Understanding the solution structure</h3>
+
+<p>The code itself is just a <em>Console Application</em>. The solution contains 4 folders:</p>
+
+<ul>
+  <li>The <strong>Bot</strong> folder contains the <code class="highlighter-rouge">Dialog</code> class and an implementation of <code class="highlighter-rouge">IBotToUser</code>. All these classes are related to Bot Framework. I have used <code class="highlighter-rouge">EchoDialog</code> from the bot framework sample which echoes back the initial message with a count.</li>
+  <li><strong>UcwaSfbo</strong> folder mostly contains classes as it is from Tam Huynh’s sample except for <code class="highlighter-rouge">UcwaReciveMessage.cs</code> and <code class="highlighter-rouge">UcwaSendMessage.cs</code>. As name suggests, these two classes are used to receive and send messages to SFB.</li>
+  <li><strong>Utilities.cs</strong> contains some some convenience methods.</li>
+  <li><strong>Data</strong> folder contains auto generated classes that represents UCWA JSON responses.</li>
+</ul>
+
+<hr />
+
+<h4 id="code-smell">Code Smell</h4>
+
+<p><strong>Data</strong> folder is a mess. All these classes were auto-generated based on responses from UCWA APIs. Therefore there are lot of duplicate classes. I tried to clean up some of it but couldn’t get time to see it through. <code class="highlighter-rouge">UcwaReciveMessage.cs</code> and <code class="highlighter-rouge">UcwaSendMessage.cs</code> are also not very well written. It was hastily written as a first attempt to get a PoC on UCWA. Once you get the understanding of what is happening, I would suggest you rewrite them for your own applications.</p>
+
+<h3 id="setting-up-the-code">Setting up the code</h3>
+<p>Open <code class="highlighter-rouge">Program.cs</code> and you would see some <code class="highlighter-rouge">static strings</code>. Replace the values of <code class="highlighter-rouge">tenantId</code>, <code class="highlighter-rouge">clientId</code> and <code class="highlighter-rouge">redirectUri</code> to what you copied before. <code class="highlighter-rouge">hardcodedUsername</code> and <code class="highlighter-rouge">hardcodedPassword</code> are credentials for the user that you would want the bot to sign in as. If you don’t want to hardcode the credentials, that is fine too as we will see later. <code class="highlighter-rouge">destinationAddress</code> is not used so you could leave it as it is.</p>
+
+<p>Go to <code class="highlighter-rouge">App.config</code> and enter a valid <code class="highlighter-rouge">MicrosoftAppId</code> and <code class="highlighter-rouge">MicrosoftAppPassword</code> for an existing registration of bot in bot framework portal. It is required as we would be using Bot State Service to store the conversation state.</p>
+
+<p>Once done run the sample and you would be greeted by a console message to choose a login style. <strong>If you are running the project for first time after creating the AD app, choose <code class="highlighter-rouge">dialog</code> option.</strong> This is needed as you would be asked to provide some consent, which requires a web page so <code class="highlighter-rouge">console</code> login doesn’t work. This only needs to be done once. Next time you could just use <code class="highlighter-rouge">console</code> option and bot would sign in using hardcoded credentials which we defined before. If you don’t want to hardcode, your only choice to proceed is through <code class="highlighter-rouge">dialog</code> option.</p>
+
+<p>If the program started successfully you would see json responses in the console. Login to Skype for Business as the other user and send the message to the bot. The bot should echo back what you typed. Great!! Our bot is working as expected.</p>
+
+<h3 id="under-the-hood">Under the hood</h3>
+
+<p>Once the bot signs in using the credentials provided, it polls the UCWA for incoming messages. As mentioned before, you need to send series of requests to UCWA in specific order for this to work. All this is handled in <code class="highlighter-rouge">UcwaReciveMessage.cs</code> class. When you send a message to the bot, the message is actually received in <code class="highlighter-rouge">GetIM_Step03_Events</code> method. Once I get the message I create the <code class="highlighter-rouge">Activity</code> object with minimum information required.</p>
+
+<div class="language-csharp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kt">string</span> <span class="n">SendMessageUrl</span> <span class="p">=</span> <span class="n">item1</span><span class="p">.</span><span class="n">_embedded</span><span class="p">.</span><span class="n">message</span><span class="p">.</span><span class="n">_links</span><span class="p">.</span><span class="n">messaging</span><span class="p">.</span><span class="n">href</span><span class="p">;</span>
+<span class="kt">var</span> <span class="n">conversationId</span> <span class="p">=</span> <span class="n">item</span><span class="p">.</span><span class="n">href</span><span class="p">.</span><span class="nf">Split</span><span class="p">(</span><span class="sc">'/'</span><span class="p">).</span><span class="nf">Last</span><span class="p">();</span>
+<span class="kt">var</span> <span class="n">fromId</span> <span class="p">=</span> <span class="n">item1</span><span class="p">.</span><span class="n">_embedded</span><span class="p">.</span><span class="n">message</span><span class="p">.</span><span class="n">_links</span><span class="p">.</span><span class="n">contact</span><span class="p">.</span><span class="n">href</span><span class="p">.</span><span class="nf">Split</span><span class="p">(</span><span class="sc">'/'</span><span class="p">).</span><span class="nf">Last</span><span class="p">();</span>
+
+<span class="n">Activity</span> <span class="n">activity</span> <span class="p">=</span> <span class="k">new</span> <span class="nf">Activity</span><span class="p">()</span>
+<span class="p">{</span>
+    <span class="n">From</span> <span class="p">=</span> <span class="k">new</span> <span class="n">ChannelAccount</span> <span class="p">{</span> <span class="n">Id</span> <span class="p">=</span> <span class="n">fromId</span><span class="p">,</span> <span class="n">Name</span> <span class="p">=</span> <span class="n">fromId</span> <span class="p">},</span>
+    <span class="n">Conversation</span> <span class="p">=</span> <span class="k">new</span> <span class="n">ConversationAccount</span> <span class="p">{</span> <span class="n">Id</span> <span class="p">=</span> <span class="n">conversationId</span> <span class="p">},</span>
+    <span class="n">Recipient</span> <span class="p">=</span> <span class="k">new</span> <span class="n">ChannelAccount</span> <span class="p">{</span> <span class="n">Id</span> <span class="p">=</span> <span class="s">"Bot"</span> <span class="p">},</span>
+    <span class="n">ServiceUrl</span> <span class="p">=</span> <span class="s">"https://skype.botframework.com"</span><span class="p">,</span>
+    <span class="n">ChannelId</span> <span class="p">=</span> <span class="s">"skype"</span><span class="p">,</span>
+    <span class="n">ChannelData</span> <span class="p">=</span> <span class="n">SendMessageUrl</span>
+<span class="p">};</span>
+
+<span class="n">activity</span><span class="p">.</span><span class="n">Text</span> <span class="p">=</span> <span class="n">message</span><span class="p">;</span>
+</code></pre></div></div>
+
+<p>The <code class="highlighter-rouge">conversationId</code> and <code class="highlighter-rouge">fromId</code> are extracted from the JSON response. These are required as the conversation state are stored using these key. <code class="highlighter-rouge">SendMessageUrl</code> is required to reply to user. We store it in the <code class="highlighter-rouge">ChannelData</code> property of <code class="highlighter-rouge">Activity</code>.</p>
+
+<p>Once <code class="highlighter-rouge">activity</code> object is properly initialized, we jump start the bot and pass the <code class="highlighter-rouge">activity</code> object as the incoming message. Instead of starting the bot here, or if you have an existing bot, you could use <a href="https://docs.botframework.com/en-us/restapi/directline3/">Direct Line API</a> to send the message to the bot.</p>
+
+<div class="language-csharp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">using</span> <span class="p">(</span><span class="kt">var</span> <span class="n">scope</span> <span class="p">=</span> <span class="n">Microsoft</span><span class="p">.</span><span class="n">Bot</span><span class="p">.</span><span class="n">Builder</span><span class="p">.</span><span class="n">Dialogs</span><span class="p">.</span><span class="n">Conversation</span>
+    <span class="p">.</span><span class="n">Container</span><span class="p">.</span><span class="nf">BeginLifetimeScope</span><span class="p">(</span><span class="n">DialogModule</span><span class="p">.</span><span class="n">LifetimeScopeTag</span><span class="p">,</span>
+    <span class="n">builder</span> <span class="p">=&gt;</span> <span class="nf">Configure</span><span class="p">(</span><span class="n">builder</span><span class="p">)))</span>
+<span class="p">{</span>
+    <span class="n">scope</span><span class="p">.</span><span class="n">Resolve</span><span class="p">&lt;</span><span class="n">IMessageActivity</span><span class="p">&gt;</span>
+        <span class="p">(</span><span class="n">TypedParameter</span><span class="p">.</span><span class="nf">From</span><span class="p">((</span><span class="n">IMessageActivity</span><span class="p">)</span><span class="n">activity</span><span class="p">));</span>
+    <span class="n">DialogModule_MakeRoot</span><span class="p">.</span><span class="nf">Register</span>
+        <span class="p">(</span><span class="n">scope</span><span class="p">,</span> <span class="p">()</span> <span class="p">=&gt;</span> <span class="k">new</span> <span class="nf">EchoDialog</span><span class="p">());</span>
+    <span class="kt">var</span> <span class="n">postToBot</span> <span class="p">=</span> <span class="n">scope</span><span class="p">.</span><span class="n">Resolve</span><span class="p">&lt;</span><span class="n">IPostToBot</span><span class="p">&gt;();</span>
+    <span class="k">await</span> <span class="n">postToBot</span><span class="p">.</span><span class="nf">PostAsync</span><span class="p">(</span><span class="n">activity</span><span class="p">,</span> <span class="n">CancellationToken</span><span class="p">.</span><span class="n">None</span><span class="p">);</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<p>In the <code class="highlighter-rouge">Configure</code> method I register my custom implementation of <code class="highlighter-rouge">IBotToUser</code>.</p>
+
+<div class="language-csharp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">private</span> <span class="k">static</span> <span class="k">void</span> <span class="nf">Configure</span><span class="p">(</span><span class="n">ContainerBuilder</span> <span class="n">builder</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="n">builder</span><span class="p">.</span><span class="n">RegisterType</span><span class="p">&lt;</span><span class="n">BotToUserLync</span><span class="p">&gt;()</span>
+       <span class="p">.</span><span class="n">As</span><span class="p">&lt;</span><span class="n">IBotToUser</span><span class="p">&gt;()</span>
+       <span class="p">.</span><span class="nf">InstancePerLifetimeScope</span><span class="p">();</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<p><code class="highlighter-rouge">BotToUserLync</code> reads the <code class="highlighter-rouge">ChannelData</code> property of the <code class="highlighter-rouge">Activity</code> and calls <code class="highlighter-rouge">SendIM_Step05</code> method of <code class="highlighter-rouge">UcwaSendMessage</code> which sends a request to UCWA to reply to the user.</p>
+
+<h3 id="conclusion">Conclusion</h3>
+
+<p>Using UCWA is easy once you understand how it works. However it is tiring process to write code against it. There are lot of steps to follow in particular order and lack of any SDK makes it more difficult. The present sample is not at all production ready. I would recommend you use this sample to understand what happens inside and implement a better(and cleaner) solution if you are developing it for a live environment.</p>
+
+<p>I hope this article was helpful. If you have any questions, please post a comment below.</p>
+
+  </div><!-- from https://github.com/utterance/utterances -->
+<script src="https://utteranc.es/client.js"
+        repo="ankitbko/blog"
+        issue-term="title"
+        label="blogpost-comment"
+        theme="github-light"
+        crossorigin="anonymous"
+        async>
+</script><a class="u-url" href="/blog/2017/02/Sykpe-For-Business-Bot-Using-UCWA/" hidden></a>
+</article>
+      </div>
+    </main><footer class="site-footer h-card">
+  <data class="u-url" href="/blog/"></data>
+
+  <div class="wrapper">
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col">
+        <p class="feed-subscribe">
+          <a href="/blog/feed.xml">
+            <svg class="svg-icon orange">
+              <use xlink:href="/blog/assets/minima-social-icons.svg#rss"></use>
+            </svg><span>Subscribe</span>
+          </a>
+        </p>
+        <ul class="contact-list">
+          <li class="p-name">Ankit Sinha</li>
+          
+        </ul>
+      </div>
+      <div class="footer-col">
+        <p>A technology blog focusing on random stuff</p>
+      </div>
+    </div>
+
+    <div class="social-links"><ul class="social-media-list"><li><a rel="me" href="https://github.com/ankitbko" title="ankitbko"><svg class="svg-icon grey"><use xlink:href="/blog/assets/minima-social-icons.svg#github"></use></svg></a></li><li><a rel="me" href="https://twitter.com/ankitbko" title="ankitbko"><svg class="svg-icon grey"><use xlink:href="/blog/assets/minima-social-icons.svg#twitter"></use></svg></a></li></ul>
+</div>
+
+  </div>
+
+</footer>
+</body>
+
+</html>

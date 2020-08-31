@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="twitter:card" content="summary" /><!-- Begin Jekyll SEO tag v2.6.1 -->
+<title>Hidden Gem in Microsoft Bot Framework - QnA Maker | F5</title>
+<meta name="generator" content="Jekyll v4.0.0" />
+<meta property="og:title" content="Hidden Gem in Microsoft Bot Framework - QnA Maker" />
+<meta name="author" content="Ankit Sinha" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="Use QnA Maker to quickly create a QnA Bot" />
+<meta property="og:description" content="Use QnA Maker to quickly create a QnA Bot" />
+<link rel="canonical" href="https://ankitbko.github.io/blog/2016/10/Hidden-Gem-in-Microsoft-Bot-Framework-QnA-Maker/" />
+<meta property="og:url" content="https://ankitbko.github.io/blog/2016/10/Hidden-Gem-in-Microsoft-Bot-Framework-QnA-Maker/" />
+<meta property="og:site_name" content="F5" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2016-10-03T00:00:00-05:00" />
+<script type="application/ld+json">
+{"headline":"Hidden Gem in Microsoft Bot Framework - QnA Maker","dateModified":"2016-10-03T00:00:00-05:00","datePublished":"2016-10-03T00:00:00-05:00","author":{"@type":"Person","name":"Ankit Sinha"},"description":"Use QnA Maker to quickly create a QnA Bot","mainEntityOfPage":{"@type":"WebPage","@id":"https://ankitbko.github.io/blog/2016/10/Hidden-Gem-in-Microsoft-Bot-Framework-QnA-Maker/"},"@type":"BlogPosting","url":"https://ankitbko.github.io/blog/2016/10/Hidden-Gem-in-Microsoft-Bot-Framework-QnA-Maker/","@context":"https://schema.org"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="stylesheet" href="/blog/assets/css/style.css"><link type="application/atom+xml" rel="alternate" href="https://ankitbko.github.io/blog/feed.xml" title="F5" /><!-- the google_analytics_id gets auto inserted from the config file -->
+
+
+
+<script>(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)})(window,document,'script','//www.google-analytics.com/analytics.js','ga');ga('create','UA-75679348-1','auto');ga('require','displayfeatures');ga('send','pageview');</script>
+
+<link rel="shortcut icon" type="image/x-icon" href="/blog/images/favicon.ico"><!-- Begin Jekyll SEO tag v2.6.1 -->
+<title>Hidden Gem in Microsoft Bot Framework - QnA Maker | F5</title>
+<meta name="generator" content="Jekyll v4.0.0" />
+<meta property="og:title" content="Hidden Gem in Microsoft Bot Framework - QnA Maker" />
+<meta name="author" content="Ankit Sinha" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="Use QnA Maker to quickly create a QnA Bot" />
+<meta property="og:description" content="Use QnA Maker to quickly create a QnA Bot" />
+<link rel="canonical" href="https://ankitbko.github.io/blog/2016/10/Hidden-Gem-in-Microsoft-Bot-Framework-QnA-Maker/" />
+<meta property="og:url" content="https://ankitbko.github.io/blog/2016/10/Hidden-Gem-in-Microsoft-Bot-Framework-QnA-Maker/" />
+<meta property="og:site_name" content="F5" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2016-10-03T00:00:00-05:00" />
+<script type="application/ld+json">
+{"headline":"Hidden Gem in Microsoft Bot Framework - QnA Maker","dateModified":"2016-10-03T00:00:00-05:00","datePublished":"2016-10-03T00:00:00-05:00","author":{"@type":"Person","name":"Ankit Sinha"},"description":"Use QnA Maker to quickly create a QnA Bot","mainEntityOfPage":{"@type":"WebPage","@id":"https://ankitbko.github.io/blog/2016/10/Hidden-Gem-in-Microsoft-Bot-Framework-QnA-Maker/"},"@type":"BlogPosting","url":"https://ankitbko.github.io/blog/2016/10/Hidden-Gem-in-Microsoft-Bot-Framework-QnA-Maker/","@context":"https://schema.org"}</script>
+<!-- End Jekyll SEO tag -->
+
+<link href="https://unpkg.com/@primer/css/dist/primer.css" rel="stylesheet" />
+<link rel="stylesheet" href="//use.fontawesome.com/releases/v5.0.7/css/all.css"><link type="application/atom+xml" rel="alternate" href="https://ankitbko.github.io/blog/feed.xml" title="F5" /><!-- the google_analytics_id gets auto inserted from the config file -->
+
+
+
+<script>(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)})(window,document,'script','//www.google-analytics.com/analytics.js','ga');ga('create','UA-75679348-1','auto');ga('require','displayfeatures');ga('send','pageview');</script>
+
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.11.1/dist/katex.min.css" integrity="sha384-zB1R0rpPzHqg7Kpt0Aljp8JPLqbXI3bhnPWROx27a9N0Ll6ZP/+DiW/UqRcLbRjq" crossorigin="anonymous">
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML"> </script>
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.11.1/dist/katex.min.js" integrity="sha384-y23I5Q6l+B6vatafAwxRu/0oK/79VlbSz7Q9aiSZUvyWYIYsd+qj+o24G5ZU2zJz" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.11.1/dist/contrib/auto-render.min.js" integrity="sha384-kWPLUVMOks5AQFrykwIup5lo0m3iMkkHrD0uJ4H5cjeGihAutqP0yW0J6dpFiVkI" crossorigin="anonymous"></script>
+    <script>
+    document.addEventListener("DOMContentLoaded", function() {
+        renderMathInElement( document.body, {
+        delimiters: [
+            {left: "$$", right: "$$", display: true},
+            {left: "[%", right: "%]", display: true},
+            {left: "$", right: "$", display: false}
+        ]}
+        );
+    });
+    </script>
+
+
+<script>
+function wrap_img(fn) {
+    if (document.attachEvent ? document.readyState === "complete" : document.readyState !== "loading") {
+        var elements = document.querySelectorAll(".post img");
+        Array.prototype.forEach.call(elements, function(el, i) {
+            if (el.getAttribute("title") && (el.className != "emoji")) {
+                const caption = document.createElement('figcaption');
+                var node = document.createTextNode(el.getAttribute("title"));
+                caption.appendChild(node);
+                const wrapper = document.createElement('figure');
+                wrapper.className = 'image';
+                el.parentNode.insertBefore(wrapper, el);
+                el.parentNode.removeChild(el);
+                wrapper.appendChild(el);
+                wrapper.appendChild(caption);
+            }
+        });
+    } else { document.addEventListener('DOMContentLoaded', fn); }
+}
+window.onload = wrap_img;
+</script>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function(){
+    // add link icon to anchor tags
+    var elem = document.querySelectorAll(".anchor-link")
+    elem.forEach(e => (e.innerHTML = '<i class="fas fa-link fa-xs"></i>'));
+    });
+</script>
+</head>
+<body><header class="site-header">
+
+  <div class="wrapper"><a class="site-title" rel="author" href="/blog/">F5</a><nav class="site-nav">
+        <input type="checkbox" id="nav-trigger" class="nav-trigger" />
+        <label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewBox="0 0 18 15" width="18px" height="15px">
+              <path d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.032C17.335,0,18,0.665,18,1.484L18,1.484z M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.032C17.335,6.031,18,6.696,18,7.516L18,7.516z M18,13.516C18,14.335,17.335,15,16.516,15H1.484 C0.665,15,0,14.335,0,13.516l0,0c0-0.82,0.665-1.483,1.484-1.483h15.032C17.335,12.031,18,12.695,18,13.516L18,13.516z"/>
+            </svg>
+          </span>
+        </label>
+
+        <div class="trigger"><a class="page-link" href="/blog/about/">About Me</a><a class="page-link" href="/blog/search/">Search</a><a class="page-link" href="/blog/categories/">Tags</a></div>
+      </nav></div>
+</header>
+<main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title p-name" itemprop="name headline">Hidden Gem in Microsoft Bot Framework - QnA Maker</h1><p class="page-description">Use QnA Maker to quickly create a QnA Bot</p><p class="post-meta post-meta-title"><time class="dt-published" datetime="2016-10-03T00:00:00-05:00" itemprop="datePublished">
+        Oct 3, 2016
+      </time>
+       • <span class="read-time" title="Estimated read time">
+    
+    
+      4 min read
+    
+</span></p>
+
+    
+      <p class="category-tags"><i class="fas fa-tags category-tags-icon"></i></i> 
+      
+        <a class="category-tags-link" href="/blog/categories/#Microsoft Bot Framework">Microsoft Bot Framework</a>
+        &nbsp;
+      
+        <a class="category-tags-link" href="/blog/categories/#LUIS">LUIS</a>
+        &nbsp;
+      
+        <a class="category-tags-link" href="/blog/categories/#Bots">Bots</a>
+        &nbsp;
+      
+        <a class="category-tags-link" href="/blog/categories/#Chat Bots">Chat Bots</a>
+        &nbsp;
+      
+        <a class="category-tags-link" href="/blog/categories/#Conversational Apps">Conversational Apps</a>
+        
+      
+      </p>
+    
+
+    </header>
+
+  <div class="post-content e-content" itemprop="articleBody">
+    <p>One of the most common use cases in Bot space is to create a bot to answer FAQ. And almost all businesses has an FAQ either in form of documents or web pages. Now it is not at all difficult to create a bot to answer simple questions. In fact there are hardly any context to maintain and most of the conversations are very shallow which makes it a very repetitive and quite boring task. All the FAQs are mostly same, well they are just list of questions and answers. Only if there would have been a way to upload this “knowledge” and create an NLP model based on the questions without us having to write any code.</p>
+
+<p>Enter <a href="https://qnamaker.botframework.com">QnAMaker</a>, one of the least documented and almost non-existent service offered by Microsoft. QnAMaker allows us to upload a FAQ document or just give a link to a FAQ page and it will create an NLP model and expose an endpoint to query.</p>
+
+<h3 id="qna-maker">QnA Maker</h3>
+
+<p>QnA Maker is provided as a service which is part of Microsoft Bot Framework. It is really hard to find as there are no external links to the page and absolutely no documentation. The only way to reach it by directly going to the sub-domain <a href="https://qnamaker.botframework.com">qnamaker.botframework.com</a>.</p>
+
+<p><img src="/blog/assets/images/posts/qnamaker/qnamaker.png" alt="QnA Maker" /></p>
+
+<p>Once on the page, we can create a new service by clicking “Create a new QnA service”. We will be redirected a page with list of steps to create QnA Service. We will create a QnA service to answer questions about Bot Framework itself. The Bot Framework FAQ is available at it’s <a href="https://docs.botframework.com/en-us/faq/">documentation</a>.</p>
+
+<p><img src="/blog/assets/images/posts/qnamaker/qnaedit.png" alt="QnA Edit" /></p>
+
+<ul>
+  <li>Name your service: The first step is to give a name to our service. Let’s name it “botframework”.</li>
+  <li>FAQ URL: This is one of the three steps to seed the QnA Maker with questions and answers. QnA Maker provides sample sites as how the FAQ page should look like. However it is not limited to the same format. Most of the FAQ pages, which clearly separates questions and answers, works with QnA Maker. Here we will provide “https://docs.botframework.com/en-us/faq/” as single line entry.</li>
+  <li>Question and Answer Pairs: This is the second way to provide questions and answers. The format is <code class="highlighter-rouge">question:answer</code> one per each line. We will leave this field blank.</li>
+  <li>Upload files: The third and last way to seed data is to upload a file(doc, docx, txt, tsv or pdf) containing questions and answers in a sequence. This too we will leave as it is.</li>
+</ul>
+
+<p>Click on “Extract” and wait a while. The QnA maker will extract all the questions and create an NLP model (probably LUIS). It would also show how many question-answer pair were extracted just above “Next” button. Clicking on it will download a tsv file with question-answer pair.</p>
+
+<p><img src="/blog/assets/images/posts/qnamaker/qnaextracted.png" alt="QnA Extracted" /></p>
+
+<p>Click on “Next” to go to fifth and last step which is to test and re-train our model.</p>
+
+<p><img src="/blog/assets/images/posts/qnamaker/traintrue.png" alt="QnA Train True" /></p>
+
+<p>This window has three parts. In the middle is a chat bot embedded as an iframe. Enter a question from FAQ in the chat bot and it should respond back with the answer.
+The right side of chat bot allows us to enter alternate phrasings to a question. This will further reinforce the model and make it better at classifying the questions correctly. As you can see in the image, I have added another phrase “what is release timeline for bot framework” to this question.
+The left side can be used to choose a correct response in case the bot answers incorrectly. The QnA Maker will automatically display answers related to the question. When asked “when the bot framework be publicly available”, it returned wrong response. I selected the correct response from the list of responses which appeared on the left.
+Once satisfied with the responses, click “Re-Train” to train the model again.</p>
+
+<p>Click on “Publish” to make the service available over an URL.</p>
+
+<p><img src="/blog/assets/images/posts/qnamaker/end.png" alt="QnA End" /></p>
+
+<p>Using the “Service URL” we can test the service to see what it returns.</p>
+
+<p><img src="/blog/assets/images/posts/qnamaker/result.png" alt="QnA End" /></p>
+
+<p>The question is supplied in the query string and the service returns a json containing an “answer” and a confidence “score”. The score tells us how confident is the QnA Maker that it has responded back with correct answer to the question. The score varies from 0-100, higher the number more confident it is.</p>
+
+<h4 id="conclusion">Conclusion</h4>
+
+<p>QnA Maker is a powerful tool to quickly create an FAQ bot. However there are couple of limitations. First it does not expose the underlying NLP model. Most likely it uses LUIS internally and it creates an intent for each question. We do not get access to the LUIS or the trained model. Second it is very less documented and there are almost no mention of it anywhere. Which begs the question on how long will it be supported and whether there are any technical limitations and cost to the usage of the service. Overall this is a fine piece of work which lets us create a bot in minutes.</p>
+
+<p>I hope this article was helpful. If you have any questions, please post a comment below.</p>
+
+  </div><!-- from https://github.com/utterance/utterances -->
+<script src="https://utteranc.es/client.js"
+        repo="ankitbko/blog"
+        issue-term="title"
+        label="blogpost-comment"
+        theme="github-light"
+        crossorigin="anonymous"
+        async>
+</script><a class="u-url" href="/blog/2016/10/Hidden-Gem-in-Microsoft-Bot-Framework-QnA-Maker/" hidden></a>
+</article>
+      </div>
+    </main><footer class="site-footer h-card">
+  <data class="u-url" href="/blog/"></data>
+
+  <div class="wrapper">
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col">
+        <p class="feed-subscribe">
+          <a href="/blog/feed.xml">
+            <svg class="svg-icon orange">
+              <use xlink:href="/blog/assets/minima-social-icons.svg#rss"></use>
+            </svg><span>Subscribe</span>
+          </a>
+        </p>
+        <ul class="contact-list">
+          <li class="p-name">Ankit Sinha</li>
+          
+        </ul>
+      </div>
+      <div class="footer-col">
+        <p>A technology blog focusing on random stuff</p>
+      </div>
+    </div>
+
+    <div class="social-links"><ul class="social-media-list"><li><a rel="me" href="https://github.com/ankitbko" title="ankitbko"><svg class="svg-icon grey"><use xlink:href="/blog/assets/minima-social-icons.svg#github"></use></svg></a></li><li><a rel="me" href="https://twitter.com/ankitbko" title="ankitbko"><svg class="svg-icon grey"><use xlink:href="/blog/assets/minima-social-icons.svg#twitter"></use></svg></a></li></ul>
+</div>
+
+  </div>
+
+</footer>
+</body>
+
+</html>

@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="twitter:card" content="summary" /><!-- Begin Jekyll SEO tag v2.6.1 -->
+<title>Microsoft Bot Framework - Use Redis to store conversation state | F5</title>
+<meta name="generator" content="Jekyll v4.0.0" />
+<meta property="og:title" content="Microsoft Bot Framework - Use Redis to store conversation state" />
+<meta name="author" content="Ankit Sinha" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="Use Redis for storing conversation state" />
+<meta property="og:description" content="Use Redis for storing conversation state" />
+<link rel="canonical" href="https://ankitbko.github.io/blog/2016/10/Microsoft-Bot-Framework-Use-Redis-to-store-conversation-state/" />
+<meta property="og:url" content="https://ankitbko.github.io/blog/2016/10/Microsoft-Bot-Framework-Use-Redis-to-store-conversation-state/" />
+<meta property="og:site_name" content="F5" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2016-10-17T00:00:00-05:00" />
+<script type="application/ld+json">
+{"headline":"Microsoft Bot Framework - Use Redis to store conversation state","dateModified":"2016-10-17T00:00:00-05:00","datePublished":"2016-10-17T00:00:00-05:00","author":{"@type":"Person","name":"Ankit Sinha"},"description":"Use Redis for storing conversation state","mainEntityOfPage":{"@type":"WebPage","@id":"https://ankitbko.github.io/blog/2016/10/Microsoft-Bot-Framework-Use-Redis-to-store-conversation-state/"},"@type":"BlogPosting","url":"https://ankitbko.github.io/blog/2016/10/Microsoft-Bot-Framework-Use-Redis-to-store-conversation-state/","@context":"https://schema.org"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="stylesheet" href="/blog/assets/css/style.css"><link type="application/atom+xml" rel="alternate" href="https://ankitbko.github.io/blog/feed.xml" title="F5" /><!-- the google_analytics_id gets auto inserted from the config file -->
+
+
+
+<script>(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)})(window,document,'script','//www.google-analytics.com/analytics.js','ga');ga('create','UA-75679348-1','auto');ga('require','displayfeatures');ga('send','pageview');</script>
+
+<link rel="shortcut icon" type="image/x-icon" href="/blog/images/favicon.ico"><!-- Begin Jekyll SEO tag v2.6.1 -->
+<title>Microsoft Bot Framework - Use Redis to store conversation state | F5</title>
+<meta name="generator" content="Jekyll v4.0.0" />
+<meta property="og:title" content="Microsoft Bot Framework - Use Redis to store conversation state" />
+<meta name="author" content="Ankit Sinha" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="Use Redis for storing conversation state" />
+<meta property="og:description" content="Use Redis for storing conversation state" />
+<link rel="canonical" href="https://ankitbko.github.io/blog/2016/10/Microsoft-Bot-Framework-Use-Redis-to-store-conversation-state/" />
+<meta property="og:url" content="https://ankitbko.github.io/blog/2016/10/Microsoft-Bot-Framework-Use-Redis-to-store-conversation-state/" />
+<meta property="og:site_name" content="F5" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2016-10-17T00:00:00-05:00" />
+<script type="application/ld+json">
+{"headline":"Microsoft Bot Framework - Use Redis to store conversation state","dateModified":"2016-10-17T00:00:00-05:00","datePublished":"2016-10-17T00:00:00-05:00","author":{"@type":"Person","name":"Ankit Sinha"},"description":"Use Redis for storing conversation state","mainEntityOfPage":{"@type":"WebPage","@id":"https://ankitbko.github.io/blog/2016/10/Microsoft-Bot-Framework-Use-Redis-to-store-conversation-state/"},"@type":"BlogPosting","url":"https://ankitbko.github.io/blog/2016/10/Microsoft-Bot-Framework-Use-Redis-to-store-conversation-state/","@context":"https://schema.org"}</script>
+<!-- End Jekyll SEO tag -->
+
+<link href="https://unpkg.com/@primer/css/dist/primer.css" rel="stylesheet" />
+<link rel="stylesheet" href="//use.fontawesome.com/releases/v5.0.7/css/all.css"><link type="application/atom+xml" rel="alternate" href="https://ankitbko.github.io/blog/feed.xml" title="F5" /><!-- the google_analytics_id gets auto inserted from the config file -->
+
+
+
+<script>(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)})(window,document,'script','//www.google-analytics.com/analytics.js','ga');ga('create','UA-75679348-1','auto');ga('require','displayfeatures');ga('send','pageview');</script>
+
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.11.1/dist/katex.min.css" integrity="sha384-zB1R0rpPzHqg7Kpt0Aljp8JPLqbXI3bhnPWROx27a9N0Ll6ZP/+DiW/UqRcLbRjq" crossorigin="anonymous">
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML"> </script>
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.11.1/dist/katex.min.js" integrity="sha384-y23I5Q6l+B6vatafAwxRu/0oK/79VlbSz7Q9aiSZUvyWYIYsd+qj+o24G5ZU2zJz" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.11.1/dist/contrib/auto-render.min.js" integrity="sha384-kWPLUVMOks5AQFrykwIup5lo0m3iMkkHrD0uJ4H5cjeGihAutqP0yW0J6dpFiVkI" crossorigin="anonymous"></script>
+    <script>
+    document.addEventListener("DOMContentLoaded", function() {
+        renderMathInElement( document.body, {
+        delimiters: [
+            {left: "$$", right: "$$", display: true},
+            {left: "[%", right: "%]", display: true},
+            {left: "$", right: "$", display: false}
+        ]}
+        );
+    });
+    </script>
+
+
+<script>
+function wrap_img(fn) {
+    if (document.attachEvent ? document.readyState === "complete" : document.readyState !== "loading") {
+        var elements = document.querySelectorAll(".post img");
+        Array.prototype.forEach.call(elements, function(el, i) {
+            if (el.getAttribute("title") && (el.className != "emoji")) {
+                const caption = document.createElement('figcaption');
+                var node = document.createTextNode(el.getAttribute("title"));
+                caption.appendChild(node);
+                const wrapper = document.createElement('figure');
+                wrapper.className = 'image';
+                el.parentNode.insertBefore(wrapper, el);
+                el.parentNode.removeChild(el);
+                wrapper.appendChild(el);
+                wrapper.appendChild(caption);
+            }
+        });
+    } else { document.addEventListener('DOMContentLoaded', fn); }
+}
+window.onload = wrap_img;
+</script>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function(){
+    // add link icon to anchor tags
+    var elem = document.querySelectorAll(".anchor-link")
+    elem.forEach(e => (e.innerHTML = '<i class="fas fa-link fa-xs"></i>'));
+    });
+</script>
+</head>
+<body><header class="site-header">
+
+  <div class="wrapper"><a class="site-title" rel="author" href="/blog/">F5</a><nav class="site-nav">
+        <input type="checkbox" id="nav-trigger" class="nav-trigger" />
+        <label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewBox="0 0 18 15" width="18px" height="15px">
+              <path d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.032C17.335,0,18,0.665,18,1.484L18,1.484z M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.032C17.335,6.031,18,6.696,18,7.516L18,7.516z M18,13.516C18,14.335,17.335,15,16.516,15H1.484 C0.665,15,0,14.335,0,13.516l0,0c0-0.82,0.665-1.483,1.484-1.483h15.032C17.335,12.031,18,12.695,18,13.516L18,13.516z"/>
+            </svg>
+          </span>
+        </label>
+
+        <div class="trigger"><a class="page-link" href="/blog/about/">About Me</a><a class="page-link" href="/blog/search/">Search</a><a class="page-link" href="/blog/categories/">Tags</a></div>
+      </nav></div>
+</header>
+<main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title p-name" itemprop="name headline">Microsoft Bot Framework - Use Redis to store conversation state</h1><p class="page-description">Use Redis for storing conversation state</p><p class="post-meta post-meta-title"><time class="dt-published" datetime="2016-10-17T00:00:00-05:00" itemprop="datePublished">
+        Oct 17, 2016
+      </time>
+       • <span class="read-time" title="Estimated read time">
+    
+    
+      3 min read
+    
+</span></p>
+
+    
+      <p class="category-tags"><i class="fas fa-tags category-tags-icon"></i></i> 
+      
+        <a class="category-tags-link" href="/blog/categories/#Microsoft Bot Framework">Microsoft Bot Framework</a>
+        &nbsp;
+      
+        <a class="category-tags-link" href="/blog/categories/#LUIS">LUIS</a>
+        &nbsp;
+      
+        <a class="category-tags-link" href="/blog/categories/#Bots">Bots</a>
+        &nbsp;
+      
+        <a class="category-tags-link" href="/blog/categories/#Chat Bots">Chat Bots</a>
+        &nbsp;
+      
+        <a class="category-tags-link" href="/blog/categories/#Conversational Apps">Conversational Apps</a>
+        &nbsp;
+      
+        <a class="category-tags-link" href="/blog/categories/#Redis">Redis</a>
+        
+      
+      </p>
+    
+
+    </header>
+
+  <div class="post-content e-content" itemprop="articleBody">
+    <p>Bots created using Microsoft Bot Framework are by default stateless. The conversation state and it’s associated context is stored by <a href="https://docs.botframework.com/en-us/restapi/state/">Bot State Service</a> in cloud. The state service stores information in 3 distinct bags keyed by their associated ids -</p>
+
+<table>
+  <thead>
+    <tr>
+      <th><strong>Property</strong></th>
+      <th><strong>Key</strong></th>
+      <th><strong>Description</strong></th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><strong>User</strong></td>
+      <td>User Id</td>
+      <td>Remembering context for a user on a channel</td>
+    </tr>
+    <tr>
+      <td><strong>Conversation</strong></td>
+      <td>Conversation Id</td>
+      <td>Remembering context all users in a conversation</td>
+    </tr>
+    <tr>
+      <td><strong>Private Conversation</strong></td>
+      <td>Conversation Id + User Id</td>
+      <td>Remembering context for a user in a conversation</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>Bot State Service <a href="https://docs.botframework.com/en-us/csharp/builder/sdkreference/stateapi.html">documentation</a> provides more detail explanation to them. Moreover all these property bags are scoped by the Bot id and Channel id, essentially making them unique.
+The Dialog Stack and Dialog Data are both stored in Private Conversation bag.</p>
+
+<p>If we want to store these data in our database, Bot Framework provides two extension points to do that -</p>
+
+<ul>
+  <li>Create a REST layer by implementing <code class="highlighter-rouge">IBotState</code> interface</li>
+  <li>Implement <code class="highlighter-rouge">IBotDataStore&lt;T&gt;</code> in your bot</li>
+</ul>
+
+<p>In this post, we will implement <code class="highlighter-rouge">IBotDataStore</code> to store the context in Redis. However making a REST service by implementing <code class="highlighter-rouge">IBotState</code> should be similar. The source code is available <a href="https://github.com/ankitbko/Microsoft.Bot.Builder.RedisStore">here</a>.</p>
+
+<h3 id="redis-store">Redis Store</h3>
+
+<div class="language-csharp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">public</span> <span class="k">interface</span> <span class="nc">IBotDataStore</span><span class="p">&lt;</span><span class="n">T</span><span class="p">&gt;</span>
+<span class="p">{</span>
+    <span class="n">Task</span><span class="p">&lt;</span><span class="kt">bool</span><span class="p">&gt;</span> <span class="nf">FlushAsync</span><span class="p">(</span><span class="n">BotDataKey</span> <span class="n">key</span><span class="p">,</span> <span class="n">CancellationToken</span> <span class="n">cancellationToken</span><span class="p">);</span>
+    <span class="n">Task</span><span class="p">&lt;</span><span class="n">T</span><span class="p">&gt;</span> <span class="nf">LoadAsync</span><span class="p">(</span><span class="n">BotDataKey</span> <span class="n">key</span><span class="p">,</span> <span class="n">BotStoreType</span> <span class="n">botStoreType</span><span class="p">,</span> <span class="n">CancellationToken</span> <span class="n">cancellationToken</span><span class="p">);</span>
+    <span class="n">Task</span> <span class="nf">SaveAsync</span><span class="p">(</span><span class="n">BotDataKey</span> <span class="n">key</span><span class="p">,</span> <span class="n">BotStoreType</span> <span class="n">botStoreType</span><span class="p">,</span> <span class="n">T</span> <span class="n">data</span><span class="p">,</span> <span class="n">CancellationToken</span> <span class="n">cancellationToken</span><span class="p">);</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<p><code class="highlighter-rouge">IBotDataStore</code> is a simple interface with only three methods to implement, all of them being self explanatory. We will start with <code class="highlighter-rouge">SaveAsync</code>. We will use <a href="https://github.com/StackExchange/StackExchange.Redis">StackExchange.Redis</a> for C# client.</p>
+
+<div class="language-csharp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">public</span> <span class="k">async</span> <span class="n">Task</span> <span class="nf">SaveAsync</span><span class="p">(</span><span class="n">BotDataKey</span> <span class="n">key</span><span class="p">,</span> <span class="n">BotStoreType</span> <span class="n">botStoreType</span><span class="p">,</span> <span class="n">BotData</span> <span class="n">data</span><span class="p">,</span> <span class="n">CancellationToken</span> <span class="n">cancellationToken</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="nf">Connect</span><span class="p">();</span>
+
+    <span class="kt">var</span> <span class="n">redisKey</span> <span class="p">=</span> <span class="nf">GetKey</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">botStoreType</span><span class="p">);</span>
+    <span class="kt">var</span> <span class="n">serializedData</span> <span class="p">=</span> <span class="nf">Serialize</span><span class="p">(</span><span class="n">data</span><span class="p">.</span><span class="n">Data</span><span class="p">);</span>
+
+    <span class="kt">var</span> <span class="n">database</span> <span class="p">=</span> <span class="n">_connection</span><span class="p">.</span><span class="nf">GetDatabase</span><span class="p">(</span><span class="n">_options</span><span class="p">.</span><span class="n">Database</span><span class="p">);</span>
+    <span class="kt">var</span> <span class="n">tran</span> <span class="p">=</span> <span class="n">database</span><span class="p">.</span><span class="nf">CreateTransaction</span><span class="p">();</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">data</span><span class="p">.</span><span class="n">ETag</span> <span class="p">!=</span> <span class="s">"*"</span><span class="p">)</span>
+        <span class="n">tran</span><span class="p">.</span><span class="nf">AddCondition</span><span class="p">(</span><span class="n">Condition</span><span class="p">.</span><span class="nf">HashEqual</span><span class="p">(</span><span class="n">redisKey</span><span class="p">,</span> <span class="n">ETAG_KEY</span><span class="p">,</span> <span class="n">data</span><span class="p">.</span><span class="n">ETag</span><span class="p">));</span>
+    <span class="n">tran</span><span class="p">.</span><span class="nf">HashSetAsync</span><span class="p">(</span><span class="n">redisKey</span><span class="p">,</span> <span class="k">new</span> <span class="n">HashEntry</span><span class="p">[]</span>
+    <span class="p">{</span>
+        <span class="k">new</span> <span class="nf">HashEntry</span><span class="p">(</span><span class="n">ETAG_KEY</span><span class="p">,</span> <span class="n">DateTime</span><span class="p">.</span><span class="n">UtcNow</span><span class="p">.</span><span class="n">Ticks</span><span class="p">.</span><span class="nf">ToString</span><span class="p">()),</span>
+        <span class="k">new</span> <span class="nf">HashEntry</span><span class="p">(</span><span class="n">DATA_KEY</span><span class="p">,</span> <span class="n">serializedData</span><span class="p">)</span>
+    <span class="p">});</span>
+
+    <span class="kt">bool</span> <span class="n">committed</span> <span class="p">=</span> <span class="k">await</span> <span class="n">tran</span><span class="p">.</span><span class="nf">ExecuteAsync</span><span class="p">();</span>
+
+    <span class="k">if</span> <span class="p">(!</span><span class="n">committed</span><span class="p">)</span>
+        <span class="k">throw</span> <span class="k">new</span> <span class="nf">ConcurrencyException</span><span class="p">(</span><span class="s">"Inconsistent SaveAsync based on ETag!"</span><span class="p">);</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<p>The critical part here is to maintain optimistic concurrency control for storing the data. This situation arises most commonly when the bot is in process of handling a user message and the user sends another message. The second message may end up in different bot instance which would start processing with older bot state. We will maintain optimistic concurrency using <code class="highlighter-rouge">ETag</code> property of <code class="highlighter-rouge">BotData</code>. ETag property will be set to <code class="highlighter-rouge">DateTime.UtcNow.Ticks</code>. If it differs while saving the new state, we will throw an exception. To achieve this we will use Transactions in Redis. Note that transactions in Redis works differently than your typical RDBMS. It gets more complicated due to how connection multiplexing is performed by StackExchange Redis client. An excellent explanation of this is given <a href="https://github.com/StackExchange/StackExchange.Redis/blob/master/Docs/Transactions.md">here</a>. In our code, we add a “Condition” for the transaction to be successful. If the condition fails, the entire transaction is void and <code class="highlighter-rouge">committed</code> will be false.</p>
+
+<p>The <code class="highlighter-rouge">LoadAsync</code> method is pretty simple. We return <code class="highlighter-rouge">null</code> if there is no value for a particular key (first time scenario), otherwise we return <code class="highlighter-rouge">BotData</code>.</p>
+
+<div class="language-csharp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">public</span> <span class="k">async</span> <span class="n">Task</span><span class="p">&lt;</span><span class="n">BotData</span><span class="p">&gt;</span> <span class="nf">LoadAsync</span><span class="p">(</span><span class="n">BotDataKey</span> <span class="n">key</span><span class="p">,</span> <span class="n">BotStoreType</span> <span class="n">botStoreType</span><span class="p">,</span> <span class="n">CancellationToken</span> <span class="n">cancellationToken</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="nf">Connect</span><span class="p">();</span>
+
+    <span class="kt">var</span> <span class="n">database</span> <span class="p">=</span> <span class="n">_connection</span><span class="p">.</span><span class="nf">GetDatabase</span><span class="p">(</span><span class="n">_options</span><span class="p">.</span><span class="n">Database</span><span class="p">);</span>
+    <span class="kt">var</span> <span class="n">redisKey</span> <span class="p">=</span> <span class="nf">GetKey</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">botStoreType</span><span class="p">);</span>
+    <span class="kt">var</span> <span class="n">result</span> <span class="p">=</span> <span class="k">await</span> <span class="n">database</span><span class="p">.</span><span class="nf">HashGetAllAsync</span><span class="p">(</span><span class="n">redisKey</span><span class="p">);</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">result</span> <span class="p">==</span> <span class="k">null</span> <span class="p">||</span> <span class="n">result</span><span class="p">.</span><span class="nf">Count</span><span class="p">()</span> <span class="p">==</span> <span class="m">0</span><span class="p">)</span>
+    <span class="p">{</span>
+        <span class="k">return</span> <span class="k">null</span><span class="p">;</span>
+    <span class="p">}</span>
+
+    <span class="kt">var</span> <span class="n">botData</span> <span class="p">=</span> <span class="k">new</span> <span class="nf">BotData</span><span class="p">();</span>
+    <span class="n">botData</span><span class="p">.</span><span class="n">ETag</span> <span class="p">=</span> <span class="n">result</span><span class="p">.</span><span class="nf">Where</span><span class="p">(</span><span class="n">t</span> <span class="p">=&gt;</span> <span class="n">t</span><span class="p">.</span><span class="n">Name</span><span class="p">.</span><span class="nf">Equals</span><span class="p">(</span><span class="n">ETAG_KEY</span><span class="p">)).</span><span class="nf">FirstOrDefault</span><span class="p">().</span><span class="n">Value</span><span class="p">;</span>
+    <span class="n">botData</span><span class="p">.</span><span class="n">Data</span> <span class="p">=</span> <span class="nf">Deserialize</span><span class="p">((</span><span class="kt">byte</span><span class="p">[])</span><span class="n">result</span><span class="p">.</span><span class="nf">Where</span><span class="p">(</span><span class="n">t</span> <span class="p">=&gt;</span> <span class="n">t</span><span class="p">.</span><span class="n">Name</span><span class="p">.</span><span class="nf">Equals</span><span class="p">(</span><span class="n">DATA_KEY</span><span class="p">)).</span><span class="nf">FirstOrDefault</span><span class="p">().</span><span class="n">Value</span><span class="p">);</span>
+    <span class="k">return</span> <span class="n">botData</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<h4 id="integrating-with-bot">Integrating with Bot</h4>
+
+<p>To start using Redis Store instead of Bot State Service, we just need to override the existing Autofac registration of <code class="highlighter-rouge">IBotDataStore</code> with new one. The Bot Builder SDK uses <code class="highlighter-rouge">CachingBotDataStore</code> implementation for <code class="highlighter-rouge">IBotDataStore</code> which is just a decorator for <code class="highlighter-rouge">ConnectorStore</code>. We will replace <code class="highlighter-rouge">ConnectorStore</code> with <code class="highlighter-rouge">RedisStore</code>. Just call the <code class="highlighter-rouge">RegisterBotDependencies</code> in <code class="highlighter-rouge">Application_Start()</code> in Global.asax.cs and it will work.</p>
+
+<div class="language-csharp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">private</span> <span class="k">void</span> <span class="nf">RegisterBotDependencies</span><span class="p">()</span>
+<span class="p">{</span>
+    <span class="kt">var</span> <span class="n">builder</span> <span class="p">=</span> <span class="k">new</span> <span class="nf">ContainerBuilder</span><span class="p">();</span>
+
+    <span class="n">RedisStoreOptions</span> <span class="n">redisOptions</span> <span class="p">=</span> <span class="k">new</span> <span class="nf">RedisStoreOptions</span><span class="p">()</span>
+    <span class="p">{</span>
+        <span class="n">Configuration</span> <span class="p">=</span> <span class="s">"localhost"</span>
+    <span class="p">};</span>
+
+    <span class="n">builder</span><span class="p">.</span><span class="nf">Register</span><span class="p">(</span><span class="n">c</span> <span class="p">=&gt;</span> <span class="k">new</span> <span class="nf">RedisStore</span><span class="p">(</span><span class="n">redisOptions</span><span class="p">))</span>
+       <span class="p">.</span><span class="n">As</span><span class="p">&lt;</span><span class="n">RedisStore</span><span class="p">&gt;()</span>
+       <span class="p">.</span><span class="nf">SingleInstance</span><span class="p">();</span>
+
+    <span class="n">builder</span><span class="p">.</span><span class="nf">Register</span><span class="p">(</span><span class="n">c</span> <span class="p">=&gt;</span> <span class="k">new</span> <span class="nf">CachingBotDataStore</span><span class="p">(</span><span class="n">c</span><span class="p">.</span><span class="n">Resolve</span><span class="p">&lt;</span><span class="n">RedisStore</span><span class="p">&gt;(),</span>
+                                                  <span class="n">CachingBotDataStoreConsistencyPolicy</span><span class="p">.</span><span class="n">ETagBasedConsistency</span><span class="p">))</span>
+        <span class="p">.</span><span class="n">As</span><span class="p">&lt;</span><span class="n">IBotDataStore</span><span class="p">&lt;</span><span class="n">BotData</span><span class="p">&gt;&gt;()</span>
+        <span class="p">.</span><span class="nf">AsSelf</span><span class="p">()</span>
+        <span class="p">.</span><span class="nf">InstancePerLifetimeScope</span><span class="p">();</span>
+
+    <span class="n">builder</span><span class="p">.</span><span class="nf">Update</span><span class="p">(</span><span class="n">Conversation</span><span class="p">.</span><span class="n">Container</span><span class="p">);</span>
+
+    <span class="n">DependencyResolver</span><span class="p">.</span><span class="nf">SetResolver</span><span class="p">(</span><span class="k">new</span> <span class="nf">AutofacDependencyResolver</span><span class="p">(</span><span class="n">Conversation</span><span class="p">.</span><span class="n">Container</span><span class="p">));</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<h3 id="wrapping-up">Wrapping Up</h3>
+
+<p>As mentioned before, the other way to achieve the same is by creating a REST Api and implementing <code class="highlighter-rouge">IBotState</code>. However in essence, the way we do this would remain same.
+Microsoft Bot Builder is highly flexible when it comes to extending it with custom logics. Again the source code is at my <a href="https://github.com/ankitbko/Microsoft.Bot.Builder.RedisStore">github repo</a>. I have also published it as a <a href="https://www.nuget.org/packages/Microsoft.Bot.Builder.RedisStore/">nuget package</a>.</p>
+
+<p>I hope you liked it. Post a comment if you have any question.</p>
+
+  </div><!-- from https://github.com/utterance/utterances -->
+<script src="https://utteranc.es/client.js"
+        repo="ankitbko/blog"
+        issue-term="title"
+        label="blogpost-comment"
+        theme="github-light"
+        crossorigin="anonymous"
+        async>
+</script><a class="u-url" href="/blog/2016/10/Microsoft-Bot-Framework-Use-Redis-to-store-conversation-state/" hidden></a>
+</article>
+      </div>
+    </main><footer class="site-footer h-card">
+  <data class="u-url" href="/blog/"></data>
+
+  <div class="wrapper">
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col">
+        <p class="feed-subscribe">
+          <a href="/blog/feed.xml">
+            <svg class="svg-icon orange">
+              <use xlink:href="/blog/assets/minima-social-icons.svg#rss"></use>
+            </svg><span>Subscribe</span>
+          </a>
+        </p>
+        <ul class="contact-list">
+          <li class="p-name">Ankit Sinha</li>
+          
+        </ul>
+      </div>
+      <div class="footer-col">
+        <p>A technology blog focusing on random stuff</p>
+      </div>
+    </div>
+
+    <div class="social-links"><ul class="social-media-list"><li><a rel="me" href="https://github.com/ankitbko" title="ankitbko"><svg class="svg-icon grey"><use xlink:href="/blog/assets/minima-social-icons.svg#github"></use></svg></a></li><li><a rel="me" href="https://twitter.com/ankitbko" title="ankitbko"><svg class="svg-icon grey"><use xlink:href="/blog/assets/minima-social-icons.svg#twitter"></use></svg></a></li></ul>
+</div>
+
+  </div>
+
+</footer>
+</body>
+
+</html>
