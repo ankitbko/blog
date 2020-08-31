@@ -4,6 +4,7 @@ title: Device Code Flow in Azure AD using Python's requests module and MSAL
 comments: true
 categories: [Python, azure, oauth, msal, requests, device code]
 description: Sample on how to integrate requests with MSAL to achieve device code flow
+source_code: https://github.com/ankitbko/python-requests-msal
 ---
 
 > Repo: [https://github.com/ankitbko/python-requests-msal](https://github.com/ankitbko/python-requests-msal).
