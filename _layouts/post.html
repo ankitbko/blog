@@ -66,6 +66,7 @@ layout: default
   <div class="post-content e-content" itemprop="articleBody">
     {{ content | toc  }}
   </div>
+  {% include page_navigation.html %}
   {%- if page.comments -%}
     {%- include utterances.html -%}
   {%- endif -%}

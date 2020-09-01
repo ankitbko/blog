@@ -9,3 +9,30 @@
 
 // If you want to turn off dark background for syntax highlighting, comment or delete the below line.
 @import "minima/fastpages-dracula-highlight"; 
+
+.PageNavigation {
+  font-size: 18px;
+  display: block;
+  width: auto;
+  overflow: hidden;
+}
+
+.PageNavigation a {
+  display: block;
+  float: left;
+  margin: 1em 0;
+}
+
+.PageNavigation .next {
+  float: right;
+}
+
+.PageNavigation div {
+  display: block;
+  width: 40%;
+  float: left;
+}
+
+.PageNavigation .nextDiv {
+  float: right;
+}
