@@ -482,4 +482,14 @@ table th { text-align: center !important; }
 
 .highlight .gd { color: #ff5555; }
 
+.PageNavigation { font-size: 18px; display: block; width: auto; overflow: hidden; }
+
+.PageNavigation a { display: block; float: left; margin: 1em 0; }
+
+.PageNavigation .next { float: right; }
+
+.PageNavigation div { display: block; width: 40%; float: left; }
+
+.PageNavigation .nextDiv { float: right; }
+
 /*# sourceMappingURL=style.css.map */
