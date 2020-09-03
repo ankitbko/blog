@@ -102,6 +102,7 @@ jobs:
         rm -rf _posts _notebooks _word images
         rm *.md CNAME action.yml _config.yml index.html LICENSE
         rm _pages/*.md
+        rm .github/workflows/chatops.yaml
         rm .github/workflows/docker-nbdev.yaml
         rm .github/workflows/docker.yaml
         rm .github/ISSUE_TEMPLATE/bug.md .github/ISSUE_TEMPLATE/feature_request.md
