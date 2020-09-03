@@ -1,0 +1,38 @@
+From b41384b3d8385ab41f656648f2d0f29f8d56c2e9 Mon Sep 17 00:00:00 2001
+From: Ankit Sinha <anksinha@microsoft.com>
+Date: Fri, 4 Sep 2020 05:18:23 +0530
+Subject: [PATCH] added navigation and source_code
+
+---
+ _layouts/post.html | 10 ++++++++++
+ 1 file changed, 10 insertions(+)
+
+diff --git a/_layouts/post.html b/_layouts/post.html
+index 9d924a0..57221ae 100755
+--- a/_layouts/post.html
++++ b/_layouts/post.html
+@@ -52,11 +52,21 @@ layout: default
+         </div>
+       {% endif -%}
+     {% endif -%}
++	
++	{% if page.source_code != nil %}
++		<div class="d-flex flex-wrap flex-justify-start flex-items-center">
++			<p class="page-description" style="margin-right: .5rem;">Source Code </p>
++			<div class="page-description">
++				{% include source_code_github_link.html %}
++			</div>
++		</div>
++	{% endif -%}
+   </header>
+ 
+   <div class="post-content e-content" itemprop="articleBody">
+     {{ content | toc  }}
+   </div>
++  {% include page_navigation.html %}
+   {%- if page.comments -%}
+     {%- include utterances.html -%}
+   {%- endif -%}
+-- 
+2.25.1
+
