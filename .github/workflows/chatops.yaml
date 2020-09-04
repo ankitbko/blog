@@ -122,7 +122,7 @@ jobs:
         if: steps.get_status.outputs.status == 'private'
         uses: docker://hamelsmu/fastpages-jekyll
         with:
-          args: bash -c "gem install bundler && jekyll build --baseurl=''"
+          args: bash -c "gem install bundler && jekyll build --baseurl ''"
      
       - name: deploy to netlify
         if: steps.get_status.outputs.status == 'private'
