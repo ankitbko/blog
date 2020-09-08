@@ -1,0 +1,1091 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="twitter:card" content="summary_large_image" /><!-- Begin Jekyll SEO tag v2.6.1 -->
+<title>Building large scale data ingestion solutions for Azure SQL using Azure databricks - Part 3 | F5 - Squashing Bugs</title>
+<meta name="generator" content="Jekyll v4.0.0" />
+<meta property="og:title" content="Building large scale data ingestion solutions for Azure SQL using Azure databricks - Part 3" />
+<meta name="author" content="<a href='https://twitter.com/ankitbko', target='_blank'>Ankit Sinha</a>, <a href='https://srikantan67.blogspot.com/' target='_blank'>Srikantan Sankaran</a>" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="Learn why do deadlock happen when inserting large data into Azure SQL from databricks" />
+<meta property="og:description" content="Learn why do deadlock happen when inserting large data into Azure SQL from databricks" />
+<link rel="canonical" href="https://ankitbko.github.io/blog/2020/09/bulk-import-using-sql-spark-connector-p3/" />
+<meta property="og:url" content="https://ankitbko.github.io/blog/2020/09/bulk-import-using-sql-spark-connector-p3/" />
+<meta property="og:site_name" content="F5 - Squashing Bugs" />
+<meta property="og:image" content="https://ankitbko.github.io/blog/images/previews/spark-connector-3-preview.png" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2020-09-08T00:00:00-05:00" />
+<script type="application/ld+json">
+{"headline":"Building large scale data ingestion solutions for Azure SQL using Azure databricks - Part 3","dateModified":"2020-09-08T00:00:00-05:00","datePublished":"2020-09-08T00:00:00-05:00","author":{"@type":"Person","name":"<a href='https://twitter.com/ankitbko', target='_blank'>Ankit Sinha</a>, <a href='https://srikantan67.blogspot.com/' target='_blank'>Srikantan Sankaran</a>"},"image":"https://ankitbko.github.io/blog/images/previews/spark-connector-3-preview.png","description":"Learn why do deadlock happen when inserting large data into Azure SQL from databricks","mainEntityOfPage":{"@type":"WebPage","@id":"https://ankitbko.github.io/blog/2020/09/bulk-import-using-sql-spark-connector-p3/"},"@type":"BlogPosting","url":"https://ankitbko.github.io/blog/2020/09/bulk-import-using-sql-spark-connector-p3/","@context":"https://schema.org"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="stylesheet" href="/blog/assets/css/style.css"><link type="application/atom+xml" rel="alternate" href="https://ankitbko.github.io/blog/feed.xml" title="F5 - Squashing Bugs" /><!-- the google_analytics_id gets auto inserted from the config file -->
+
+
+
+<script>(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)})(window,document,'script','//www.google-analytics.com/analytics.js','ga');ga('create','UA-75679348-1','auto');ga('require','displayfeatures');ga('send','pageview');</script>
+
+<link rel="shortcut icon" type="image/x-icon" href="/blog/images/favicon.ico"><link href="https://unpkg.com/@primer/css/dist/primer.css" rel="stylesheet" />
+<link rel="stylesheet" href="//use.fontawesome.com/releases/v5.0.7/css/all.css"><link type="application/atom+xml" rel="alternate" href="https://ankitbko.github.io/blog/feed.xml" title="F5 - Squashing Bugs" /><!-- the google_analytics_id gets auto inserted from the config file -->
+
+
+
+<script>(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)})(window,document,'script','//www.google-analytics.com/analytics.js','ga');ga('create','UA-75679348-1','auto');ga('require','displayfeatures');ga('send','pageview');</script>
+
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.11.1/dist/katex.min.css" integrity="sha384-zB1R0rpPzHqg7Kpt0Aljp8JPLqbXI3bhnPWROx27a9N0Ll6ZP/+DiW/UqRcLbRjq" crossorigin="anonymous">
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML"> </script>
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.11.1/dist/katex.min.js" integrity="sha384-y23I5Q6l+B6vatafAwxRu/0oK/79VlbSz7Q9aiSZUvyWYIYsd+qj+o24G5ZU2zJz" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.11.1/dist/contrib/auto-render.min.js" integrity="sha384-kWPLUVMOks5AQFrykwIup5lo0m3iMkkHrD0uJ4H5cjeGihAutqP0yW0J6dpFiVkI" crossorigin="anonymous"></script>
+    <script>
+    document.addEventListener("DOMContentLoaded", function() {
+        renderMathInElement( document.body, {
+        delimiters: [
+            {left: "$$", right: "$$", display: true},
+            {left: "[%", right: "%]", display: true},
+            {left: "$", right: "$", display: false}
+        ]}
+        );
+    });
+    </script>
+
+
+<script>
+function wrap_img(fn) {
+    if (document.attachEvent ? document.readyState === "complete" : document.readyState !== "loading") {
+        var elements = document.querySelectorAll(".post img");
+        Array.prototype.forEach.call(elements, function(el, i) {
+            if (el.getAttribute("title") && (el.className != "emoji")) {
+                const caption = document.createElement('figcaption');
+                var node = document.createTextNode(el.getAttribute("title"));
+                caption.appendChild(node);
+                const wrapper = document.createElement('figure');
+                wrapper.className = 'image';
+                el.parentNode.insertBefore(wrapper, el);
+                el.parentNode.removeChild(el);
+                wrapper.appendChild(el);
+                wrapper.appendChild(caption);
+            }
+        });
+    } else { document.addEventListener('DOMContentLoaded', fn); }
+}
+window.onload = wrap_img;
+</script>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function(){
+    // add link icon to anchor tags
+    var elem = document.querySelectorAll(".anchor-link")
+    elem.forEach(e => (e.innerHTML = '<i class="fas fa-link fa-xs"></i>'));
+    });
+</script>
+</head>
+<body><header class="site-header">
+
+  <div class="wrapper"><a class="site-title" rel="author" href="/blog/">F5 - Squashing Bugs</a><nav class="site-nav">
+        <input type="checkbox" id="nav-trigger" class="nav-trigger" />
+        <label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewBox="0 0 18 15" width="18px" height="15px">
+              <path d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.032C17.335,0,18,0.665,18,1.484L18,1.484z M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.032C17.335,6.031,18,6.696,18,7.516L18,7.516z M18,13.516C18,14.335,17.335,15,16.516,15H1.484 C0.665,15,0,14.335,0,13.516l0,0c0-0.82,0.665-1.483,1.484-1.483h15.032C17.335,12.031,18,12.695,18,13.516L18,13.516z"/>
+            </svg>
+          </span>
+        </label>
+
+        <div class="trigger"><a class="page-link" href="/blog/about/">About Me</a><a class="page-link" href="/blog/search/">Search</a><a class="page-link" href="/blog/categories/">Tags</a></div>
+      </nav></div>
+</header>
+<main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title p-name" itemprop="name headline">Building large scale data ingestion solutions for Azure SQL using Azure databricks - Part 3</h1><p class="page-description">Learn why do deadlock happen when inserting large data into Azure SQL from databricks</p><p class="post-meta post-meta-title"><time class="dt-published" datetime="2020-09-08T00:00:00-05:00" itemprop="datePublished">
+        Sep 8, 2020
+      </time>• 
+          <span itemprop="author" itemscope itemtype="http://schema.org/Person">
+            <span class="p-author h-card" itemprop="name"><a href='https://twitter.com/ankitbko', target='_blank'>Ankit Sinha</a>, <a href='https://srikantan67.blogspot.com/' target='_blank'>Srikantan Sankaran</a></span></span>
+       • <span class="read-time" title="Estimated read time">
+    
+    
+      30 min read
+    
+</span></p>
+
+    
+      <p class="category-tags"><i class="fas fa-tags category-tags-icon"></i></i> 
+      
+        <a class="category-tags-link" href="/blog/categories/#spark">spark</a>
+        &nbsp;
+      
+        <a class="category-tags-link" href="/blog/categories/#Azure Databricks">Azure Databricks</a>
+        &nbsp;
+      
+        <a class="category-tags-link" href="/blog/categories/#Azure SQL">Azure SQL</a>
+        &nbsp;
+      
+        <a class="category-tags-link" href="/blog/categories/#data ingestion">data ingestion</a>
+        &nbsp;
+      
+        <a class="category-tags-link" href="/blog/categories/#SQL spark connector">SQL spark connector</a>
+        &nbsp;
+      
+        <a class="category-tags-link" href="/blog/categories/#big data">big data</a>
+        &nbsp;
+      
+        <a class="category-tags-link" href="/blog/categories/#python">python</a>
+        
+      
+      </p>
+    
+
+    
+      
+		<div class="d-flex flex-wrap flex-justify-start flex-items-center">
+			<p class="page-description" style="margin-right: .5rem;">Source Code </p>
+			<div class="page-description">
+				<div class="px-2">
+    <a href="https://github.com/ankitbko/sql-spark-connector-sample" role="button" target="_blank">
+        <img class="notebook-badge-image" src="/blog/assets/badges/github.svg" alt="View On GitHub">
+    </a>
+</div>
+
+			</div>
+		</div>
+	<p class="page-description flash flash-success page-credits">Shoutout to <a href='https://github.com/ydaponte' target='_blank'>Yennifer Santos</a> and <a href='https://twitter.com/grrl_geek' target='_blank'>Jes Schultz</a> for providing me guidance on both deadlock and delete issue.</p>
+  </header>
+
+  <div class="post-content e-content" itemprop="articleBody">
+    <!--
+#################################################
+### THIS FILE WAS AUTOGENERATED! DO NOT EDIT! ###
+#################################################
+# file to edit: _notebooks/2020-09-08-bulk-import-using-sql-spark-connector-p3.ipynb
+-->
+
+<div class="container" id="notebook-container">
+        
+    
+    
+<div class="cell border-box-sizing code_cell rendered">
+
+</div>
+    
+
+<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>This is the third article of the blog series on data ingestion into Azure SQL using Azure Databricks. In the <a href="https://ankitbko.github.io/blog/2020/09/bulk-import-using-sql-spark-connector-p1/">first post</a> we discussed how we can use <a href="https://github.com/microsoft/sql-spark-connector">Apache Spark Connector for SQL Server and Azure SQL</a> to bulk insert data into Azure SQL. In the <a href="https://ankitbko.github.io/blog/2020/09/bulk-import-using-sql-spark-connector-p2/">second post</a> we saw how bulk insert performs with different indexing strategies and also compared performance of the new Microsoft SQL Spark Connector with the now deprecated Azure SQL Spark Connector.</p>
+<p>In this post we will delve deeper into deadlock issue and discuss potential solution to it. Finally we will discuss briefly the challenges we face when we <em>DELETE</em> large amount of data from Azure SQL Database.</p>
+<p>We will continue using environment, dataset and scripts from previous posts and the code will be hidden for brevity. You will find the notebooks and all scripts in the github repo linked above.</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h2 id="Deadlocks:-How-and-Why">Deadlocks: How and Why<a class="anchor-link" href="#Deadlocks:-How-and-Why"> </a></h2><p>We start with reporducing the deadlock that we faced earlier. Databricks is resilient enough to retry any task that failed therefore be on lookout for any failed task even if the stage and job succeeds. We have same set of store ids that we are going to use to insert sales data into the database.</p>
+
+</div>
+</div>
+</div>
+    
+    
+<div class="cell border-box-sizing code_cell rendered">
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+<div class="output_html rendered_html output_subarea ">
+<div>
+<style scoped="">
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>ss_store_sk</th>
+      <th>count</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>529</td>
+      <td>5512441</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>650</td>
+      <td>5510505</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>14</td>
+      <td>5508259</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>406</td>
+      <td>5506912</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>178</td>
+      <td>5506321</td>
+    </tr>
+    <tr>
+      <th>5</th>
+      <td>766</td>
+      <td>5506226</td>
+    </tr>
+    <tr>
+      <th>6</th>
+      <td>934</td>
+      <td>5505890</td>
+    </tr>
+    <tr>
+      <th>7</th>
+      <td>157</td>
+      <td>5505605</td>
+    </tr>
+    <tr>
+      <th>8</th>
+      <td>22</td>
+      <td>5505380</td>
+    </tr>
+    <tr>
+      <th>9</th>
+      <td>772</td>
+      <td>5504930</td>
+    </tr>
+    <tr>
+      <th>10</th>
+      <td>Total</td>
+      <td>55072469</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+    
+
+    
+    
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="k">def</span> <span class="nf">import_table</span><span class="p">(</span><span class="n">url</span><span class="p">,</span> <span class="n">table_name</span><span class="p">,</span> <span class="n">stores</span><span class="p">,</span> <span class="n">batch_size</span><span class="p">,</span> <span class="n">collapse_partitions</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span> 
+  <span class="k">try</span><span class="p">:</span>
+      <span class="n">df</span> <span class="o">=</span> <span class="n">spark</span><span class="o">.</span><span class="n">read</span><span class="o">.</span><span class="n">parquet</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">path</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">table_name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+      <span class="n">df</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="n">table_storesk_map</span><span class="p">[</span><span class="n">table_name</span><span class="p">]]</span><span class="o">.</span><span class="n">isin</span><span class="p">(</span><span class="n">stores</span><span class="p">))</span>
+
+      <span class="c1"># Temporary workaround until Issue #5 gets fixed https://github.com/microsoft/sql-spark-connector/issues/5</span>
+      <span class="n">table_schema</span> <span class="o">=</span> <span class="n">create_valid_table_schema</span><span class="p">(</span><span class="n">table_name</span><span class="p">,</span> <span class="n">df</span><span class="o">.</span><span class="n">schema</span><span class="p">)</span>
+      <span class="n">df</span> <span class="o">=</span> <span class="n">spark</span><span class="o">.</span><span class="n">createDataFrame</span><span class="p">(</span><span class="n">df</span><span class="o">.</span><span class="n">rdd</span><span class="p">,</span> <span class="n">table_schema</span><span class="p">)</span>
+      
+      <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Number of partitions: </span><span class="si">{</span><span class="n">df</span><span class="o">.</span><span class="n">rdd</span><span class="o">.</span><span class="n">getNumPartitions</span><span class="p">()</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+      <span class="k">if</span> <span class="n">collapse_partitions</span><span class="p">:</span>
+        <span class="n">df</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">coalesce</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+
+      <span class="n">t</span> <span class="o">=</span> <span class="n">Timer</span><span class="p">(</span><span class="n">text</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;Imported into table </span><span class="si">{</span><span class="n">table_name</span><span class="si">}</span><span class="s2"> in : </span><span class="se">{{</span><span class="s2">:0.2f</span><span class="se">}}</span><span class="s2"> &quot;</span><span class="p">)</span>    
+      <span class="n">t</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
+      
+      <span class="n">df</span><span class="o">.</span><span class="n">write</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="s2">&quot;com.microsoft.sqlserver.jdbc.spark&quot;</span><span class="p">)</span> \
+        <span class="o">.</span><span class="n">mode</span><span class="p">(</span><span class="s2">&quot;append&quot;</span><span class="p">)</span> \
+        <span class="o">.</span><span class="n">option</span><span class="p">(</span><span class="s2">&quot;url&quot;</span><span class="p">,</span> <span class="n">url</span><span class="p">)</span> \
+        <span class="o">.</span><span class="n">option</span><span class="p">(</span><span class="s2">&quot;dbtable&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">schema</span><span class="si">}</span><span class="s2">.</span><span class="si">{</span><span class="n">table_name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span> \
+        <span class="o">.</span><span class="n">option</span><span class="p">(</span><span class="s2">&quot;user&quot;</span><span class="p">,</span> <span class="n">username</span><span class="p">)</span> \
+        <span class="o">.</span><span class="n">option</span><span class="p">(</span><span class="s2">&quot;password&quot;</span><span class="p">,</span> <span class="n">password</span><span class="p">)</span> \
+        <span class="o">.</span><span class="n">option</span><span class="p">(</span><span class="s2">&quot;tableLock&quot;</span><span class="p">,</span> <span class="s2">&quot;false&quot;</span><span class="p">)</span> \
+        <span class="o">.</span><span class="n">option</span><span class="p">(</span><span class="s2">&quot;batchsize&quot;</span><span class="p">,</span> <span class="n">batch_size</span><span class="p">)</span> \
+        <span class="o">.</span><span class="n">save</span><span class="p">()</span>
+
+      <span class="n">elapsed</span> <span class="o">=</span> <span class="n">t</span><span class="o">.</span><span class="n">stop</span><span class="p">()</span>
+      <span class="k">return</span> <span class="n">elapsed</span>
+  <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Failed to import into table </span><span class="si">{</span><span class="n">table_name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">e</span><span class="p">)</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+<div class="output_html rendered_html output_subarea ">
+<style scoped="">
+  .ansiout {
+    display: block;
+    unicode-bidi: embed;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    word-break: break-all;
+    font-family: "Source Code Pro", "Menlo", monospace;;
+    font-size: 13px;
+    color: #555;
+    margin-left: 4px;
+    line-height: 19px;
+  }
+</style>
+<div class="ansiout"></div>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+    
+
+    
+    
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">url</span> <span class="o">=</span> <span class="n">create_url</span><span class="p">(</span><span class="n">server_name</span><span class="p">,</span> <span class="s2">&quot;idx&quot;</span><span class="p">)</span>
+<span class="n">truncate_tables</span><span class="p">(</span><span class="n">url</span><span class="p">,</span> <span class="n">username</span><span class="p">,</span> <span class="n">password</span><span class="p">,</span> <span class="n">tables</span><span class="p">)</span>
+<span class="n">elapsed</span> <span class="o">=</span> <span class="n">import_table</span><span class="p">(</span><span class="n">url</span><span class="p">,</span> <span class="n">table_name</span><span class="p">,</span> <span class="n">stores</span><span class="p">[:</span><span class="mi">2</span><span class="p">],</span> <span class="mi">1048576</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+<div class="output_html rendered_html output_subarea ">
+<style scoped="">
+  .ansiout {
+    display: block;
+    unicode-bidi: embed;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    word-break: break-all;
+    font-family: "Source Code Pro", "Menlo", monospace;;
+    font-size: 13px;
+    color: #555;
+    margin-left: 4px;
+    line-height: 19px;
+  }
+</style>
+<div class="ansiout">Truncated table store_sales in: 0.10
+Number of partitions: 6
+Imported into table store_sales in : 471.29 
+</div>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+    
+
+<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>In the above example we insert sales data for 2 stores which results in ~11 million records inserted into <code>store_sales</code> table. Whether any deadlocks happened during course of import can be verified by looking at logs in Spark UI.</p>
+<p><img src="/blog/images/copied_from_nb/./assets/images/posts/spark-connector-3/deadlock1.png" alt="deadlock" /></p>
+<p>Spark will start with creating 6 tasks, 1 for each partition. All of these tasks will execute concurrently on available workers and each of them will execute Bulk Insert on Azure SQL Database. When these tasks fail as part of deadlock resolution process by database, spark will create new tasks based on its retry policy.</p>
+<p><strong>But why do spark create multiple partitions?</strong></p>
+<p>There can be many factors which effect how many partitions are created by spark. If the data is read from already paritioned dataset spark will try to maintain the parititons. If the file being read has <a href="https://spark.apache.org/docs/2.4.5/rdd-programming-guide.html#external-datasets">more than one block</a> spark will read each block into separate partitions. To add to all this number of partitions will also depend on number workers that are available. In our case we read from 2 partitions (because we read 2 stores) and spark reads each of them in 3 partitions (because each file has 3 blocks). This is an optimization which is performed by spark to evenly distribute the dataset across different workers. In general analytics scenario this improves concurrency and performance but it our case it backfires and leads to deadlock. To understand why deadlock happens we need to look deeper into extended events logs.</p>
+<p>We can find more details of recently occured deadlocks on Azure SQL Server by executing below query against <code>master</code> database.</p>
+<div class="highlight"><pre><span></span><span class="k">WITH</span> <span class="n">CTE</span> <span class="k">AS</span> <span class="p">(</span>
+<span class="k">SELECT</span> <span class="k">CAST</span><span class="p">(</span><span class="n">event_data</span> <span class="k">AS</span> <span class="n">XML</span><span class="p">)</span>  <span class="k">AS</span> <span class="p">[</span><span class="n">target_data_XML</span><span class="p">]</span>
+<span class="k">FROM</span> <span class="n">sys</span><span class="p">.</span><span class="n">fn_xe_telemetry_blob_target_read_file</span><span class="p">(</span><span class="s1">&#39;dl&#39;</span><span class="p">,</span>
+<span class="k">null</span><span class="p">,</span> <span class="k">null</span><span class="p">,</span> <span class="k">null</span><span class="p">)</span>
+<span class="p">)</span>
+<span class="k">SELECT</span> <span class="n">TOP</span> <span class="mi">10</span> <span class="n">target_data_XML</span><span class="p">.</span><span class="n">value</span><span class="p">(</span><span class="s1">&#39;(/event/@timestamp)[1]&#39;</span><span class="p">,</span>
+<span class="s1">&#39;DateTime2&#39;</span><span class="p">)</span> <span class="k">AS</span> <span class="k">Timestamp</span><span class="p">,</span>
+<span class="n">target_data_XML</span><span class="p">.</span><span class="n">query</span><span class="p">(</span><span class="s1">&#39;/event/data[@name=&#39;&#39;xml_report&#39;&#39;]</span>
+<span class="s1">/value/deadlock&#39;</span><span class="p">)</span> <span class="k">AS</span> <span class="n">deadlock_xml</span><span class="p">,</span>
+<span class="n">target_data_XML</span><span class="p">.</span><span class="n">query</span><span class="p">(</span><span class="s1">&#39;/event/data[@name=&#39;&#39;database_name&#39;&#39;]</span>
+<span class="s1">/value&#39;</span><span class="p">).</span><span class="n">value</span><span class="p">(</span><span class="s1">&#39;(/value)[1]&#39;</span><span class="p">,</span> <span class="s1">&#39;nvarchar(100)&#39;</span><span class="p">)</span> <span class="k">AS</span> <span class="n">db_name</span>
+<span class="k">FROM</span> <span class="n">CTE</span>
+<span class="k">ORDER</span> <span class="k">BY</span> <span class="k">Timestamp</span> <span class="k">DESC</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+    
+    
+<div class="cell border-box-sizing code_cell rendered">
+<details class="description">
+      <summary class="btn btn-sm" data-open="Hide Code" data-close="Show Code"></summary>
+        <p><div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="c1">#collapse</span>
+<span class="n">query</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">SELECT top 10 target_data_XML.value(&#39;(/event/@timestamp)[1]&#39;,</span>
+<span class="s2">&#39;DateTime2&#39;) AS Timestamp,</span>
+<span class="s2">target_data_XML.query(&#39;/event/data[@name=&#39;&#39;xml_report&#39;&#39;]</span>
+<span class="s2">/value/deadlock&#39;) AS deadlock_xml,</span>
+<span class="s2">target_data_XML.query(&#39;/event/data[@name=&#39;&#39;database_name&#39;&#39;]</span>
+<span class="s2">/value&#39;).value(&#39;(/value)[1]&#39;, &#39;nvarchar(100)&#39;) AS db_name</span>
+<span class="s2">FROM (</span>
+<span class="s2">	SELECT CAST(event_data AS XML)  AS [target_data_XML]</span>
+<span class="s2">	FROM sys.fn_xe_telemetry_blob_target_read_file(&#39;dl&#39;,</span>
+<span class="s2">	null, null, null)</span>
+<span class="s2">) as x</span>
+<span class="s2">ORDER BY Timestamp DESC&quot;&quot;&quot;</span>
+
+<span class="n">url</span> <span class="o">=</span> <span class="n">create_url</span><span class="p">(</span><span class="n">server_name</span><span class="p">,</span> <span class="s2">&quot;master&quot;</span><span class="p">)</span>
+
+<span class="n">dl_df</span> <span class="o">=</span> <span class="n">spark</span><span class="o">.</span><span class="n">read</span> \
+        <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="s2">&quot;jdbc&quot;</span><span class="p">)</span> \
+        <span class="o">.</span><span class="n">option</span><span class="p">(</span><span class="s2">&quot;url&quot;</span><span class="p">,</span> <span class="n">url</span><span class="p">)</span> \
+        <span class="o">.</span><span class="n">option</span><span class="p">(</span><span class="s2">&quot;query&quot;</span><span class="p">,</span> <span class="n">query</span><span class="p">)</span> \
+        <span class="o">.</span><span class="n">option</span><span class="p">(</span><span class="s2">&quot;user&quot;</span><span class="p">,</span> <span class="n">username</span><span class="p">)</span> \
+        <span class="o">.</span><span class="n">option</span><span class="p">(</span><span class="s2">&quot;password&quot;</span><span class="p">,</span> <span class="n">password</span><span class="p">)</span><span class="o">.</span><span class="n">load</span><span class="p">()</span>
+
+<span class="n">display</span><span class="p">(</span><span class="n">dl_df</span><span class="p">)</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+</p>
+    </details>
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+<div class="output_html rendered_html output_subarea ">
+<style scoped="">
+  .table-result-container {
+    max-height: 300px;
+    overflow: auto;
+  }
+  table, th, td {
+    border: 1px solid black;
+    border-collapse: collapse;
+  }
+  th, td {
+    padding: 5px;
+  }
+  th {
+    text-align: left;
+  }
+</style><div class="table-result-container"><table class="table-result"><thead style="background-color: white"><tr><th>Timestamp</th><th>deadlock_xml</th><th>db_name</th></tr></thead><tbody><tr><td>2020-09-07T12:51:03.150+0000</td><td><deadlock><victim-list><victimProcess id="process294342d5c28" /></victim-list><process-list><process id="process294342d5c28" taskpriority="0" logused="14702332" waitresource="PAGE: 6:5:177139 " waittime="65924" ownerId="6305608" transactionname="implicit_transaction" lasttranstarted="2020-09-07T12:48:46.310" XDES="0x2942da70428" lockMode="IX" schedulerid="2" kpid="32240" status="suspended" spid="104" sbid="0" ecid="0" priority="0" trancount="2" lastbatchstarted="2020-09-07T12:48:46.310" lastbatchcompleted="2020-09-07T12:48:46.310" lastattention="1900-01-01T00:00:00.310" clientapp="Microsoft JDBC Driver for SQL Server" hostname="0825-113128-alum84-10-139-64-6" hostpid="0" loginname="[REDACTED]" isolationlevel="read committed (2)" xactid="0" currentdb="6" currentdbname="idx" lockTimeout="4294967295" clientoption1="671088672" clientoption2="128058"><executionStack><frame procname="unknown" queryhash="0x499421339951eed9" queryplanhash="0xfdb1047943f4774d" line="1" stmtend="1414" sqlhandle="0x020000004f6fb4142b1cd89e697a443fbf5d63241a537a260000000000000000000000000000000000000000">
+unknown    </frame></executionStack><inputbuf>
+INSERT BULK dbo.store_sales ([ss_sold_date_sk] INT , [ss_sold_time_sk] INT , [ss_item_sk] INT , [ss_customer_sk] INT , [ss_cdemo_sk] INT , [ss_hdemo_sk] INT , [ss_addr_sk] INT , [ss_store_sk] INT , [ss_promo_sk] INT , [ss_ticket_number] INT , [ss_quantity] INT , [ss_wholesale_cost] DECIMAL(7, 2) , [ss_list_price] DECIMAL(7, 2) , [ss_sales_price] DECIMAL(7, 2) , [ss_ext_discount_amt] DECIMAL(7, 2) , [ss_ext_sales_price] DECIMAL(7, 2) , [ss_ext_wholesale_cost] DECIMAL(7, 2) , [ss_ext_list_price] DECIMAL(7, 2) , [ss_ext_tax] DECIMAL(7, 2) , [ss_coupon_amt] DECIMAL(7, 2) , [ss_net_paid] DECIMAL(7, 2) , [ss_net_paid_inc_tax] DECIMAL(7, 2) , [ss_net_profit] DECIMAL(7, 2) )  with (ROWS_PER_BATCH = 1048576)   </inputbuf></process><process id="process2943205fc28" taskpriority="0" logused="465121144" waitresource="PAGE: 6:5:176838 " waittime="4133" ownerId="6305670" transactionname="implicit_transaction" lasttranstarted="2020-09-07T12:48:46.320" XDES="0x29448a1c428" lockMode="X" schedulerid="2" kpid="54388" status="suspended" spid="107" sbid="0" ecid="0" priority="0" trancount="2" lastbatchstarted="2020-09-07T12:50:13.077" lastbatchcompleted="2020-09-07T12:50:13.077" lastattention="1900-01-01T00:00:00.077" clientapp="Microsoft JDBC Driver for SQL Server" hostname="0825-113128-alum84-10-139-64-5" hostpid="0" loginname="[REDACTED]" isolationlevel="read committed (2)" xactid="0" currentdb="6" currentdbname="idx" lockTimeout="4294967295" clientoption1="671088672" clientoption2="128058"><executionStack><frame procname="unknown" queryhash="0x499421339951eed9" queryplanhash="0xfdb1047943f4774d" line="1" stmtend="1414" sqlhandle="0x020000004f6fb4142b1cd89e697a443fbf5d63241a537a260000000000000000000000000000000000000000">
+unknown    </frame></executionStack><inputbuf>
+INSERT BULK dbo.store_sales ([ss_sold_date_sk] INT , [ss_sold_time_sk] INT , [ss_item_sk] INT , [ss_customer_sk] INT , [ss_cdemo_sk] INT , [ss_hdemo_sk] INT , [ss_addr_sk] INT , [ss_store_sk] INT , [ss_promo_sk] INT , [ss_ticket_number] INT , [ss_quantity] INT , [ss_wholesale_cost] DECIMAL(7, 2) , [ss_list_price] DECIMAL(7, 2) , [ss_sales_price] DECIMAL(7, 2) , [ss_ext_discount_amt] DECIMAL(7, 2) , [ss_ext_sales_price] DECIMAL(7, 2) , [ss_ext_wholesale_cost] DECIMAL(7, 2) , [ss_ext_list_price] DECIMAL(7, 2) , [ss_ext_tax] DECIMAL(7, 2) , [ss_coupon_amt] DECIMAL(7, 2) , [ss_net_paid] DECIMAL(7, 2) , [ss_net_paid_inc_tax] DECIMAL(7, 2) , [ss_net_profit] DECIMAL(7, 2) )  with (ROWS_PER_BATCH = 1048576)   </inputbuf></process></process-list><resource-list><pagelock fileid="5" pageid="177139" dbid="6" subresource="FULL" objectname="1184344b-8c03-4040-beeb-0fe87dbb370f.dbo.store_sales" id="lock293f9709e80" mode="X" associatedObjectId="72057594045267968"><owner-list><owner id="process2943205fc28" mode="X" /></owner-list><waiter-list><waiter id="process294342d5c28" mode="IX" requestType="wait" /></waiter-list></pagelock><pagelock fileid="5" pageid="176838" dbid="6" subresource="FULL" objectname="1184344b-8c03-4040-beeb-0fe87dbb370f.dbo.store_sales" id="lock29338111d80" mode="IX" associatedObjectId="72057594045267968"><owner-list><owner id="process294342d5c28" mode="IX" /></owner-list><waiter-list><waiter id="process2943205fc28" mode="X" requestType="convert" /></waiter-list></pagelock></resource-list></deadlock></td><td>idx</td></tr><tr><td>2020-09-07T12:50:58.154+0000</td><td><deadlock><victim-list><victimProcess id="process2943c43b848" /><victimProcess id="process2943205f848" /></victim-list><process-list><process id="process2943c43b848" taskpriority="0" logused="6968288" waitresource="PAGE: 6:5:177096 " waittime="63098" ownerId="6305642" transactionname="implicit_transaction" lasttranstarted="2020-09-07T12:48:46.310" XDES="0x29442e2c428" lockMode="IX" schedulerid="1" kpid="75996" status="suspended" spid="106" sbid="0" ecid="0" priority="0" trancount="2" lastbatchstarted="2020-09-07T12:48:46.313" lastbatchcompleted="2020-09-07T12:48:46.313" lastattention="1900-01-01T00:00:00.313" clientapp="Microsoft JDBC Driver for SQL Server" hostname="0825-113128-alum84-10-139-64-9" hostpid="0" loginname="[REDACTED]" isolationlevel="read committed (2)" xactid="0" currentdb="6" currentdbname="idx" lockTimeout="4294967295" clientoption1="671088672" clientoption2="128058"><executionStack><frame procname="unknown" queryhash="0x499421339951eed9" queryplanhash="0xfdb1047943f4774d" line="1" stmtend="1414" sqlhandle="0x020000004f6fb4142b1cd89e697a443fbf5d63241a537a260000000000000000000000000000000000000000">
+unknown    </frame></executionStack><inputbuf>
+INSERT BULK dbo.store_sales ([ss_sold_date_sk] INT , [ss_sold_time_sk] INT , [ss_item_sk] INT , [ss_customer_sk] INT , [ss_cdemo_sk] INT , [ss_hdemo_sk] INT , [ss_addr_sk] INT , [ss_store_sk] INT , [ss_promo_sk] INT , [ss_ticket_number] INT , [ss_quantity] INT , [ss_wholesale_cost] DECIMAL(7, 2) , [ss_list_price] DECIMAL(7, 2) , [ss_sales_price] DECIMAL(7, 2) , [ss_ext_discount_amt] DECIMAL(7, 2) , [ss_ext_sales_price] DECIMAL(7, 2) , [ss_ext_wholesale_cost] DECIMAL(7, 2) , [ss_ext_list_price] DECIMAL(7, 2) , [ss_ext_tax] DECIMAL(7, 2) , [ss_coupon_amt] DECIMAL(7, 2) , [ss_net_paid] DECIMAL(7, 2) , [ss_net_paid_inc_tax] DECIMAL(7, 2) , [ss_net_profit] DECIMAL(7, 2) )  with (ROWS_PER_BATCH = 1048576)   </inputbuf></process><process id="process2943205f848" taskpriority="0" logused="12716200" waitresource="PAGE: 6:5:177287 " waittime="63273" ownerId="6305638" transactionname="implicit_transaction" lasttranstarted="2020-09-07T12:48:46.310" XDES="0x29442e14428" lockMode="IX" schedulerid="2" kpid="78828" status="suspended" spid="105" sbid="0" ecid="0" priority="0" trancount="2" lastbatchstarted="2020-09-07T12:48:46.313" lastbatchcompleted="2020-09-07T12:48:46.313" lastattention="1900-01-01T00:00:00.313" clientapp="Microsoft JDBC Driver for SQL Server" hostname="0825-113128-alum84-10-139-64-8" hostpid="0" loginname="[REDACTED]" isolationlevel="read committed (2)" xactid="0" currentdb="6" currentdbname="idx" lockTimeout="4294967295" clientoption1="671088672" clientoption2="128058"><executionStack><frame procname="unknown" queryhash="0x499421339951eed9" queryplanhash="0xfdb1047943f4774d" line="1" stmtend="1414" sqlhandle="0x020000004f6fb4142b1cd89e697a443fbf5d63241a537a260000000000000000000000000000000000000000">
+unknown    </frame></executionStack><inputbuf>
+INSERT BULK dbo.store_sales ([ss_sold_date_sk] INT , [ss_sold_time_sk] INT , [ss_item_sk] INT , [ss_customer_sk] INT , [ss_cdemo_sk] INT , [ss_hdemo_sk] INT , [ss_addr_sk] INT , [ss_store_sk] INT , [ss_promo_sk] INT , [ss_ticket_number] INT , [ss_quantity] INT , [ss_wholesale_cost] DECIMAL(7, 2) , [ss_list_price] DECIMAL(7, 2) , [ss_sales_price] DECIMAL(7, 2) , [ss_ext_discount_amt] DECIMAL(7, 2) , [ss_ext_sales_price] DECIMAL(7, 2) , [ss_ext_wholesale_cost] DECIMAL(7, 2) , [ss_ext_list_price] DECIMAL(7, 2) , [ss_ext_tax] DECIMAL(7, 2) , [ss_coupon_amt] DECIMAL(7, 2) , [ss_net_paid] DECIMAL(7, 2) , [ss_net_paid_inc_tax] DECIMAL(7, 2) , [ss_net_profit] DECIMAL(7, 2) )  with (ROWS_PER_BATCH = 1048576)   </inputbuf></process><process id="process2943205fc28" taskpriority="0" logused="451286660" waitresource="PAGE: 6:3:184435 " waittime="1096" ownerId="6305670" transactionname="implicit_transaction" lasttranstarted="2020-09-07T12:48:46.320" XDES="0x29448a1c428" lockMode="X" schedulerid="2" kpid="54388" status="suspended" spid="107" sbid="0" ecid="0" priority="0" trancount="2" lastbatchstarted="2020-09-07T12:50:13.077" lastbatchcompleted="2020-09-07T12:50:13.077" lastattention="1900-01-01T00:00:00.077" clientapp="Microsoft JDBC Driver for SQL Server" hostname="0825-113128-alum84-10-139-64-5" hostpid="0" loginname="[REDACTED]" isolationlevel="read committed (2)" xactid="0" currentdb="6" currentdbname="idx" lockTimeout="4294967295" clientoption1="671088672" clientoption2="128058"><executionStack><frame procname="unknown" queryhash="0x499421339951eed9" queryplanhash="0xfdb1047943f4774d" line="1" stmtend="1414" sqlhandle="0x020000004f6fb4142b1cd89e697a443fbf5d63241a537a260000000000000000000000000000000000000000">
+unknown    </frame></executionStack><inputbuf>
+INSERT BULK dbo.store_sales ([ss_sold_date_sk] INT , [ss_sold_time_sk] INT , [ss_item_sk] INT , [ss_customer_sk] INT , [ss_cdemo_sk] INT , [ss_hdemo_sk] INT , [ss_addr_sk] INT , [ss_store_sk] INT , [ss_promo_sk] INT , [ss_ticket_number] INT , [ss_quantity] INT , [ss_wholesale_cost] DECIMAL(7, 2) , [ss_list_price] DECIMAL(7, 2) , [ss_sales_price] DECIMAL(7, 2) , [ss_ext_discount_amt] DECIMAL(7, 2) , [ss_ext_sales_price] DECIMAL(7, 2) , [ss_ext_wholesale_cost] DECIMAL(7, 2) , [ss_ext_list_price] DECIMAL(7, 2) , [ss_ext_tax] DECIMAL(7, 2) , [ss_coupon_amt] DECIMAL(7, 2) , [ss_net_paid] DECIMAL(7, 2) , [ss_net_paid_inc_tax] DECIMAL(7, 2) , [ss_net_profit] DECIMAL(7, 2) )  with (ROWS_PER_BATCH = 1048576)   </inputbuf></process></process-list><resource-list><pagelock fileid="5" pageid="177096" dbid="6" subresource="FULL" objectname="1184344b-8c03-4040-beeb-0fe87dbb370f.dbo.store_sales" id="lock293d0af3500" mode="X" associatedObjectId="72057594045267968"><owner-list><owner id="process2943205fc28" mode="X" /></owner-list><waiter-list><waiter id="process2943c43b848" mode="IX" requestType="wait" /></waiter-list></pagelock><pagelock fileid="5" pageid="177287" dbid="6" subresource="FULL" objectname="1184344b-8c03-4040-beeb-0fe87dbb370f.dbo.store_sales" id="lock293ef3b6100" mode="X" associatedObjectId="72057594045267968"><owner-list><owner id="process2943205fc28" mode="X" /></owner-list><waiter-list><waiter id="process2943205f848" mode="IX" requestType="wait" /></waiter-list></pagelock><pagelock fileid="3" pageid="184435" dbid="6" subresource="FULL" objectname="1184344b-8c03-4040-beeb-0fe87dbb370f.dbo.store_sales" id="lock2933d797c80" mode="IX" associatedObjectId="72057594045267968"><owner-list><owner id="process2943c43b848" mode="IX" /></owner-list><waiter-list><waiter id="process2943205fc28" mode="X" requestType="wait" /></waiter-list></pagelock></resource-list></deadlock></td><td>idx</td></tr><tr><td>2020-09-07T12:50:58.153+0000</td><td><deadlock><victim-list><victimProcess id="process2943c43b848" /><victimProcess id="process2943205f848" /></victim-list><process-list><process id="process2943c43b848" taskpriority="0" logused="6968288" waitresource="PAGE: 6:5:177096 " waittime="63098" ownerId="6305642" transactionname="implicit_transaction" lasttranstarted="2020-09-07T12:48:46.310" XDES="0x29442e2c428" lockMode="IX" schedulerid="1" kpid="75996" status="suspended" spid="106" sbid="0" ecid="0" priority="0" trancount="2" lastbatchstarted="2020-09-07T12:48:46.313" lastbatchcompleted="2020-09-07T12:48:46.313" lastattention="1900-01-01T00:00:00.313" clientapp="Microsoft JDBC Driver for SQL Server" hostname="0825-113128-alum84-10-139-64-9" hostpid="0" loginname="[REDACTED]" isolationlevel="read committed (2)" xactid="0" currentdb="6" currentdbname="idx" lockTimeout="4294967295" clientoption1="671088672" clientoption2="128058"><executionStack><frame procname="unknown" queryhash="0x499421339951eed9" queryplanhash="0xfdb1047943f4774d" line="1" stmtend="1414" sqlhandle="0x020000004f6fb4142b1cd89e697a443fbf5d63241a537a260000000000000000000000000000000000000000">
+unknown    </frame></executionStack><inputbuf>
+INSERT BULK dbo.store_sales ([ss_sold_date_sk] INT , [ss_sold_time_sk] INT , [ss_item_sk] INT , [ss_customer_sk] INT , [ss_cdemo_sk] INT , [ss_hdemo_sk] INT , [ss_addr_sk] INT , [ss_store_sk] INT , [ss_promo_sk] INT , [ss_ticket_number] INT , [ss_quantity] INT , [ss_wholesale_cost] DECIMAL(7, 2) , [ss_list_price] DECIMAL(7, 2) , [ss_sales_price] DECIMAL(7, 2) , [ss_ext_discount_amt] DECIMAL(7, 2) , [ss_ext_sales_price] DECIMAL(7, 2) , [ss_ext_wholesale_cost] DECIMAL(7, 2) , [ss_ext_list_price] DECIMAL(7, 2) , [ss_ext_tax] DECIMAL(7, 2) , [ss_coupon_amt] DECIMAL(7, 2) , [ss_net_paid] DECIMAL(7, 2) , [ss_net_paid_inc_tax] DECIMAL(7, 2) , [ss_net_profit] DECIMAL(7, 2) )  with (ROWS_PER_BATCH = 1048576)   </inputbuf></process><process id="process2943205f848" taskpriority="0" logused="12716200" waitresource="PAGE: 6:5:177287 " waittime="63272" ownerId="6305638" transactionname="implicit_transaction" lasttranstarted="2020-09-07T12:48:46.310" XDES="0x29442e14428" lockMode="IX" schedulerid="2" kpid="78828" status="suspended" spid="105" sbid="0" ecid="0" priority="0" trancount="2" lastbatchstarted="2020-09-07T12:48:46.313" lastbatchcompleted="2020-09-07T12:48:46.313" lastattention="1900-01-01T00:00:00.313" clientapp="Microsoft JDBC Driver for SQL Server" hostname="0825-113128-alum84-10-139-64-8" hostpid="0" loginname="[REDACTED]" isolationlevel="read committed (2)" xactid="0" currentdb="6" currentdbname="idx" lockTimeout="4294967295" clientoption1="671088672" clientoption2="128058"><executionStack><frame procname="unknown" queryhash="0x499421339951eed9" queryplanhash="0xfdb1047943f4774d" line="1" stmtend="1414" sqlhandle="0x020000004f6fb4142b1cd89e697a443fbf5d63241a537a260000000000000000000000000000000000000000">
+unknown    </frame></executionStack><inputbuf>
+INSERT BULK dbo.store_sales ([ss_sold_date_sk] INT , [ss_sold_time_sk] INT , [ss_item_sk] INT , [ss_customer_sk] INT , [ss_cdemo_sk] INT , [ss_hdemo_sk] INT , [ss_addr_sk] INT , [ss_store_sk] INT , [ss_promo_sk] INT , [ss_ticket_number] INT , [ss_quantity] INT , [ss_wholesale_cost] DECIMAL(7, 2) , [ss_list_price] DECIMAL(7, 2) , [ss_sales_price] DECIMAL(7, 2) , [ss_ext_discount_amt] DECIMAL(7, 2) , [ss_ext_sales_price] DECIMAL(7, 2) , [ss_ext_wholesale_cost] DECIMAL(7, 2) , [ss_ext_list_price] DECIMAL(7, 2) , [ss_ext_tax] DECIMAL(7, 2) , [ss_coupon_amt] DECIMAL(7, 2) , [ss_net_paid] DECIMAL(7, 2) , [ss_net_paid_inc_tax] DECIMAL(7, 2) , [ss_net_profit] DECIMAL(7, 2) )  with (ROWS_PER_BATCH = 1048576)   </inputbuf></process><process id="process2943205fc28" taskpriority="0" logused="451286660" waitresource="PAGE: 6:3:184435 " waittime="1096" ownerId="6305670" transactionname="implicit_transaction" lasttranstarted="2020-09-07T12:48:46.320" XDES="0x29448a1c428" lockMode="X" schedulerid="2" kpid="54388" status="suspended" spid="107" sbid="0" ecid="0" priority="0" trancount="2" lastbatchstarted="2020-09-07T12:50:13.077" lastbatchcompleted="2020-09-07T12:50:13.077" lastattention="1900-01-01T00:00:00.077" clientapp="Microsoft JDBC Driver for SQL Server" hostname="0825-113128-alum84-10-139-64-5" hostpid="0" loginname="[REDACTED]" isolationlevel="read committed (2)" xactid="0" currentdb="6" currentdbname="idx" lockTimeout="4294967295" clientoption1="671088672" clientoption2="128058"><executionStack><frame procname="unknown" queryhash="0x499421339951eed9" queryplanhash="0xfdb1047943f4774d" line="1" stmtend="1414" sqlhandle="0x020000004f6fb4142b1cd89e697a443fbf5d63241a537a260000000000000000000000000000000000000000">
+unknown    </frame></executionStack><inputbuf>
+INSERT BULK dbo.store_sales ([ss_sold_date_sk] INT , [ss_sold_time_sk] INT , [ss_item_sk] INT , [ss_customer_sk] INT , [ss_cdemo_sk] INT , [ss_hdemo_sk] INT , [ss_addr_sk] INT , [ss_store_sk] INT , [ss_promo_sk] INT , [ss_ticket_number] INT , [ss_quantity] INT , [ss_wholesale_cost] DECIMAL(7, 2) , [ss_list_price] DECIMAL(7, 2) , [ss_sales_price] DECIMAL(7, 2) , [ss_ext_discount_amt] DECIMAL(7, 2) , [ss_ext_sales_price] DECIMAL(7, 2) , [ss_ext_wholesale_cost] DECIMAL(7, 2) , [ss_ext_list_price] DECIMAL(7, 2) , [ss_ext_tax] DECIMAL(7, 2) , [ss_coupon_amt] DECIMAL(7, 2) , [ss_net_paid] DECIMAL(7, 2) , [ss_net_paid_inc_tax] DECIMAL(7, 2) , [ss_net_profit] DECIMAL(7, 2) )  with (ROWS_PER_BATCH = 1048576)   </inputbuf></process></process-list><resource-list><pagelock fileid="5" pageid="177096" dbid="6" subresource="FULL" objectname="1184344b-8c03-4040-beeb-0fe87dbb370f.dbo.store_sales" id="lock293d0af3500" mode="X" associatedObjectId="72057594045267968"><owner-list><owner id="process2943205fc28" mode="X" /></owner-list><waiter-list><waiter id="process2943c43b848" mode="IX" requestType="wait" /></waiter-list></pagelock><pagelock fileid="5" pageid="177287" dbid="6" subresource="FULL" objectname="1184344b-8c03-4040-beeb-0fe87dbb370f.dbo.store_sales" id="lock293ef3b6100" mode="X" associatedObjectId="72057594045267968"><owner-list><owner id="process2943205fc28" mode="X" /></owner-list><waiter-list><waiter id="process2943205f848" mode="IX" requestType="wait" /></waiter-list></pagelock><pagelock fileid="3" pageid="184435" dbid="6" subresource="FULL" objectname="1184344b-8c03-4040-beeb-0fe87dbb370f.dbo.store_sales" id="lock2933d797c80" mode="IX" associatedObjectId="72057594045267968"><owner-list><owner id="process2943c43b848" mode="IX" /></owner-list><waiter-list><waiter id="process2943205fc28" mode="X" requestType="wait" /></waiter-list></pagelock></resource-list></deadlock></td><td>idx</td></tr><tr><td>2020-09-07T10:39:33.865+0000</td><td><deadlock><victim-list><victimProcess id="process2dcef11a8c8" /></victim-list><process-list><process id="process2dcef11a8c8" taskpriority="0" logused="12715828" waitresource="PAGE: 7:5:41491 " waittime="59072" ownerId="17806653" transactionname="implicit_transaction" lasttranstarted="2020-09-07T10:37:30.793" XDES="0x2dce9684428" lockMode="IX" schedulerid="1" kpid="82516" status="suspended" spid="84" sbid="0" ecid="0" priority="0" trancount="2" lastbatchstarted="2020-09-07T10:37:30.807" lastbatchcompleted="2020-09-07T10:37:30.807" lastattention="1900-01-01T00:00:00.807" clientapp="Microsoft JDBC Driver for SQL Server" hostname="0825-113128-alum84-10-139-64-12" hostpid="0" loginname="[REDACTED]" isolationlevel="read committed (2)" xactid="0" currentdb="7" currentdbname="idxpartn" lockTimeout="4294967295" clientoption1="671088672" clientoption2="128058"><executionStack><frame procname="unknown" queryhash="0x499421339951eed9" queryplanhash="0x334365cf1a991132" line="1" stmtend="1414" sqlhandle="0x020000004f6fb4142b1cd89e697a443fbf5d63241a537a260000000000000000000000000000000000000000">
+unknown    </frame></executionStack><inputbuf>
+INSERT BULK dbo.store_sales ([ss_sold_date_sk] INT , [ss_sold_time_sk] INT , [ss_item_sk] INT , [ss_customer_sk] INT , [ss_cdemo_sk] INT , [ss_hdemo_sk] INT , [ss_addr_sk] INT , [ss_store_sk] INT , [ss_promo_sk] INT , [ss_ticket_number] INT , [ss_quantity] INT , [ss_wholesale_cost] DECIMAL(7, 2) , [ss_list_price] DECIMAL(7, 2) , [ss_sales_price] DECIMAL(7, 2) , [ss_ext_discount_amt] DECIMAL(7, 2) , [ss_ext_sales_price] DECIMAL(7, 2) , [ss_ext_wholesale_cost] DECIMAL(7, 2) , [ss_ext_list_price] DECIMAL(7, 2) , [ss_ext_tax] DECIMAL(7, 2) , [ss_coupon_amt] DECIMAL(7, 2) , [ss_net_paid] DECIMAL(7, 2) , [ss_net_paid_inc_tax] DECIMAL(7, 2) , [ss_net_profit] DECIMAL(7, 2) )  with (ROWS_PER_BATCH = 1048576)   </inputbuf></process><process id="process2dd0811e4e8" taskpriority="0" logused="228964156" waitresource="PAGE: 7:5:41773 " waittime="3328" ownerId="17806721" transactionname="implicit_transaction" lasttranstarted="2020-09-07T10:37:30.810" XDES="0x2dce8f14428" lockMode="X" schedulerid="2" kpid="68540" status="suspended" spid="89" sbid="0" ecid="0" priority="0" trancount="2" lastbatchstarted="2020-09-07T10:38:42.037" lastbatchcompleted="2020-09-07T10:38:42.033" lastattention="1900-01-01T00:00:00.033" clientapp="Microsoft JDBC Driver for SQL Server" hostname="0825-113128-alum84-10-139-64-6" hostpid="0" loginname="[REDACTED]" isolationlevel="read committed (2)" xactid="0" currentdb="7" currentdbname="idxpartn" lockTimeout="4294967295" clientoption1="671088672" clientoption2="128058"><executionStack><frame procname="unknown" queryhash="0x499421339951eed9" queryplanhash="0x334365cf1a991132" line="1" stmtend="1414" sqlhandle="0x020000004f6fb4142b1cd89e697a443fbf5d63241a537a260000000000000000000000000000000000000000">
+unknown    </frame></executionStack><inputbuf>
+INSERT BULK dbo.store_sales ([ss_sold_date_sk] INT , [ss_sold_time_sk] INT , [ss_item_sk] INT , [ss_customer_sk] INT , [ss_cdemo_sk] INT , [ss_hdemo_sk] INT , [ss_addr_sk] INT , [ss_store_sk] INT , [ss_promo_sk] INT , [ss_ticket_number] INT , [ss_quantity] INT , [ss_wholesale_cost] DECIMAL(7, 2) , [ss_list_price] DECIMAL(7, 2) , [ss_sales_price] DECIMAL(7, 2) , [ss_ext_discount_amt] DECIMAL(7, 2) , [ss_ext_sales_price] DECIMAL(7, 2) , [ss_ext_wholesale_cost] DECIMAL(7, 2) , [ss_ext_list_price] DECIMAL(7, 2) , [ss_ext_tax] DECIMAL(7, 2) , [ss_coupon_amt] DECIMAL(7, 2) , [ss_net_paid] DECIMAL(7, 2) , [ss_net_paid_inc_tax] DECIMAL(7, 2) , [ss_net_profit] DECIMAL(7, 2) )  with (ROWS_PER_BATCH = 1048576)   </inputbuf></process></process-list><resource-list><pagelock fileid="5" pageid="41491" dbid="7" subresource="FULL" objectname="28709e35-b6e4-408d-adc7-9f702dd0c85a.dbo.store_sales" id="lock2dcd529fd80" mode="X" associatedObjectId="72057594356236288"><owner-list><owner id="process2dd0811e4e8" mode="X" /></owner-list><waiter-list><waiter id="process2dcef11a8c8" mode="IX" requestType="wait" /></waiter-list></pagelock><pagelock fileid="5" pageid="41773" dbid="7" subresource="FULL" objectname="28709e35-b6e4-408d-adc7-9f702dd0c85a.dbo.store_sales" id="lock2dcd5239a00" mode="X" associatedObjectId="72057594356236288"><owner-list><owner id="process2dcef11a8c8" mode="X" /></owner-list><waiter-list><waiter id="process2dd0811e4e8" mode="X" requestType="wait" /></waiter-list></pagelock></resource-list></deadlock></td><td>idxpartn</td></tr><tr><td>2020-09-07T10:39:21.332+0000</td><td><deadlock><victim-list><victimProcess id="process2dcef11c108" /></victim-list><process-list><process id="process2dcef11c108" taskpriority="0" logused="7790484" waitresource="PAGE: 7:1:84976 " waittime="59392" ownerId="17806649" transactionname="implicit_transaction" lasttranstarted="2020-09-07T10:37:30.793" XDES="0x2dce8f20428" lockMode="IX" schedulerid="2" kpid="73808" status="suspended" spid="75" sbid="0" ecid="0" priority="0" trancount="2" lastbatchstarted="2020-09-07T10:37:30.807" lastbatchcompleted="2020-09-07T10:37:30.807" lastattention="1900-01-01T00:00:00.807" clientapp="Microsoft JDBC Driver for SQL Server" hostname="0825-113128-alum84-10-139-64-10" hostpid="0" loginname="[REDACTED]" isolationlevel="read committed (2)" xactid="0" currentdb="7" currentdbname="idxpartn" lockTimeout="4294967295" clientoption1="671088672" clientoption2="128058"><executionStack><frame procname="unknown" queryhash="0x499421339951eed9" queryplanhash="0x334365cf1a991132" line="1" stmtend="1414" sqlhandle="0x020000004f6fb4142b1cd89e697a443fbf5d63241a537a260000000000000000000000000000000000000000">
+unknown    </frame></executionStack><inputbuf>
+INSERT BULK dbo.store_sales ([ss_sold_date_sk] INT , [ss_sold_time_sk] INT , [ss_item_sk] INT , [ss_customer_sk] INT , [ss_cdemo_sk] INT , [ss_hdemo_sk] INT , [ss_addr_sk] INT , [ss_store_sk] INT , [ss_promo_sk] INT , [ss_ticket_number] INT , [ss_quantity] INT , [ss_wholesale_cost] DECIMAL(7, 2) , [ss_list_price] DECIMAL(7, 2) , [ss_sales_price] DECIMAL(7, 2) , [ss_ext_discount_amt] DECIMAL(7, 2) , [ss_ext_sales_price] DECIMAL(7, 2) , [ss_ext_wholesale_cost] DECIMAL(7, 2) , [ss_ext_list_price] DECIMAL(7, 2) , [ss_ext_tax] DECIMAL(7, 2) , [ss_coupon_amt] DECIMAL(7, 2) , [ss_net_paid] DECIMAL(7, 2) , [ss_net_paid_inc_tax] DECIMAL(7, 2) , [ss_net_profit] DECIMAL(7, 2) )  with (ROWS_PER_BATCH = 1048576)   </inputbuf></process><process id="process2dcfc725468" taskpriority="0" logused="234906736" waitresource="PAGE: 7:3:24328 " waittime="1118" ownerId="17806728" transactionname="implicit_transaction" lasttranstarted="2020-09-07T10:37:30.810" XDES="0x2dcee59c428" lockMode="X" schedulerid="1" kpid="38552" status="suspended" spid="90" sbid="0" ecid="0" priority="0" trancount="2" lastbatchstarted="2020-09-07T10:38:33.890" lastbatchcompleted="2020-09-07T10:38:33.840" lastattention="1900-01-01T00:00:00.840" clientapp="Microsoft JDBC Driver for SQL Server" hostname="0825-113128-alum84-10-139-64-9" hostpid="0" loginname="[REDACTED]" isolationlevel="read committed (2)" xactid="0" currentdb="7" currentdbname="idxpartn" lockTimeout="4294967295" clientoption1="671088672" clientoption2="128058"><executionStack><frame procname="unknown" queryhash="0x499421339951eed9" queryplanhash="0x334365cf1a991132" line="1" stmtend="1414" sqlhandle="0x020000004f6fb4142b1cd89e697a443fbf5d63241a537a260000000000000000000000000000000000000000">
+unknown    </frame></executionStack><inputbuf>
+INSERT BULK dbo.store_sales ([ss_sold_date_sk] INT , [ss_sold_time_sk] INT , [ss_item_sk] INT , [ss_customer_sk] INT , [ss_cdemo_sk] INT , [ss_hdemo_sk] INT , [ss_addr_sk] INT , [ss_store_sk] INT , [ss_promo_sk] INT , [ss_ticket_number] INT , [ss_quantity] INT , [ss_wholesale_cost] DECIMAL(7, 2) , [ss_list_price] DECIMAL(7, 2) , [ss_sales_price] DECIMAL(7, 2) , [ss_ext_discount_amt] DECIMAL(7, 2) , [ss_ext_sales_price] DECIMAL(7, 2) , [ss_ext_wholesale_cost] DECIMAL(7, 2) , [ss_ext_list_price] DECIMAL(7, 2) , [ss_ext_tax] DECIMAL(7, 2) , [ss_coupon_amt] DECIMAL(7, 2) , [ss_net_paid] DECIMAL(7, 2) , [ss_net_paid_inc_tax] DECIMAL(7, 2) , [ss_net_profit] DECIMAL(7, 2) )  with (ROWS_PER_BATCH = 1048576)   </inputbuf></process></process-list><resource-list><pagelock fileid="1" pageid="84976" dbid="7" subresource="FULL" objectname="28709e35-b6e4-408d-adc7-9f702dd0c85a.dbo.store_sales" id="lock2dca948d080" mode="X" associatedObjectId="72057594348306432"><owner-list><owner id="process2dcfc725468" mode="X" /></owner-list><waiter-list><waiter id="process2dcef11c108" mode="IX" requestType="wait" /></waiter-list></pagelock><pagelock fileid="3" pageid="24328" dbid="7" subresource="FULL" objectname="28709e35-b6e4-408d-adc7-9f702dd0c85a.dbo.store_sales" id="lock2dce99a0a00" mode="IX" associatedObjectId="72057594348306432"><owner-list><owner id="process2dcef11c108" mode="IX" /></owner-list><waiter-list><waiter id="process2dcfc725468" mode="X" requestType="convert" /></waiter-list></pagelock></resource-list></deadlock></td><td>idxpartn</td></tr><tr><td>2020-09-07T09:03:53.471+0000</td><td><deadlock><victim-list><victimProcess id="process29431083c28" /></victim-list><process-list><process id="process29431083c28" taskpriority="0" logused="137056" waitresource="PAGE: 6:5:164400 " waittime="1244" ownerId="5842852" transactionname="implicit_transaction" lasttranstarted="2020-09-07T09:03:44.783" XDES="0x29422bb8428" lockMode="IX" schedulerid="2" kpid="65684" status="suspended" spid="109" sbid="0" ecid="0" priority="0" trancount="2" lastbatchstarted="2020-09-07T09:03:44.783" lastbatchcompleted="2020-09-07T09:03:44.783" lastattention="1900-01-01T00:00:00.783" clientapp="Microsoft JDBC Driver for SQL Server" hostname="0825-113128-alum84-10-139-64-12" hostpid="0" loginname="[REDACTED]" isolationlevel="read committed (2)" xactid="0" currentdb="6" currentdbname="idx" lockTimeout="4294967295" clientoption1="671088672" clientoption2="128058"><executionStack><frame procname="unknown" queryhash="0x499421339951eed9" queryplanhash="0x150811da517a2e7f" line="1" stmtend="1408" sqlhandle="0x02000000c80d212c2ca1709bbf67b6c673446b13c21772420000000000000000000000000000000000000000">
+unknown    </frame></executionStack><inputbuf>
+INSERT BULK dbo.store_sales ([ss_sold_date_sk] INT , [ss_sold_time_sk] INT , [ss_item_sk] INT , [ss_customer_sk] INT , [ss_cdemo_sk] INT , [ss_hdemo_sk] INT , [ss_addr_sk] INT , [ss_store_sk] INT , [ss_promo_sk] INT , [ss_ticket_number] INT , [ss_quantity] INT , [ss_wholesale_cost] DECIMAL(7, 2) , [ss_list_price] DECIMAL(7, 2) , [ss_sales_price] DECIMAL(7, 2) , [ss_ext_discount_amt] DECIMAL(7, 2) , [ss_ext_sales_price] DECIMAL(7, 2) , [ss_ext_wholesale_cost] DECIMAL(7, 2) , [ss_ext_list_price] DECIMAL(7, 2) , [ss_ext_tax] DECIMAL(7, 2) , [ss_coupon_amt] DECIMAL(7, 2) , [ss_net_paid] DECIMAL(7, 2) , [ss_net_paid_inc_tax] DECIMAL(7, 2) , [ss_net_profit] DECIMAL(7, 2) )  with (ROWS_PER_BATCH = 1048)   </inputbuf></process><process id="process294320784e8" taskpriority="0" logused="155288972" waitresource="PAGE: 6:5:165065 " waittime="1203" ownerId="5822896" transactionname="implicit_transaction" lasttranstarted="2020-09-07T09:03:26.723" XDES="0x29427630428" lockMode="IX" schedulerid="1" kpid="76108" status="suspended" spid="111" sbid="0" ecid="0" priority="0" trancount="2" lastbatchstarted="2020-09-07T09:03:52.247" lastbatchcompleted="2020-09-07T09:03:52.243" lastattention="1900-01-01T00:00:00.243" clientapp="Microsoft JDBC Driver for SQL Server" hostname="0825-113128-alum84-10-139-64-7" hostpid="0" loginname="[REDACTED]" isolationlevel="read committed (2)" xactid="0" currentdb="6" currentdbname="idx" lockTimeout="4294967295" clientoption1="671088672" clientoption2="128058"><executionStack><frame procname="unknown" queryhash="0x499421339951eed9" queryplanhash="0x150811da517a2e7f" line="1" stmtend="1408" sqlhandle="0x02000000c80d212c2ca1709bbf67b6c673446b13c21772420000000000000000000000000000000000000000">
+unknown    </frame></executionStack><inputbuf>
+INSERT BULK dbo.store_sales ([ss_sold_date_sk] INT , [ss_sold_time_sk] INT , [ss_item_sk] INT , [ss_customer_sk] INT , [ss_cdemo_sk] INT , [ss_hdemo_sk] INT , [ss_addr_sk] INT , [ss_store_sk] INT , [ss_promo_sk] INT , [ss_ticket_number] INT , [ss_quantity] INT , [ss_wholesale_cost] DECIMAL(7, 2) , [ss_list_price] DECIMAL(7, 2) , [ss_sales_price] DECIMAL(7, 2) , [ss_ext_discount_amt] DECIMAL(7, 2) , [ss_ext_sales_price] DECIMAL(7, 2) , [ss_ext_wholesale_cost] DECIMAL(7, 2) , [ss_ext_list_price] DECIMAL(7, 2) , [ss_ext_tax] DECIMAL(7, 2) , [ss_coupon_amt] DECIMAL(7, 2) , [ss_net_paid] DECIMAL(7, 2) , [ss_net_paid_inc_tax] DECIMAL(7, 2) , [ss_net_profit] DECIMAL(7, 2) )  with (ROWS_PER_BATCH = 1048)   </inputbuf></process></process-list><resource-list><pagelock fileid="5" pageid="164400" dbid="6" subresource="FULL" objectname="1184344b-8c03-4040-beeb-0fe87dbb370f.dbo.store_sales" id="lock2933ea09400" mode="X" associatedObjectId="72057594045267968"><owner-list><owner id="process294320784e8" mode="X" /></owner-list><waiter-list><waiter id="process29431083c28" mode="IX" requestType="wait" /></waiter-list></pagelock><pagelock fileid="5" pageid="165065" dbid="6" subresource="FULL" objectname="1184344b-8c03-4040-beeb-0fe87dbb370f.dbo.store_sales" id="lock2942136ab00" mode="X" associatedObjectId="72057594045267968"><owner-list><owner id="process29431083c28" mode="X" /></owner-list><waiter-list><waiter id="process294320784e8" mode="IX" requestType="wait" /></waiter-list></pagelock></resource-list></deadlock></td><td>idx</td></tr><tr><td>2020-09-07T09:03:52.206+0000</td><td><deadlock><victim-list><victimProcess id="process2943205e4e8" /></victim-list><process-list><process id="process2943205e4e8" taskpriority="0" logused="166624" waitresource="PAGE: 6:5:161781 " waittime="24874" ownerId="5822869" transactionname="implicit_transaction" lasttranstarted="2020-09-07T09:03:26.507" XDES="0x2942da78428" lockMode="IX" schedulerid="2" kpid="64652" status="suspended" spid="110" sbid="0" ecid="0" priority="0" trancount="2" lastbatchstarted="2020-09-07T09:03:26.510" lastbatchcompleted="2020-09-07T09:03:26.510" lastattention="1900-01-01T00:00:00.510" clientapp="Microsoft JDBC Driver for SQL Server" hostname="0825-113128-alum84-10-139-64-12" hostpid="0" loginname="[REDACTED]" isolationlevel="read committed (2)" xactid="0" currentdb="6" currentdbname="idx" lockTimeout="4294967295" clientoption1="671088672" clientoption2="128058"><executionStack><frame procname="unknown" queryhash="0x499421339951eed9" queryplanhash="0x150811da517a2e7f" line="1" stmtend="1408" sqlhandle="0x02000000c80d212c2ca1709bbf67b6c673446b13c21772420000000000000000000000000000000000000000">
+unknown    </frame></executionStack><inputbuf>
+INSERT BULK dbo.store_sales ([ss_sold_date_sk] INT , [ss_sold_time_sk] INT , [ss_item_sk] INT , [ss_customer_sk] INT , [ss_cdemo_sk] INT , [ss_hdemo_sk] INT , [ss_addr_sk] INT , [ss_store_sk] INT , [ss_promo_sk] INT , [ss_ticket_number] INT , [ss_quantity] INT , [ss_wholesale_cost] DECIMAL(7, 2) , [ss_list_price] DECIMAL(7, 2) , [ss_sales_price] DECIMAL(7, 2) , [ss_ext_discount_amt] DECIMAL(7, 2) , [ss_ext_sales_price] DECIMAL(7, 2) , [ss_ext_wholesale_cost] DECIMAL(7, 2) , [ss_ext_list_price] DECIMAL(7, 2) , [ss_ext_tax] DECIMAL(7, 2) , [ss_coupon_amt] DECIMAL(7, 2) , [ss_net_paid] DECIMAL(7, 2) , [ss_net_paid_inc_tax] DECIMAL(7, 2) , [ss_net_profit] DECIMAL(7, 2) )  with (ROWS_PER_BATCH = 1048)   </inputbuf></process><process id="process294320784e8" taskpriority="0" logused="154760200" waitresource="PAGE: 6:3:153739 " waittime="8854" ownerId="5822896" transactionname="implicit_transaction" lasttranstarted="2020-09-07T09:03:26.723" XDES="0x29427630428" lockMode="IX" schedulerid="1" kpid="76108" status="suspended" spid="111" sbid="0" ecid="0" priority="0" trancount="2" lastbatchstarted="2020-09-07T09:03:43.333" lastbatchcompleted="2020-09-07T09:03:43.330" lastattention="1900-01-01T00:00:00.330" clientapp="Microsoft JDBC Driver for SQL Server" hostname="0825-113128-alum84-10-139-64-7" hostpid="0" loginname="[REDACTED]" isolationlevel="read committed (2)" xactid="0" currentdb="6" currentdbname="idx" lockTimeout="4294967295" clientoption1="671088672" clientoption2="128058"><executionStack><frame procname="unknown" queryhash="0x499421339951eed9" queryplanhash="0x150811da517a2e7f" line="1" stmtend="1408" sqlhandle="0x02000000c80d212c2ca1709bbf67b6c673446b13c21772420000000000000000000000000000000000000000">
+unknown    </frame></executionStack><inputbuf>
+INSERT BULK dbo.store_sales ([ss_sold_date_sk] INT , [ss_sold_time_sk] INT , [ss_item_sk] INT , [ss_customer_sk] INT , [ss_cdemo_sk] INT , [ss_hdemo_sk] INT , [ss_addr_sk] INT , [ss_store_sk] INT , [ss_promo_sk] INT , [ss_ticket_number] INT , [ss_quantity] INT , [ss_wholesale_cost] DECIMAL(7, 2) , [ss_list_price] DECIMAL(7, 2) , [ss_sales_price] DECIMAL(7, 2) , [ss_ext_discount_amt] DECIMAL(7, 2) , [ss_ext_sales_price] DECIMAL(7, 2) , [ss_ext_wholesale_cost] DECIMAL(7, 2) , [ss_ext_list_price] DECIMAL(7, 2) , [ss_ext_tax] DECIMAL(7, 2) , [ss_coupon_amt] DECIMAL(7, 2) , [ss_net_paid] DECIMAL(7, 2) , [ss_net_paid_inc_tax] DECIMAL(7, 2) , [ss_net_profit] DECIMAL(7, 2) )  with (ROWS_PER_BATCH = 1048)   </inputbuf></process></process-list><resource-list><pagelock fileid="5" pageid="161781" dbid="6" subresource="FULL" objectname="1184344b-8c03-4040-beeb-0fe87dbb370f.dbo.store_sales" id="lock293cee08780" mode="X" associatedObjectId="72057594045267968"><owner-list><owner id="process294320784e8" mode="X" /></owner-list><waiter-list><waiter id="process2943205e4e8" mode="IX" requestType="wait" /></waiter-list></pagelock><pagelock fileid="3" pageid="153739" dbid="6" subresource="FULL" objectname="1184344b-8c03-4040-beeb-0fe87dbb370f.dbo.store_sales" id="lock2943c0a4880" mode="X" associatedObjectId="72057594045267968"><owner-list><owner id="process2943205e4e8" mode="X" /></owner-list><waiter-list><waiter id="process294320784e8" mode="IX" requestType="wait" /></waiter-list></pagelock></resource-list></deadlock></td><td>idx</td></tr><tr><td>2020-09-07T09:03:49.699+0000</td><td><deadlock><victim-list><victimProcess id="process2942378bc28" /></victim-list><process-list><process id="process2942378bc28" taskpriority="0" logused="156" waitresource="PAGE: 6:3:153739 " waittime="21363" ownerId="5822821" transactionname="implicit_transaction" lasttranstarted="2020-09-07T09:03:26.483" XDES="0x29442e14428" lockMode="IX" schedulerid="1" kpid="74724" status="suspended" spid="107" sbid="0" ecid="0" priority="0" trancount="2" lastbatchstarted="2020-09-07T09:03:26.483" lastbatchcompleted="2020-09-07T09:03:26.483" lastattention="1900-01-01T00:00:00.483" clientapp="Microsoft JDBC Driver for SQL Server" hostname="0825-113128-alum84-10-139-64-8" hostpid="0" loginname="[REDACTED]" isolationlevel="read committed (2)" xactid="0" currentdb="6" currentdbname="idx" lockTimeout="4294967295" clientoption1="671088672" clientoption2="128058"><executionStack><frame procname="unknown" queryhash="0x499421339951eed9" queryplanhash="0x150811da517a2e7f" line="1" stmtend="1408" sqlhandle="0x02000000c80d212c2ca1709bbf67b6c673446b13c21772420000000000000000000000000000000000000000">
+unknown    </frame></executionStack><inputbuf>
+INSERT BULK dbo.store_sales ([ss_sold_date_sk] INT , [ss_sold_time_sk] INT , [ss_item_sk] INT , [ss_customer_sk] INT , [ss_cdemo_sk] INT , [ss_hdemo_sk] INT , [ss_addr_sk] INT , [ss_store_sk] INT , [ss_promo_sk] INT , [ss_ticket_number] INT , [ss_quantity] INT , [ss_wholesale_cost] DECIMAL(7, 2) , [ss_list_price] DECIMAL(7, 2) , [ss_sales_price] DECIMAL(7, 2) , [ss_ext_discount_amt] DECIMAL(7, 2) , [ss_ext_sales_price] DECIMAL(7, 2) , [ss_ext_wholesale_cost] DECIMAL(7, 2) , [ss_ext_list_price] DECIMAL(7, 2) , [ss_ext_tax] DECIMAL(7, 2) , [ss_coupon_amt] DECIMAL(7, 2) , [ss_net_paid] DECIMAL(7, 2) , [ss_net_paid_inc_tax] DECIMAL(7, 2) , [ss_net_profit] DECIMAL(7, 2) )  with (ROWS_PER_BATCH = 1048)   </inputbuf></process><process id="process2943205e4e8" taskpriority="0" logused="166624" waitresource="PAGE: 6:5:161781 " waittime="22362" ownerId="5822869" transactionname="implicit_transaction" lasttranstarted="2020-09-07T09:03:26.507" XDES="0x2942da78428" lockMode="IX" schedulerid="2" kpid="64652" status="suspended" spid="110" sbid="0" ecid="0" priority="0" trancount="2" lastbatchstarted="2020-09-07T09:03:26.510" lastbatchcompleted="2020-09-07T09:03:26.510" lastattention="1900-01-01T00:00:00.510" clientapp="Microsoft JDBC Driver for SQL Server" hostname="0825-113128-alum84-10-139-64-12" hostpid="0" loginname="[REDACTED]" isolationlevel="read committed (2)" xactid="0" currentdb="6" currentdbname="idx" lockTimeout="4294967295" clientoption1="671088672" clientoption2="128058"><executionStack><frame procname="unknown" queryhash="0x499421339951eed9" queryplanhash="0x150811da517a2e7f" line="1" stmtend="1408" sqlhandle="0x02000000c80d212c2ca1709bbf67b6c673446b13c21772420000000000000000000000000000000000000000">
+unknown    </frame></executionStack><inputbuf>
+INSERT BULK dbo.store_sales ([ss_sold_date_sk] INT , [ss_sold_time_sk] INT , [ss_item_sk] INT , [ss_customer_sk] INT , [ss_cdemo_sk] INT , [ss_hdemo_sk] INT , [ss_addr_sk] INT , [ss_store_sk] INT , [ss_promo_sk] INT , [ss_ticket_number] INT , [ss_quantity] INT , [ss_wholesale_cost] DECIMAL(7, 2) , [ss_list_price] DECIMAL(7, 2) , [ss_sales_price] DECIMAL(7, 2) , [ss_ext_discount_amt] DECIMAL(7, 2) , [ss_ext_sales_price] DECIMAL(7, 2) , [ss_ext_wholesale_cost] DECIMAL(7, 2) , [ss_ext_list_price] DECIMAL(7, 2) , [ss_ext_tax] DECIMAL(7, 2) , [ss_coupon_amt] DECIMAL(7, 2) , [ss_net_paid] DECIMAL(7, 2) , [ss_net_paid_inc_tax] DECIMAL(7, 2) , [ss_net_profit] DECIMAL(7, 2) )  with (ROWS_PER_BATCH = 1048)   </inputbuf></process><process id="process294320784e8" taskpriority="0" logused="154760200" waitresource="PAGE: 6:3:153739 " waittime="6342" ownerId="5822896" transactionname="implicit_transaction" lasttranstarted="2020-09-07T09:03:26.723" XDES="0x29427630428" lockMode="IX" schedulerid="1" kpid="76108" status="suspended" spid="111" sbid="0" ecid="0" priority="0" trancount="2" lastbatchstarted="2020-09-07T09:03:43.333" lastbatchcompleted="2020-09-07T09:03:43.330" lastattention="1900-01-01T00:00:00.330" clientapp="Microsoft JDBC Driver for SQL Server" hostname="0825-113128-alum84-10-139-64-7" hostpid="0" loginname="[REDACTED]" isolationlevel="read committed (2)" xactid="0" currentdb="6" currentdbname="idx" lockTimeout="4294967295" clientoption1="671088672" clientoption2="128058"><executionStack><frame procname="unknown" queryhash="0x499421339951eed9" queryplanhash="0x150811da517a2e7f" line="1" stmtend="1408" sqlhandle="0x02000000c80d212c2ca1709bbf67b6c673446b13c21772420000000000000000000000000000000000000000">
+unknown    </frame></executionStack><inputbuf>
+INSERT BULK dbo.store_sales ([ss_sold_date_sk] INT , [ss_sold_time_sk] INT , [ss_item_sk] INT , [ss_customer_sk] INT , [ss_cdemo_sk] INT , [ss_hdemo_sk] INT , [ss_addr_sk] INT , [ss_store_sk] INT , [ss_promo_sk] INT , [ss_ticket_number] INT , [ss_quantity] INT , [ss_wholesale_cost] DECIMAL(7, 2) , [ss_list_price] DECIMAL(7, 2) , [ss_sales_price] DECIMAL(7, 2) , [ss_ext_discount_amt] DECIMAL(7, 2) , [ss_ext_sales_price] DECIMAL(7, 2) , [ss_ext_wholesale_cost] DECIMAL(7, 2) , [ss_ext_list_price] DECIMAL(7, 2) , [ss_ext_tax] DECIMAL(7, 2) , [ss_coupon_amt] DECIMAL(7, 2) , [ss_net_paid] DECIMAL(7, 2) , [ss_net_paid_inc_tax] DECIMAL(7, 2) , [ss_net_profit] DECIMAL(7, 2) )  with (ROWS_PER_BATCH = 1048)   </inputbuf></process></process-list><resource-list><pagelock fileid="3" pageid="153739" dbid="6" subresource="FULL" objectname="1184344b-8c03-4040-beeb-0fe87dbb370f.dbo.store_sales" id="lock2943c0a4880" mode="X" associatedObjectId="72057594045267968"><owner-list><owner id="process2943205e4e8" mode="X" /></owner-list><waiter-list><waiter id="process2942378bc28" mode="IX" requestType="wait" /></waiter-list></pagelock><pagelock fileid="5" pageid="161781" dbid="6" subresource="FULL" objectname="1184344b-8c03-4040-beeb-0fe87dbb370f.dbo.store_sales" id="lock293cee08780" mode="X" associatedObjectId="72057594045267968"><owner-list><owner id="process294320784e8" mode="X" /></owner-list><waiter-list><waiter id="process2943205e4e8" mode="IX" requestType="wait" /></waiter-list></pagelock><pagelock fileid="3" pageid="153739" dbid="6" subresource="FULL" objectname="1184344b-8c03-4040-beeb-0fe87dbb370f.dbo.store_sales" id="lock2943c0a4880" mode="X" associatedObjectId="72057594045267968"><owner-list><owner id="process2942378bc28" mode="IX" requestType="wait" /></owner-list><waiter-list><waiter id="process294320784e8" mode="IX" requestType="wait" /></waiter-list></pagelock></resource-list></deadlock></td><td>idx</td></tr><tr><td>2020-09-07T09:03:44.684+0000</td><td><deadlock><victim-list><victimProcess id="process29431083c28" /></victim-list><process-list><process id="process29431083c28" taskpriority="0" logused="156" waitresource="PAGE: 6:3:153739 " waittime="16476" ownerId="5822845" transactionname="implicit_transaction" lasttranstarted="2020-09-07T09:03:26.493" XDES="0x29422bb8428" lockMode="IX" schedulerid="2" kpid="65684" status="suspended" spid="109" sbid="0" ecid="0" priority="0" trancount="2" lastbatchstarted="2020-09-07T09:03:26.493" lastbatchcompleted="2020-09-07T09:03:26.493" lastattention="1900-01-01T00:00:00.493" clientapp="Microsoft JDBC Driver for SQL Server" hostname="0825-113128-alum84-10-139-64-11" hostpid="0" loginname="[REDACTED]" isolationlevel="read committed (2)" xactid="0" currentdb="6" currentdbname="idx" lockTimeout="4294967295" clientoption1="671088672" clientoption2="128058"><executionStack><frame procname="unknown" queryhash="0x499421339951eed9" queryplanhash="0x150811da517a2e7f" line="1" stmtend="1408" sqlhandle="0x02000000c80d212c2ca1709bbf67b6c673446b13c21772420000000000000000000000000000000000000000">
+unknown    </frame></executionStack><inputbuf>
+INSERT BULK dbo.store_sales ([ss_sold_date_sk] INT , [ss_sold_time_sk] INT , [ss_item_sk] INT , [ss_customer_sk] INT , [ss_cdemo_sk] INT , [ss_hdemo_sk] INT , [ss_addr_sk] INT , [ss_store_sk] INT , [ss_promo_sk] INT , [ss_ticket_number] INT , [ss_quantity] INT , [ss_wholesale_cost] DECIMAL(7, 2) , [ss_list_price] DECIMAL(7, 2) , [ss_sales_price] DECIMAL(7, 2) , [ss_ext_discount_amt] DECIMAL(7, 2) , [ss_ext_sales_price] DECIMAL(7, 2) , [ss_ext_wholesale_cost] DECIMAL(7, 2) , [ss_ext_list_price] DECIMAL(7, 2) , [ss_ext_tax] DECIMAL(7, 2) , [ss_coupon_amt] DECIMAL(7, 2) , [ss_net_paid] DECIMAL(7, 2) , [ss_net_paid_inc_tax] DECIMAL(7, 2) , [ss_net_profit] DECIMAL(7, 2) )  with (ROWS_PER_BATCH = 1048)   </inputbuf></process><process id="process2943205e4e8" taskpriority="0" logused="166624" waitresource="PAGE: 6:5:161781 " waittime="17347" ownerId="5822869" transactionname="implicit_transaction" lasttranstarted="2020-09-07T09:03:26.507" XDES="0x2942da78428" lockMode="IX" schedulerid="2" kpid="64652" status="suspended" spid="110" sbid="0" ecid="0" priority="0" trancount="2" lastbatchstarted="2020-09-07T09:03:26.510" lastbatchcompleted="2020-09-07T09:03:26.510" lastattention="1900-01-01T00:00:00.510" clientapp="Microsoft JDBC Driver for SQL Server" hostname="0825-113128-alum84-10-139-64-12" hostpid="0" loginname="[REDACTED]" isolationlevel="read committed (2)" xactid="0" currentdb="6" currentdbname="idx" lockTimeout="4294967295" clientoption1="671088672" clientoption2="128058"><executionStack><frame procname="unknown" queryhash="0x499421339951eed9" queryplanhash="0x150811da517a2e7f" line="1" stmtend="1408" sqlhandle="0x02000000c80d212c2ca1709bbf67b6c673446b13c21772420000000000000000000000000000000000000000">
+unknown    </frame></executionStack><inputbuf>
+INSERT BULK dbo.store_sales ([ss_sold_date_sk] INT , [ss_sold_time_sk] INT , [ss_item_sk] INT , [ss_customer_sk] INT , [ss_cdemo_sk] INT , [ss_hdemo_sk] INT , [ss_addr_sk] INT , [ss_store_sk] INT , [ss_promo_sk] INT , [ss_ticket_number] INT , [ss_quantity] INT , [ss_wholesale_cost] DECIMAL(7, 2) , [ss_list_price] DECIMAL(7, 2) , [ss_sales_price] DECIMAL(7, 2) , [ss_ext_discount_amt] DECIMAL(7, 2) , [ss_ext_sales_price] DECIMAL(7, 2) , [ss_ext_wholesale_cost] DECIMAL(7, 2) , [ss_ext_list_price] DECIMAL(7, 2) , [ss_ext_tax] DECIMAL(7, 2) , [ss_coupon_amt] DECIMAL(7, 2) , [ss_net_paid] DECIMAL(7, 2) , [ss_net_paid_inc_tax] DECIMAL(7, 2) , [ss_net_profit] DECIMAL(7, 2) )  with (ROWS_PER_BATCH = 1048)   </inputbuf></process><process id="process294320784e8" taskpriority="0" logused="154760200" waitresource="PAGE: 6:3:153739 " waittime="1328" ownerId="5822896" transactionname="implicit_transaction" lasttranstarted="2020-09-07T09:03:26.723" XDES="0x29427630428" lockMode="IX" schedulerid="1" kpid="76108" status="suspended" spid="111" sbid="0" ecid="0" priority="0" trancount="2" lastbatchstarted="2020-09-07T09:03:43.333" lastbatchcompleted="2020-09-07T09:03:43.330" lastattention="1900-01-01T00:00:00.330" clientapp="Microsoft JDBC Driver for SQL Server" hostname="0825-113128-alum84-10-139-64-7" hostpid="0" loginname="[REDACTED]" isolationlevel="read committed (2)" xactid="0" currentdb="6" currentdbname="idx" lockTimeout="4294967295" clientoption1="671088672" clientoption2="128058"><executionStack><frame procname="unknown" queryhash="0x499421339951eed9" queryplanhash="0x150811da517a2e7f" line="1" stmtend="1408" sqlhandle="0x02000000c80d212c2ca1709bbf67b6c673446b13c21772420000000000000000000000000000000000000000">
+unknown    </frame></executionStack><inputbuf>
+INSERT BULK dbo.store_sales ([ss_sold_date_sk] INT , [ss_sold_time_sk] INT , [ss_item_sk] INT , [ss_customer_sk] INT , [ss_cdemo_sk] INT , [ss_hdemo_sk] INT , [ss_addr_sk] INT , [ss_store_sk] INT , [ss_promo_sk] INT , [ss_ticket_number] INT , [ss_quantity] INT , [ss_wholesale_cost] DECIMAL(7, 2) , [ss_list_price] DECIMAL(7, 2) , [ss_sales_price] DECIMAL(7, 2) , [ss_ext_discount_amt] DECIMAL(7, 2) , [ss_ext_sales_price] DECIMAL(7, 2) , [ss_ext_wholesale_cost] DECIMAL(7, 2) , [ss_ext_list_price] DECIMAL(7, 2) , [ss_ext_tax] DECIMAL(7, 2) , [ss_coupon_amt] DECIMAL(7, 2) , [ss_net_paid] DECIMAL(7, 2) , [ss_net_paid_inc_tax] DECIMAL(7, 2) , [ss_net_profit] DECIMAL(7, 2) )  with (ROWS_PER_BATCH = 1048)   </inputbuf></process></process-list><resource-list><pagelock fileid="3" pageid="153739" dbid="6" subresource="FULL" objectname="1184344b-8c03-4040-beeb-0fe87dbb370f.dbo.store_sales" id="lock2943c0a4880" mode="X" associatedObjectId="72057594045267968"><owner-list><owner id="process2943205e4e8" mode="X" /></owner-list><waiter-list><waiter id="process29431083c28" mode="IX" requestType="wait" /></waiter-list></pagelock><pagelock fileid="5" pageid="161781" dbid="6" subresource="FULL" objectname="1184344b-8c03-4040-beeb-0fe87dbb370f.dbo.store_sales" id="lock293cee08780" mode="X" associatedObjectId="72057594045267968"><owner-list><owner id="process294320784e8" mode="X" /></owner-list><waiter-list><waiter id="process2943205e4e8" mode="IX" requestType="wait" /></waiter-list></pagelock><pagelock fileid="3" pageid="153739" dbid="6" subresource="FULL" objectname="1184344b-8c03-4040-beeb-0fe87dbb370f.dbo.store_sales" id="lock2943c0a4880" mode="X" associatedObjectId="72057594045267968"><owner-list><owner id="process29431083c28" mode="IX" requestType="wait" /></owner-list><waiter-list><waiter id="process294320784e8" mode="IX" requestType="wait" /></waiter-list></pagelock></resource-list></deadlock></td><td>idx</td></tr><tr><td>2020-09-07T08:01:05.250+0000</td><td><deadlock><victim-list><victimProcess id="process2943205f848" /></victim-list><process-list><process id="process2943205f848" taskpriority="0" logused="314596932" waitresource="PAGE: 6:1:162112 " waittime="7538" ownerId="4969000" transactionname="implicit_transaction" lasttranstarted="2020-09-07T07:59:15.493" XDES="0x29431fec428" lockMode="IX" schedulerid="2" kpid="70820" status="suspended" spid="95" sbid="0" ecid="0" priority="0" trancount="2" lastbatchstarted="2020-09-07T08:00:57.663" lastbatchcompleted="2020-09-07T08:00:57.650" lastattention="1900-01-01T00:00:00.650" clientapp="Microsoft JDBC Driver for SQL Server" hostname="0825-113128-alum84-10-139-64-11" hostpid="0" loginname="[REDACTED]" isolationlevel="read committed (2)" xactid="0" currentdb="6" currentdbname="idx" lockTimeout="4294967295" clientoption1="671088672" clientoption2="128058"><executionStack><frame procname="unknown" queryhash="0x499421339951eed9" queryplanhash="0x150811da517a2e7f" line="1" stmtend="1408" sqlhandle="0x020000009993de17a58ab6e63a7aea9fd607694914918d210000000000000000000000000000000000000000">
+unknown    </frame></executionStack><inputbuf>
+INSERT BULK dbo.store_sales ([ss_sold_date_sk] INT , [ss_sold_time_sk] INT , [ss_item_sk] INT , [ss_customer_sk] INT , [ss_cdemo_sk] INT , [ss_hdemo_sk] INT , [ss_addr_sk] INT , [ss_store_sk] INT , [ss_promo_sk] INT , [ss_ticket_number] INT , [ss_quantity] INT , [ss_wholesale_cost] DECIMAL(7, 2) , [ss_list_price] DECIMAL(7, 2) , [ss_sales_price] DECIMAL(7, 2) , [ss_ext_discount_amt] DECIMAL(7, 2) , [ss_ext_sales_price] DECIMAL(7, 2) , [ss_ext_wholesale_cost] DECIMAL(7, 2) , [ss_ext_list_price] DECIMAL(7, 2) , [ss_ext_tax] DECIMAL(7, 2) , [ss_coupon_amt] DECIMAL(7, 2) , [ss_net_paid] DECIMAL(7, 2) , [ss_net_paid_inc_tax] DECIMAL(7, 2) , [ss_net_profit] DECIMAL(7, 2) )  with (ROWS_PER_BATCH = 1000)   </inputbuf></process><process id="process294342d5c28" taskpriority="0" logused="496718700" waitresource="PAGE: 6:1:171973 " waittime="3124" ownerId="4658002" transactionname="implicit_transaction" lasttranstarted="2020-09-07T07:57:35.093" XDES="0x29442e14428" lockMode="IX" schedulerid="2" kpid="32240" status="suspended" spid="98" sbid="0" ecid="0" priority="0" trancount="2" lastbatchstarted="2020-09-07T08:01:02.093" lastbatchcompleted="2020-09-07T08:01:02.093" lastattention="1900-01-01T00:00:00.093" clientapp="Microsoft JDBC Driver for SQL Server" hostname="0825-113128-alum84-10-139-64-9" hostpid="0" loginname="[REDACTED]" isolationlevel="read committed (2)" xactid="0" currentdb="6" currentdbname="idx" lockTimeout="4294967295" clientoption1="671088672" clientoption2="128058"><executionStack><frame procname="unknown" queryhash="0x499421339951eed9" queryplanhash="0x150811da517a2e7f" line="1" stmtend="1408" sqlhandle="0x020000009993de17a58ab6e63a7aea9fd607694914918d210000000000000000000000000000000000000000">
+unknown    </frame></executionStack><inputbuf>
+INSERT BULK dbo.store_sales ([ss_sold_date_sk] INT , [ss_sold_time_sk] INT , [ss_item_sk] INT , [ss_customer_sk] INT , [ss_cdemo_sk] INT , [ss_hdemo_sk] INT , [ss_addr_sk] INT , [ss_store_sk] INT , [ss_promo_sk] INT , [ss_ticket_number] INT , [ss_quantity] INT , [ss_wholesale_cost] DECIMAL(7, 2) , [ss_list_price] DECIMAL(7, 2) , [ss_sales_price] DECIMAL(7, 2) , [ss_ext_discount_amt] DECIMAL(7, 2) , [ss_ext_sales_price] DECIMAL(7, 2) , [ss_ext_wholesale_cost] DECIMAL(7, 2) , [ss_ext_list_price] DECIMAL(7, 2) , [ss_ext_tax] DECIMAL(7, 2) , [ss_coupon_amt] DECIMAL(7, 2) , [ss_net_paid] DECIMAL(7, 2) , [ss_net_paid_inc_tax] DECIMAL(7, 2) , [ss_net_profit] DECIMAL(7, 2) )  with (ROWS_PER_BATCH = 1000)   </inputbuf></process></process-list><resource-list><pagelock fileid="1" pageid="162112" dbid="6" subresource="FULL" objectname="1184344b-8c03-4040-beeb-0fe87dbb370f.dbo.store_sales" id="lock293cd20fc00" mode="X" associatedObjectId="72057594045267968"><owner-list><owner id="process294342d5c28" mode="X" /></owner-list><waiter-list><waiter id="process2943205f848" mode="IX" requestType="wait" /></waiter-list></pagelock><pagelock fileid="1" pageid="171973" dbid="6" subresource="FULL" objectname="1184344b-8c03-4040-beeb-0fe87dbb370f.dbo.store_sales" id="lock2933488d580" mode="X" associatedObjectId="72057594045267968"><owner-list><owner id="process2943205f848" mode="X" /></owner-list><waiter-list><waiter id="process294342d5c28" mode="IX" requestType="wait" /></waiter-list></pagelock></resource-list></deadlock></td><td>idx</td></tr></tbody></table></div>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+    
+
+<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<div class="highlight"><pre><span></span><span class="cp">&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;</span>
+<span class="nt">&lt;deadlock&gt;</span>
+  <span class="nt">&lt;victim-list&gt;</span>
+    <span class="nt">&lt;victimProcess</span> <span class="na">id=</span><span class="s">&quot;process294342d5c28&quot;</span> <span class="nt">/&gt;</span>
+  <span class="nt">&lt;/victim-list&gt;</span>
+  <span class="nt">&lt;process-list&gt;</span>
+    <span class="nt">&lt;process</span> <span class="na">id=</span><span class="s">&quot;process294342d5c28&quot;</span> <span class="na">taskpriority=</span><span class="s">&quot;0&quot;</span> <span class="na">logused=</span><span class="s">&quot;14702332&quot;</span> <span class="na">waitresource=</span><span class="s">&quot;PAGE: 6:5:177139 &quot;</span> <span class="na">waittime=</span><span class="s">&quot;65924&quot;</span> <span class="na">ownerId=</span><span class="s">&quot;6305608&quot;</span> <span class="na">transactionname=</span><span class="s">&quot;implicit_transaction&quot;</span> <span class="na">lasttranstarted=</span><span class="s">&quot;2020-09-07T12:48:46.310&quot;</span> <span class="na">XDES=</span><span class="s">&quot;0x2942da70428&quot;</span> <span class="na">lockMode=</span><span class="s">&quot;IX&quot;</span> <span class="na">schedulerid=</span><span class="s">&quot;2&quot;</span> <span class="na">kpid=</span><span class="s">&quot;32240&quot;</span> <span class="na">status=</span><span class="s">&quot;suspended&quot;</span> <span class="na">spid=</span><span class="s">&quot;104&quot;</span> <span class="na">sbid=</span><span class="s">&quot;0&quot;</span> <span class="na">ecid=</span><span class="s">&quot;0&quot;</span> <span class="na">priority=</span><span class="s">&quot;0&quot;</span> <span class="na">trancount=</span><span class="s">&quot;2&quot;</span> <span class="na">lastbatchstarted=</span><span class="s">&quot;2020-09-07T12:48:46.310&quot;</span> <span class="na">lastbatchcompleted=</span><span class="s">&quot;2020-09-07T12:48:46.310&quot;</span> <span class="na">lastattention=</span><span class="s">&quot;1900-01-01T00:00:00.310&quot;</span> <span class="na">clientapp=</span><span class="s">&quot;Microsoft JDBC Driver for SQL Server&quot;</span> <span class="na">hostname=</span><span class="s">&quot;0825-113128-alum84-10-139-64-6&quot;</span> <span class="na">hostpid=</span><span class="s">&quot;0&quot;</span> <span class="na">loginname=</span><span class="s">&quot;anksinha&quot;</span> <span class="na">isolationlevel=</span><span class="s">&quot;read committed (2)&quot;</span> <span class="na">xactid=</span><span class="s">&quot;0&quot;</span> <span class="na">currentdb=</span><span class="s">&quot;6&quot;</span> <span class="na">currentdbname=</span><span class="s">&quot;idx&quot;</span> <span class="na">lockTimeout=</span><span class="s">&quot;4294967295&quot;</span> <span class="na">clientoption1=</span><span class="s">&quot;671088672&quot;</span> <span class="na">clientoption2=</span><span class="s">&quot;128058&quot;</span><span class="nt">&gt;</span>
+      <span class="nt">&lt;executionStack&gt;</span>
+        <span class="nt">&lt;frame</span> <span class="na">procname=</span><span class="s">&quot;unknown&quot;</span> <span class="na">queryhash=</span><span class="s">&quot;0x499421339951eed9&quot;</span> <span class="na">queryplanhash=</span><span class="s">&quot;0xfdb1047943f4774d&quot;</span> <span class="na">line=</span><span class="s">&quot;1&quot;</span> <span class="na">stmtend=</span><span class="s">&quot;1414&quot;</span> <span class="na">sqlhandle=</span><span class="s">&quot;0x020000004f6fb4142b1cd89e697a443fbf5d63241a537a260000000000000000000000000000000000000000&quot;</span><span class="nt">&gt;</span>unknown<span class="nt">&lt;/frame&gt;</span>
+      <span class="nt">&lt;/executionStack&gt;</span>
+      <span class="nt">&lt;inputbuf&gt;</span>INSERT BULK dbo.store_sales ([ss_sold_date_sk] INT , [ss_sold_time_sk] INT , [ss_item_sk] INT , [ss_customer_sk] INT , [ss_cdemo_sk] INT , [ss_hdemo_sk] INT , [ss_addr_sk] INT , [ss_store_sk] INT , [ss_promo_sk] INT , [ss_ticket_number] INT , [ss_quantity] INT , [ss_wholesale_cost] DECIMAL(7, 2) , [ss_list_price] DECIMAL(7, 2) , [ss_sales_price] DECIMAL(7, 2) , [ss_ext_discount_amt] DECIMAL(7, 2) , [ss_ext_sales_price] DECIMAL(7, 2) , [ss_ext_wholesale_cost] DECIMAL(7, 2) , [ss_ext_list_price] DECIMAL(7, 2) , [ss_ext_tax] DECIMAL(7, 2) , [ss_coupon_amt] DECIMAL(7, 2) , [ss_net_paid] DECIMAL(7, 2) , [ss_net_paid_inc_tax] DECIMAL(7, 2) , [ss_net_profit] DECIMAL(7, 2) )  with (ROWS_PER_BATCH = 1048576)<span class="nt">&lt;/inputbuf&gt;</span>
+    <span class="nt">&lt;/process&gt;</span>
+    <span class="nt">&lt;process</span> <span class="na">id=</span><span class="s">&quot;process2943205fc28&quot;</span> <span class="na">taskpriority=</span><span class="s">&quot;0&quot;</span> <span class="na">logused=</span><span class="s">&quot;465121144&quot;</span> <span class="na">waitresource=</span><span class="s">&quot;PAGE: 6:5:176838 &quot;</span> <span class="na">waittime=</span><span class="s">&quot;4133&quot;</span> <span class="na">ownerId=</span><span class="s">&quot;6305670&quot;</span> <span class="na">transactionname=</span><span class="s">&quot;implicit_transaction&quot;</span> <span class="na">lasttranstarted=</span><span class="s">&quot;2020-09-07T12:48:46.320&quot;</span> <span class="na">XDES=</span><span class="s">&quot;0x29448a1c428&quot;</span> <span class="na">lockMode=</span><span class="s">&quot;X&quot;</span> <span class="na">schedulerid=</span><span class="s">&quot;2&quot;</span> <span class="na">kpid=</span><span class="s">&quot;54388&quot;</span> <span class="na">status=</span><span class="s">&quot;suspended&quot;</span> <span class="na">spid=</span><span class="s">&quot;107&quot;</span> <span class="na">sbid=</span><span class="s">&quot;0&quot;</span> <span class="na">ecid=</span><span class="s">&quot;0&quot;</span> <span class="na">priority=</span><span class="s">&quot;0&quot;</span> <span class="na">trancount=</span><span class="s">&quot;2&quot;</span> <span class="na">lastbatchstarted=</span><span class="s">&quot;2020-09-07T12:50:13.077&quot;</span> <span class="na">lastbatchcompleted=</span><span class="s">&quot;2020-09-07T12:50:13.077&quot;</span> <span class="na">lastattention=</span><span class="s">&quot;1900-01-01T00:00:00.077&quot;</span> <span class="na">clientapp=</span><span class="s">&quot;Microsoft JDBC Driver for SQL Server&quot;</span> <span class="na">hostname=</span><span class="s">&quot;0825-113128-alum84-10-139-64-5&quot;</span> <span class="na">hostpid=</span><span class="s">&quot;0&quot;</span> <span class="na">loginname=</span><span class="s">&quot;anksinha&quot;</span> <span class="na">isolationlevel=</span><span class="s">&quot;read committed (2)&quot;</span> <span class="na">xactid=</span><span class="s">&quot;0&quot;</span> <span class="na">currentdb=</span><span class="s">&quot;6&quot;</span> <span class="na">currentdbname=</span><span class="s">&quot;idx&quot;</span> <span class="na">lockTimeout=</span><span class="s">&quot;4294967295&quot;</span> <span class="na">clientoption1=</span><span class="s">&quot;671088672&quot;</span> <span class="na">clientoption2=</span><span class="s">&quot;128058&quot;</span><span class="nt">&gt;</span>
+      <span class="nt">&lt;executionStack&gt;</span>
+        <span class="nt">&lt;frame</span> <span class="na">procname=</span><span class="s">&quot;unknown&quot;</span> <span class="na">queryhash=</span><span class="s">&quot;0x499421339951eed9&quot;</span> <span class="na">queryplanhash=</span><span class="s">&quot;0xfdb1047943f4774d&quot;</span> <span class="na">line=</span><span class="s">&quot;1&quot;</span> <span class="na">stmtend=</span><span class="s">&quot;1414&quot;</span> <span class="na">sqlhandle=</span><span class="s">&quot;0x020000004f6fb4142b1cd89e697a443fbf5d63241a537a260000000000000000000000000000000000000000&quot;</span><span class="nt">&gt;</span>unknown<span class="nt">&lt;/frame&gt;</span>
+      <span class="nt">&lt;/executionStack&gt;</span>
+      <span class="nt">&lt;inputbuf&gt;</span>INSERT BULK dbo.store_sales ([ss_sold_date_sk] INT , [ss_sold_time_sk] INT , [ss_item_sk] INT , [ss_customer_sk] INT , [ss_cdemo_sk] INT , [ss_hdemo_sk] INT , [ss_addr_sk] INT , [ss_store_sk] INT , [ss_promo_sk] INT , [ss_ticket_number] INT , [ss_quantity] INT , [ss_wholesale_cost] DECIMAL(7, 2) , [ss_list_price] DECIMAL(7, 2) , [ss_sales_price] DECIMAL(7, 2) , [ss_ext_discount_amt] DECIMAL(7, 2) , [ss_ext_sales_price] DECIMAL(7, 2) , [ss_ext_wholesale_cost] DECIMAL(7, 2) , [ss_ext_list_price] DECIMAL(7, 2) , [ss_ext_tax] DECIMAL(7, 2) , [ss_coupon_amt] DECIMAL(7, 2) , [ss_net_paid] DECIMAL(7, 2) , [ss_net_paid_inc_tax] DECIMAL(7, 2) , [ss_net_profit] DECIMAL(7, 2) )  with (ROWS_PER_BATCH = 1048576)<span class="nt">&lt;/inputbuf&gt;</span>
+    <span class="nt">&lt;/process&gt;</span>
+  <span class="nt">&lt;/process-list&gt;</span>
+  <span class="nt">&lt;resource-list&gt;</span>
+    <span class="nt">&lt;pagelock</span> <span class="na">fileid=</span><span class="s">&quot;5&quot;</span> <span class="na">pageid=</span><span class="s">&quot;177139&quot;</span> <span class="na">dbid=</span><span class="s">&quot;6&quot;</span> <span class="na">subresource=</span><span class="s">&quot;FULL&quot;</span> <span class="na">objectname=</span><span class="s">&quot;1184344b-8c03-4040-beeb-0fe87dbb370f.dbo.store_sales&quot;</span> <span class="na">id=</span><span class="s">&quot;lock293f9709e80&quot;</span> <span class="na">mode=</span><span class="s">&quot;X&quot;</span> <span class="na">associatedObjectId=</span><span class="s">&quot;72057594045267968&quot;</span><span class="nt">&gt;</span>
+      <span class="nt">&lt;owner-list&gt;</span>
+        <span class="nt">&lt;owner</span> <span class="na">id=</span><span class="s">&quot;process2943205fc28&quot;</span> <span class="na">mode=</span><span class="s">&quot;X&quot;</span> <span class="nt">/&gt;</span>
+      <span class="nt">&lt;/owner-list&gt;</span>
+      <span class="nt">&lt;waiter-list&gt;</span>
+        <span class="nt">&lt;waiter</span> <span class="na">id=</span><span class="s">&quot;process294342d5c28&quot;</span> <span class="na">mode=</span><span class="s">&quot;IX&quot;</span> <span class="na">requestType=</span><span class="s">&quot;wait&quot;</span> <span class="nt">/&gt;</span>
+      <span class="nt">&lt;/waiter-list&gt;</span>
+    <span class="nt">&lt;/pagelock&gt;</span>
+    <span class="nt">&lt;pagelock</span> <span class="na">fileid=</span><span class="s">&quot;5&quot;</span> <span class="na">pageid=</span><span class="s">&quot;176838&quot;</span> <span class="na">dbid=</span><span class="s">&quot;6&quot;</span> <span class="na">subresource=</span><span class="s">&quot;FULL&quot;</span> <span class="na">objectname=</span><span class="s">&quot;1184344b-8c03-4040-beeb-0fe87dbb370f.dbo.store_sales&quot;</span> <span class="na">id=</span><span class="s">&quot;lock29338111d80&quot;</span> <span class="na">mode=</span><span class="s">&quot;IX&quot;</span> <span class="na">associatedObjectId=</span><span class="s">&quot;72057594045267968&quot;</span><span class="nt">&gt;</span>
+      <span class="nt">&lt;owner-list&gt;</span>
+        <span class="nt">&lt;owner</span> <span class="na">id=</span><span class="s">&quot;process294342d5c28&quot;</span> <span class="na">mode=</span><span class="s">&quot;IX&quot;</span> <span class="nt">/&gt;</span>
+      <span class="nt">&lt;/owner-list&gt;</span>
+      <span class="nt">&lt;waiter-list&gt;</span>
+        <span class="nt">&lt;waiter</span> <span class="na">id=</span><span class="s">&quot;process2943205fc28&quot;</span> <span class="na">mode=</span><span class="s">&quot;X&quot;</span> <span class="na">requestType=</span><span class="s">&quot;convert&quot;</span> <span class="nt">/&gt;</span>
+      <span class="nt">&lt;/waiter-list&gt;</span>
+    <span class="nt">&lt;/pagelock&gt;</span>
+  <span class="nt">&lt;/resource-list&gt;</span>
+<span class="nt">&lt;/deadlock&gt;</span>
+</pre></div>
+<p>The XML produced gives a more detail about why deadlock happens. There are two (or more) page locks held by different processes under X (or IX) mode and the processes tries to acquire exclusive lock on each other's pages. Refer to <a href="https://docs.microsoft.com/en-us/sql/relational-databases/sql-server-transaction-locking-and-row-versioning-guide?view=sql-server-ver15#lock_modes">doc</a> to learn more about different lock modes and deadlock.</p>
+<p>BULK insert will start by acquiring exclusive(X) row-level lock and intent exclusive (IX) lock on corresponding pages. One way to control this behaviour is by specifying TABLOCK option which will force the session to acquire table-level lock. Which table-level lock is obtained depends upon whether the table has any index on it. If the table has no index (heap table) then Bulk Update log is acquired which allows multiple concurrent bulk import to execute. However if the table has index then IX or X lock is acquired which prevents any other write operations on the table. <a href="https://docs.microsoft.com/en-us/previous-versions/sql/sql-server-2008-r2/ms177445%28v=sql.105%29">This documentation</a> provides more detail on how to optimize Bulk Import on Sql Database. However the article is for SQL Server 2008 and few of the recommendation (such as minimizing logging) is not applicable for Azure SQL Server. Nonetheless, the behaviour of bulk insert described in the article is still applicable to Azure SQL Database.</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h2 id="Approaches-for-avoiding-deadlock">Approaches for avoiding deadlock<a class="anchor-link" href="#Approaches-for-avoiding-deadlock"> </a></h2><p>A takeaway from this is that deadlock is not the product of spark or JDBC connector. The deadlock will happen whenever there are multiple bulk import executing on single table irrespective of which applications initated the trasaction. Below are few approaches to avoid deadlock when using databricks to import large data into Azure SQL Server.</p>
+<h3 id="Coalesce-partitions">Coalesce partitions<a class="anchor-link" href="#Coalesce-partitions"> </a></h3><p>We have already been using this solution throughout the blog. We coalesce the partitions to 1 in order to avoid concurrent bulk import. This is a tradeoff between performance and reliablility. We give up on the power of spark to execute multiple tasks concurrently to gain a deadlock-free execution. However this solution will not work if there are two or more notebooks running in parallel performing bulk import on the same table.</p>
+<h3 id="Insert-into-unique-temp-tables">Insert into unique temp tables<a class="anchor-link" href="#Insert-into-unique-temp-tables"> </a></h3><p>This is a two phase approach. In first phase each worker bulk inserts data into different global temp tables which are exclusively created for this purpose. In the second phase each of these temp tables are merged into destination table. This two phase approach limits the surface area where deadlock can happen to second phase and that too only when multiple notebooks are running to bulk insert data into same table. This approach is <a href="https://github.com/microsoft/sql-spark-connector#supported-options">available</a> in Microsoft SQL Spark Connector with <code>NO_DUPLICATES</code> option on <code>reliabilityLevel</code>. However due to <a href="https://github.com/microsoft/sql-spark-connector/issues/22">issue #22</a> this approach is not usable in databricks yet. An another problem with this approach is that spark can execute more than one tasks on same worker which will result in deadlock if temp tables are unique to a worker. This is being dicussed at <a href="https://github.com/microsoft/sql-spark-connector/issues/49">issue #49</a>.</p>
+<h3 id="Using-Clustered-Columnstore-Index">Using Clustered Columnstore Index<a class="anchor-link" href="#Using-Clustered-Columnstore-Index"> </a></h3><p>Clustered Columnstore Index (CCI) is optimized for bulk insertion scenarios. If the batch size is greater than 102400 the rows are directly written to compressed columnstore. This means each task is writing into its own rowgroup which eliminates any possibility of deadlock. We have seen this scenario in the <a href="https://ankitbko.github.io/blog/2020/09/bulk-import-using-sql-spark-connector-p2/#Clustered-Columnstore-Index">previous post</a>. More details on how to optimize bulk insertion on CCI is available <a href="https://docs.microsoft.com/en-us/sql/relational-databases/indexes/columnstore-indexes-data-loading-guidance?view=sql-server-ver15">here</a>.</p>
+<h3 id="Using-Partitioned-Table">Using Partitioned Table<a class="anchor-link" href="#Using-Partitioned-Table"> </a></h3><p>Table partitioning in Azure SQL Database serves to spread the data into multiple units inside a single Primary filegroup. Partitioning the table helps to query and insert data into different partitions, in parallel, without one impacting the other. Since the operations in each Partition affect only a subset of the data in the table, they are more efficient than performing the operation on the entire table as one entity. In order to achieve an effective spread of this data into partitions, the choice of the Column in the table to partition on is important.</p>
+<h4 id="Choice-of-the-column-to-partition-on">Choice of the column to partition on<a class="anchor-link" href="#Choice-of-the-column-to-partition-on"> </a></h4><p>In the scenario at hand, I have chosen to partition the table on the <code>ss_store_sk</code> Column in the Table <code>dbo.store_sales</code>, for the following reasons</p>
+<ul>
+<li>The number of rows in the table per <code>ss_store_sk</code> are in the same range of ~ 5 million</li>
+<li>The Parquet data in the Azure Data Lake Store for store sales is already partitioned on this column</li>
+<li>Most commonly performed operations on the data in this table would be done based on the <code>ss_store_sk</code></li>
+</ul>
+<p>This indicates that this column would be a good candidate to partition this Table on. A quick check on the distinct number of <code>ss_store_sk</code> values in the table indicated a count of ~ 1002. This means that we would need to create ~ 1003 partitions, providing for one partition that would store rows that have a null value for this Column.  Azure SQL Database supports having upto ~ 15000 partitions per table.</p>
+<p>The steps to be performed to partition tables are documented <a href="https://docs.microsoft.com/en-us/sql/relational-databases/partitions/partitioned-tables-and-indexes?view=sql-server-ver15">here</a>. Follow  through the sections below to see how this could be done.</p>
+<h4 id="Creating-Partition-Functions">Creating Partition Functions<a class="anchor-link" href="#Creating-Partition-Functions"> </a></h4><div class="highlight"><pre><span></span><span class="k">DECLARE</span> <span class="o">@</span><span class="n">IntegerPartitionFunction</span> <span class="n">nvarchar</span><span class="p">(</span><span class="k">max</span><span class="p">)</span> <span class="o">=</span> 
+    <span class="n">N</span><span class="s1">&#39;CREATE PARTITION FUNCTION partitionByStoreId (int) </span>
+<span class="s1">    AS RANGE RIGHT FOR VALUES (&#39;</span><span class="p">;</span>  
+<span class="k">DECLARE</span> <span class="o">@</span><span class="n">i</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>  
+<span class="n">WHILE</span> <span class="o">@</span><span class="n">i</span> <span class="o">&lt;</span> <span class="mi">1003</span> 
+<span class="k">BEGIN</span>  
+<span class="k">SET</span> <span class="o">@</span><span class="n">IntegerPartitionFunction</span> <span class="o">+=</span> <span class="k">CAST</span><span class="p">(</span><span class="o">@</span><span class="n">i</span> <span class="k">as</span> <span class="n">nvarchar</span><span class="p">(</span><span class="mi">10</span><span class="p">))</span> <span class="o">+</span> <span class="n">N</span><span class="s1">&#39;, &#39;</span><span class="p">;</span>  
+<span class="k">SET</span> <span class="o">@</span><span class="n">i</span> <span class="o">+=</span> <span class="mi">1</span><span class="p">;</span>  
+<span class="k">END</span>  
+<span class="k">SET</span> <span class="o">@</span><span class="n">IntegerPartitionFunction</span> <span class="o">+=</span> <span class="k">CAST</span><span class="p">(</span><span class="o">@</span><span class="n">i</span> <span class="k">as</span> <span class="n">nvarchar</span><span class="p">(</span><span class="mi">10</span><span class="p">))</span> <span class="o">+</span> <span class="n">N</span><span class="s1">&#39;);&#39;</span><span class="p">;</span>  
+<span class="k">EXEC</span> <span class="n">sp_executesql</span> <span class="o">@</span><span class="n">IntegerPartitionFunction</span><span class="p">;</span>
+</pre></div>
+<h4 id="Creating-Partition-Scheme">Creating Partition Scheme<a class="anchor-link" href="#Creating-Partition-Scheme"> </a></h4><div class="highlight"><pre><span></span><span class="k">CREATE</span> <span class="n">PARTITION</span> <span class="n">SCHEME</span> <span class="n">PS_HASH_BY_STORE_SK</span> 
+<span class="k">AS</span> <span class="n">PARTITION</span> <span class="n">partitionByStoreId</span> 
+<span class="k">ALL</span> <span class="k">TO</span> <span class="p">([</span><span class="k">PRIMARY</span><span class="p">]);</span> 
+<span class="k">GO</span>
+</pre></div>
+<h4 id="Creating-Partitioned-Table">Creating Partitioned Table<a class="anchor-link" href="#Creating-Partitioned-Table"> </a></h4><p>The Table <code>dbo.store_sales</code> has a combination Primary Key on the Columns <code>ss_item_sk</code> and  <code>ss_ticket_number</code>. For us to partition this table on <code>ss_store_s</code>' Column, we would need to add this column to the Primary Key index. However, running the script below would result in an error, since the column <code>ss_store_sk</code> is nullable, and hence cannot be a part of a Primary Key. You would recollect that the data in the Parquet file contains rows where the <code>ss_store_sk</code> values are null, hence we need to be able to store null values in the Table. In order to address this, we would need to drop the Primary Index altogether, and instead create a separate Non clustered Index that includes all three columns.</p>
+<div class="highlight"><pre><span></span><span class="k">DROP</span> <span class="k">TABLE</span> <span class="k">IF</span> <span class="k">EXISTS</span> <span class="n">dbo</span><span class="p">.</span><span class="n">store_sales</span>
+
+<span class="k">CREATE</span> <span class="k">TABLE</span> <span class="n">dbo</span><span class="p">.</span><span class="n">store_sales</span>
+<span class="p">(</span>
+    <span class="n">ss_sold_date_sk</span>           <span class="nb">integer</span>                       <span class="p">,</span>
+    <span class="n">ss_sold_time_sk</span>           <span class="nb">integer</span>                       <span class="p">,</span>
+    <span class="n">ss_item_sk</span>                <span class="nb">integer</span>               <span class="k">not</span> <span class="k">null</span><span class="p">,</span>
+    <span class="n">ss_customer_sk</span>            <span class="nb">integer</span>                       <span class="p">,</span>
+    <span class="n">ss_cdemo_sk</span>               <span class="nb">integer</span>                       <span class="p">,</span>
+    <span class="n">ss_hdemo_sk</span>               <span class="nb">integer</span>                       <span class="p">,</span>
+    <span class="n">ss_addr_sk</span>                <span class="nb">integer</span>                       <span class="p">,</span>
+    <span class="n">ss_store_sk</span>               <span class="nb">integer</span>                  <span class="k">null</span> <span class="p">,</span>
+    <span class="n">ss_promo_sk</span>               <span class="nb">integer</span>                       <span class="p">,</span>
+    <span class="n">ss_ticket_number</span>          <span class="nb">integer</span>               <span class="k">not</span> <span class="k">null</span><span class="p">,</span>
+    <span class="n">ss_quantity</span>               <span class="nb">integer</span>                       <span class="p">,</span>
+    <span class="n">ss_wholesale_cost</span>         <span class="nb">decimal</span><span class="p">(</span><span class="mi">7</span><span class="p">,</span><span class="mi">2</span><span class="p">)</span>                  <span class="p">,</span>
+    <span class="n">ss_list_price</span>             <span class="nb">decimal</span><span class="p">(</span><span class="mi">7</span><span class="p">,</span><span class="mi">2</span><span class="p">)</span>                  <span class="p">,</span>
+    <span class="n">ss_sales_price</span>            <span class="nb">decimal</span><span class="p">(</span><span class="mi">7</span><span class="p">,</span><span class="mi">2</span><span class="p">)</span>                  <span class="p">,</span>
+    <span class="n">ss_ext_discount_amt</span>       <span class="nb">decimal</span><span class="p">(</span><span class="mi">7</span><span class="p">,</span><span class="mi">2</span><span class="p">)</span>                  <span class="p">,</span>
+    <span class="n">ss_ext_sales_price</span>        <span class="nb">decimal</span><span class="p">(</span><span class="mi">7</span><span class="p">,</span><span class="mi">2</span><span class="p">)</span>                  <span class="p">,</span>
+    <span class="n">ss_ext_wholesale_cost</span>     <span class="nb">decimal</span><span class="p">(</span><span class="mi">7</span><span class="p">,</span><span class="mi">2</span><span class="p">)</span>                  <span class="p">,</span>
+    <span class="n">ss_ext_list_price</span>         <span class="nb">decimal</span><span class="p">(</span><span class="mi">7</span><span class="p">,</span><span class="mi">2</span><span class="p">)</span>                  <span class="p">,</span>
+    <span class="n">ss_ext_tax</span>                <span class="nb">decimal</span><span class="p">(</span><span class="mi">7</span><span class="p">,</span><span class="mi">2</span><span class="p">)</span>                  <span class="p">,</span>
+    <span class="n">ss_coupon_amt</span>             <span class="nb">decimal</span><span class="p">(</span><span class="mi">7</span><span class="p">,</span><span class="mi">2</span><span class="p">)</span>                  <span class="p">,</span>
+    <span class="n">ss_net_paid</span>               <span class="nb">decimal</span><span class="p">(</span><span class="mi">7</span><span class="p">,</span><span class="mi">2</span><span class="p">)</span>                  <span class="p">,</span>
+    <span class="n">ss_net_paid_inc_tax</span>       <span class="nb">decimal</span><span class="p">(</span><span class="mi">7</span><span class="p">,</span><span class="mi">2</span><span class="p">)</span>                  <span class="p">,</span>
+    <span class="n">ss_net_profit</span>             <span class="nb">decimal</span><span class="p">(</span><span class="mi">7</span><span class="p">,</span><span class="mi">2</span><span class="p">)</span>                  <span class="p">,</span>
+    <span class="k">index</span> <span class="n">ui_stores_sales</span> <span class="p">(</span><span class="n">ss_item_sk</span><span class="p">,</span> <span class="n">ss_ticket_number</span><span class="p">,</span><span class="n">ss_store_sk</span><span class="p">)</span>
+    <span class="c1">--primary key (ss_item_sk, ss_ticket_number,ss_store_sk)</span>
+<span class="p">)</span><span class="k">ON</span> <span class="n">PS_HASH_BY_STORE_SK</span> <span class="p">(</span><span class="n">ss_store_sk</span><span class="p">)</span> <span class="p">;</span>
+</pre></div>
+<h4 id="Import-into-partitioned-table">Import into partitioned table<a class="anchor-link" href="#Import-into-partitioned-table"> </a></h4><p>Now that the table has been partitioned, lets look at how we can bulk import <code>store_sales</code> using spark.
+For the table partitions to be effectively leveraged during the Bulk Insert, the data in the spark dataframe also need to be partitioned on <code>ss_store_sk</code>, like the Database Table partitions. This ensures that a bulk insert from a Spark dataframe executes on a single table partition, without interfering with a Bulk Insert from another Dataframe. Not doing this will result in deadlocks as we discussed earlier.</p>
+<p>Since our dataset in ADLS is already partitioned on <code>ss_store_sk</code>, spark will read it into different partitions, based on its size. On execution, it was observed that this resulted in 3 partitions per <code>ss_store_sk</code>. If the Bulk insert were performed thus, we would face deadlocks again. Unfortunately, there is no way to configure spark to read each file into single partition. What we will have to do is to <em>repartition</em> the dataframe again after reading the dataset from ADLS. This repartition will cause a <em>SHUFFLE</em> operation on spark which is a very costly operation. We can repartition dataframe on any column by simply supplying column name and number of partitions we want.</p>
+<p>To demonstrate this we have created a new database that is partitioned on the column shown in scripts above. All DDL scripts is available in git repository linked at the begininning of the article. We will try to insert data for all 10 stores, which amounts to ~55 million records, as called out in the previous post.</p>
+
+</div>
+</div>
+</div>
+    
+    
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="k">def</span> <span class="nf">import_table_partn</span><span class="p">(</span><span class="n">url</span><span class="p">,</span> <span class="n">table_name</span><span class="p">,</span> <span class="n">stores</span><span class="p">,</span> <span class="n">batch_size</span><span class="p">):</span> 
+  <span class="k">try</span><span class="p">:</span>
+      <span class="n">df</span> <span class="o">=</span> <span class="n">spark</span><span class="o">.</span><span class="n">read</span><span class="o">.</span><span class="n">parquet</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">path</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">table_name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+      <span class="n">df</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="n">table_storesk_map</span><span class="p">[</span><span class="n">table_name</span><span class="p">]]</span><span class="o">.</span><span class="n">isin</span><span class="p">(</span><span class="n">stores</span><span class="p">))</span>
+
+      <span class="c1"># Temporary workaround until Issue #5 gets fixed https://github.com/microsoft/sql-spark-connector/issues/5</span>
+      <span class="n">table_schema</span> <span class="o">=</span> <span class="n">create_valid_table_schema</span><span class="p">(</span><span class="n">table_name</span><span class="p">,</span> <span class="n">df</span><span class="o">.</span><span class="n">schema</span><span class="p">)</span>
+      <span class="n">df</span> <span class="o">=</span> <span class="n">spark</span><span class="o">.</span><span class="n">createDataFrame</span><span class="p">(</span><span class="n">df</span><span class="o">.</span><span class="n">rdd</span><span class="p">,</span> <span class="n">table_schema</span><span class="p">)</span>
+      
+      <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Number of partitions before repartitioning: </span><span class="si">{</span><span class="n">df</span><span class="o">.</span><span class="n">rdd</span><span class="o">.</span><span class="n">getNumPartitions</span><span class="p">()</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+      <span class="n">df</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">repartition</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">stores</span><span class="p">),</span> <span class="n">table_storesk_map</span><span class="p">[</span><span class="n">table_name</span><span class="p">])</span>
+      <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Number of partitions after repartitioning: </span><span class="si">{</span><span class="n">df</span><span class="o">.</span><span class="n">rdd</span><span class="o">.</span><span class="n">getNumPartitions</span><span class="p">()</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+      <span class="n">t</span> <span class="o">=</span> <span class="n">Timer</span><span class="p">(</span><span class="n">text</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;Imported into table </span><span class="si">{</span><span class="n">table_name</span><span class="si">}</span><span class="s2"> in : </span><span class="se">{{</span><span class="s2">:0.2f</span><span class="se">}}</span><span class="s2"> &quot;</span><span class="p">)</span>    
+      <span class="n">t</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
+      
+      <span class="n">df</span><span class="o">.</span><span class="n">write</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="s2">&quot;com.microsoft.sqlserver.jdbc.spark&quot;</span><span class="p">)</span> \
+        <span class="o">.</span><span class="n">mode</span><span class="p">(</span><span class="s2">&quot;append&quot;</span><span class="p">)</span> \
+        <span class="o">.</span><span class="n">option</span><span class="p">(</span><span class="s2">&quot;url&quot;</span><span class="p">,</span> <span class="n">url</span><span class="p">)</span> \
+        <span class="o">.</span><span class="n">option</span><span class="p">(</span><span class="s2">&quot;dbtable&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">schema</span><span class="si">}</span><span class="s2">.</span><span class="si">{</span><span class="n">table_name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span> \
+        <span class="o">.</span><span class="n">option</span><span class="p">(</span><span class="s2">&quot;user&quot;</span><span class="p">,</span> <span class="n">username</span><span class="p">)</span> \
+        <span class="o">.</span><span class="n">option</span><span class="p">(</span><span class="s2">&quot;password&quot;</span><span class="p">,</span> <span class="n">password</span><span class="p">)</span> \
+        <span class="o">.</span><span class="n">option</span><span class="p">(</span><span class="s2">&quot;tableLock&quot;</span><span class="p">,</span> <span class="s2">&quot;false&quot;</span><span class="p">)</span> \
+        <span class="o">.</span><span class="n">option</span><span class="p">(</span><span class="s2">&quot;batchsize&quot;</span><span class="p">,</span> <span class="n">batch_size</span><span class="p">)</span> \
+        <span class="o">.</span><span class="n">save</span><span class="p">()</span>
+
+      <span class="n">elapsed</span> <span class="o">=</span> <span class="n">t</span><span class="o">.</span><span class="n">stop</span><span class="p">()</span>
+      <span class="k">return</span> <span class="n">elapsed</span>
+  <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Failed to import into table </span><span class="si">{</span><span class="n">table_name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">e</span><span class="p">)</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+<div class="output_html rendered_html output_subarea ">
+<style scoped="">
+  .ansiout {
+    display: block;
+    unicode-bidi: embed;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    word-break: break-all;
+    font-family: "Source Code Pro", "Menlo", monospace;;
+    font-size: 13px;
+    color: #555;
+    margin-left: 4px;
+    line-height: 19px;
+  }
+</style>
+<div class="ansiout"></div>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+    
+
+    
+    
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">url</span> <span class="o">=</span> <span class="n">create_url</span><span class="p">(</span><span class="n">server_name</span><span class="p">,</span> <span class="s2">&quot;idxpartn&quot;</span><span class="p">)</span>
+<span class="n">truncate_tables</span><span class="p">(</span><span class="n">url</span><span class="p">,</span> <span class="n">username</span><span class="p">,</span> <span class="n">password</span><span class="p">,</span> <span class="n">tables</span><span class="p">)</span>
+<span class="n">elapsed</span> <span class="o">=</span> <span class="n">import_table_partn</span><span class="p">(</span><span class="n">url</span><span class="p">,</span> <span class="n">table_name</span><span class="p">,</span> <span class="n">stores</span><span class="p">,</span> <span class="mi">1048576</span><span class="p">)</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+<div class="output_html rendered_html output_subarea ">
+<style scoped="">
+  .ansiout {
+    display: block;
+    unicode-bidi: embed;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    word-break: break-all;
+    font-family: "Source Code Pro", "Menlo", monospace;;
+    font-size: 13px;
+    color: #555;
+    margin-left: 4px;
+    line-height: 19px;
+  }
+</style>
+<div class="ansiout">Truncated table store_sales in: 0.06
+Number of partitions before repartitioning: 30
+Number of partitions after repartitioning: 10
+Imported into table store_sales in : 593.27 
+</div>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+    
+
+<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>If we take a look at the logs we will not find any deadlock errors. Moreover it took us only 593 seconds to insert data into partitioned table. Compare it with time it took insert data into non partitioned table from previous post. This is order of magnitude faster because we are able to insert data for each store in parallel.</p>
+<p>Run the query below to find how many rows per partitions have been inserted.</p>
+<div class="highlight"><pre><span></span><span class="k">SELECT</span> <span class="n">TOP</span> <span class="mi">10</span> <span class="n">object_name</span><span class="p">(</span><span class="n">object_id</span><span class="p">)</span> <span class="k">as</span> <span class="k">Table_Name</span><span class="p">,</span><span class="n">partition_id</span><span class="p">,</span> <span class="n">partition_number</span><span class="p">,</span> <span class="n">index_id</span><span class="p">,</span> <span class="k">row_count</span> 
+<span class="k">FROM</span> <span class="n">sys</span><span class="p">.</span><span class="n">dm_db_partition_stats</span> 
+<span class="k">WHERE</span> <span class="n">object_name</span><span class="p">(</span><span class="n">object_id</span><span class="p">)</span><span class="o">=</span><span class="s1">&#39;store_sales&#39;</span>
+<span class="k">ORDER</span> <span class="k">BY</span> <span class="k">row_count</span> <span class="k">DESC</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+    
+    
+<div class="cell border-box-sizing code_cell rendered">
+<details class="description">
+      <summary class="btn btn-sm" data-open="Hide Code" data-close="Show Code"></summary>
+        <p><div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="c1">#collapse</span>
+
+<span class="n">query</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">SELECT TOP 10 object_name(object_id) as Table_Name,partition_id, partition_number, index_id, row_count </span>
+<span class="s2">FROM sys.dm_db_partition_stats </span>
+<span class="s2">WHERE object_name(object_id)=&#39;store_sales&#39;</span>
+<span class="s2">ORDER BY row_count DESC&quot;&quot;&quot;</span>
+
+<span class="n">url</span> <span class="o">=</span> <span class="n">create_url</span><span class="p">(</span><span class="n">server_name</span><span class="p">,</span> <span class="s2">&quot;idxpartn&quot;</span><span class="p">)</span>
+
+<span class="n">dl_df</span> <span class="o">=</span> <span class="n">spark</span><span class="o">.</span><span class="n">read</span> \
+        <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="s2">&quot;jdbc&quot;</span><span class="p">)</span> \
+        <span class="o">.</span><span class="n">option</span><span class="p">(</span><span class="s2">&quot;url&quot;</span><span class="p">,</span> <span class="n">url</span><span class="p">)</span> \
+        <span class="o">.</span><span class="n">option</span><span class="p">(</span><span class="s2">&quot;query&quot;</span><span class="p">,</span> <span class="n">query</span><span class="p">)</span> \
+        <span class="o">.</span><span class="n">option</span><span class="p">(</span><span class="s2">&quot;user&quot;</span><span class="p">,</span> <span class="n">username</span><span class="p">)</span> \
+        <span class="o">.</span><span class="n">option</span><span class="p">(</span><span class="s2">&quot;password&quot;</span><span class="p">,</span> <span class="n">password</span><span class="p">)</span><span class="o">.</span><span class="n">load</span><span class="p">()</span>
+
+<span class="n">display</span><span class="p">(</span><span class="n">dl_df</span><span class="p">)</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+</p>
+    </details>
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+<div class="output_html rendered_html output_subarea ">
+<style scoped="">
+  .table-result-container {
+    max-height: 300px;
+    overflow: auto;
+  }
+  table, th, td {
+    border: 1px solid black;
+    border-collapse: collapse;
+  }
+  th, td {
+    padding: 5px;
+  }
+  th {
+    text-align: left;
+  }
+</style><div class="table-result-container"><table class="table-result"><thead style="background-color: white"><tr><th>Table_Name</th><th>partition_id</th><th>partition_number</th><th>index_id</th><th>row_count</th></tr></thead><tbody><tr><td>store_sales</td><td>72057595138342912</td><td>530</td><td>0</td><td>5512441</td></tr><tr><td>store_sales</td><td>72057595204141056</td><td>530</td><td>2</td><td>5512441</td></tr><tr><td>store_sales</td><td>72057595146272768</td><td>651</td><td>0</td><td>5510505</td></tr><tr><td>store_sales</td><td>72057595212070912</td><td>651</td><td>2</td><td>5510505</td></tr><tr><td>store_sales</td><td>72057595104591872</td><td>15</td><td>0</td><td>5508259</td></tr><tr><td>store_sales</td><td>72057595170390016</td><td>15</td><td>2</td><td>5508259</td></tr><tr><td>store_sales</td><td>72057595130281984</td><td>407</td><td>0</td><td>5506912</td></tr><tr><td>store_sales</td><td>72057595196080128</td><td>407</td><td>2</td><td>5506912</td></tr><tr><td>store_sales</td><td>72057595115339776</td><td>179</td><td>0</td><td>5506321</td></tr><tr><td>store_sales</td><td>72057595181137920</td><td>179</td><td>2</td><td>5506321</td></tr></tbody></table></div>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+    
+
+<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>You will notice <em>partition_number</em> is duplicated with different <em>partition_id</em>. This is because one row represents the table and the other non clustered index which is denoted by <em>index_id</em>. If you dont have a non clustered index and instead have a primary key then there will be only one partition representing clustered index created by primary key.</p>
+<p>When carrying out the Bulk insert operation above, the target partitions were empty. There was no other application accessing the same table or partitions in that table. However, what if the partitions already had data in them, and other applications were actively connecting to it? This would then have an impact on the bulk insert that we are performing here, and potentially raise errors from deadlocks. The Spark Connector at this time does not provide the ability to Bulk insert into a separate staging table, which could then be merged with the main table using a partition switch. This feature is being discussed in [issue #46] (<a href="https://github.com/microsoft/sql-spark-connector/issues/46">https://github.com/microsoft/sql-spark-connector/issues/46</a>). Once this issue is resolved, we would have more options to deal with concurrency issues and deadlocks during Bulk insert operations.</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h2 id="About-DELETE-operations-in-Azure-SQL-Database">About DELETE operations in Azure SQL Database<a class="anchor-link" href="#About-DELETE-operations-in-Azure-SQL-Database"> </a></h2><p>Lets try to delete the sales data for 2 store on the rowstore index table that we inserted into before. This will result in deletion of ~11 million records. As always we will focus on time it takes to delete them.</p>
+
+</div>
+</div>
+</div>
+    
+    
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="k">def</span> <span class="nf">delete_tables</span><span class="p">(</span><span class="n">url</span><span class="p">,</span> <span class="n">username</span><span class="p">,</span> <span class="n">password</span><span class="p">,</span> <span class="n">tables</span><span class="p">,</span> <span class="n">stores</span><span class="p">):</span>
+  <span class="k">for</span> <span class="n">table</span> <span class="ow">in</span> <span class="n">tables</span><span class="p">:</span>
+    <span class="n">query</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;DELETE FROM </span><span class="si">{</span><span class="n">schema</span><span class="si">}</span><span class="s2">.</span><span class="si">{</span><span class="n">table</span><span class="si">}</span><span class="s2"> WHERE </span><span class="si">{</span><span class="n">table_storesk_map</span><span class="p">[</span><span class="n">table_name</span><span class="p">]</span><span class="si">}</span><span class="s2"> IN (</span><span class="si">{</span><span class="s1">&#39;,&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="n">stores</span><span class="p">))</span><span class="si">}</span><span class="s2">)&quot;</span>
+
+    <span class="k">try</span><span class="p">:</span>
+      <span class="n">t</span> <span class="o">=</span> <span class="n">Timer</span><span class="p">(</span><span class="n">text</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;DELETE stores </span><span class="si">{</span><span class="s1">&#39;,&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="n">stores</span><span class="p">))</span><span class="si">}</span><span class="s2"> from table </span><span class="si">{</span><span class="n">table</span><span class="si">}</span><span class="s2"> in: </span><span class="se">{{</span><span class="s2">:0.2f</span><span class="se">}}</span><span class="s2">&quot;</span><span class="p">)</span>
+      <span class="n">t</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
+      <span class="n">driver_manager</span> <span class="o">=</span> <span class="n">spark</span><span class="o">.</span><span class="n">_sc</span><span class="o">.</span><span class="n">_gateway</span><span class="o">.</span><span class="n">jvm</span><span class="o">.</span><span class="n">java</span><span class="o">.</span><span class="n">sql</span><span class="o">.</span><span class="n">DriverManager</span>
+      <span class="n">con</span> <span class="o">=</span> <span class="n">driver_manager</span><span class="o">.</span><span class="n">getConnection</span><span class="p">(</span><span class="n">url</span><span class="p">,</span> <span class="n">username</span><span class="p">,</span> <span class="n">password</span><span class="p">)</span>
+
+      <span class="n">stmt</span> <span class="o">=</span> <span class="n">con</span><span class="o">.</span><span class="n">createStatement</span><span class="p">()</span>
+      <span class="n">stmt</span><span class="o">.</span><span class="n">executeUpdate</span><span class="p">(</span><span class="n">query</span><span class="p">)</span>
+      <span class="n">stmt</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+      <span class="n">t</span><span class="o">.</span><span class="n">stop</span><span class="p">()</span>
+    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+      <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Failed to DELETE stores </span><span class="si">{</span><span class="s1">&#39;,&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">stores</span><span class="p">)</span><span class="si">}</span><span class="s2"> from table </span><span class="si">{</span><span class="n">table</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">e</span><span class="p">)</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+<div class="output_html rendered_html output_subarea ">
+<style scoped="">
+  .ansiout {
+    display: block;
+    unicode-bidi: embed;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    word-break: break-all;
+    font-family: "Source Code Pro", "Menlo", monospace;;
+    font-size: 13px;
+    color: #555;
+    margin-left: 4px;
+    line-height: 19px;
+  }
+</style>
+<div class="ansiout"></div>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+    
+
+    
+    
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">url</span> <span class="o">=</span> <span class="n">create_url</span><span class="p">(</span><span class="n">server_name</span><span class="p">,</span> <span class="s2">&quot;idx&quot;</span><span class="p">)</span>
+<span class="n">delete_tables</span><span class="p">(</span><span class="n">url</span><span class="p">,</span> <span class="n">username</span><span class="p">,</span> <span class="n">password</span><span class="p">,</span> <span class="n">tables</span><span class="p">,</span> <span class="n">stores</span><span class="p">[:</span><span class="mi">2</span><span class="p">])</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+<div class="output_html rendered_html output_subarea ">
+<style scoped="">
+  .ansiout {
+    display: block;
+    unicode-bidi: embed;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    word-break: break-all;
+    font-family: "Source Code Pro", "Menlo", monospace;;
+    font-size: 13px;
+    color: #555;
+    margin-left: 4px;
+    line-height: 19px;
+  }
+</style>
+<div class="ansiout">DELETE stores 529,650 from table store_sales in: 178.83
+</div>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+    
+
+<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>As you could see, it took significant amount of time to delete the data of two stores. By default, a DELETE operation will <a href="https://docs.microsoft.com/en-us/sql/t-sql/statements/delete-transact-sql?view=sql-server-ver15#locking-behavior">acquire IX</a> (intent exclusive) lock on table. With an intent exclusive (IX) lock, no other transactions can modify data; read operations can take place only with the use of the NOLOCK hint or read uncommitted isolation level.</p>
+<p>Unlike SQL Server running in a Virtual Machine, Azure SQL Database does not provide the option to use a Simple Recovery Model. Instead it uses only the Full recovery Model. This implicitly requires a Log Backup to support a Full point-in-time recoverability of the data. Also, Azure SQL Database has a “Advanced Database Recovery” that uses a Persistent Version store to keep track of all changes that happen to the database. This allow Azure SQL Database to rollback a transaction instantaneously, no matter if the transaction has been running for hours or even days. This is the reason why DELETE and UPDATE Operations in Azure SQL Database take longer than SQL Server running on premises, or when compared to other Database Services in Azure.</p>
+<p>Moreover DELETE operation gets complicated if its performed on Clustered Columnstore Index. It is <a href="https://docs.microsoft.com/en-us/sql/relational-databases/indexes/columnstore-indexes-query-performance?view=sql-server-ver15#recommendations-for-improving-query-performance">recommended</a> to avoid deleting large mount of data from CCI. When records are deleted from columnstore row it is logically marked as deleted (soft delete). A background task then runs that will determine if it is worth the effort to physically remove and merge the compressed rowgroups.</p>
+<p>However if you are using partitioned table and needs to delete data from entire partition, you could perform a <em>TRUNCATE</em> operation instead of <em>DELETE</em> on the partition, by specifying partition id. This will be quickest and least resource intensive way to remove large data from the table.</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>With this I conclude this blog series on importing data into Azure SQL using Azure Databricks. If you have any questions or suggestions please leave them as comment below.</p>
+
+</div>
+</div>
+</div>
+</div>
+
+
+
+  </div>
+  <div class="PageNavigation">
+  
+  <div class="prevDiv">
+    <a class="prev" href="/blog/2020/09/bulk-import-using-sql-spark-connector-p2/">&laquo; Building large scale data ingestion solutions for Azure SQL using Azure databricks - Part 2</a>
+  </div>
+  
+  
+</div>
+<!-- from https://github.com/utterance/utterances -->
+<script src="https://utteranc.es/client.js"
+        repo="ankitbko/blog"
+        issue-term="title"
+        label="blogpost-comment"
+        theme="github-light"
+        crossorigin="anonymous"
+        async>
+</script><a class="u-url" href="/blog/2020/09/bulk-import-using-sql-spark-connector-p3/" hidden></a>
+</article>
+      </div>
+    </main><footer class="site-footer h-card">
+  <data class="u-url" href="/blog/"></data>
+
+  <div class="wrapper">
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col">
+        <p class="feed-subscribe">
+          <a href="/blog/feed.xml">
+            <svg class="svg-icon orange">
+              <use xlink:href="/blog/assets/minima-social-icons.svg#rss"></use>
+            </svg><span>Subscribe</span>
+          </a>
+        </p>
+        <ul class="contact-list">
+          <li class="p-name">Ankit Sinha</li>
+          
+        </ul>
+      </div>
+      <div class="footer-col">
+        <p>A technology blog focusing on random stuff</p>
+      </div>
+    </div>
+
+    <div class="social-links"><ul class="social-media-list"><li><a rel="me" href="https://github.com/ankitbko" title="ankitbko"><svg class="svg-icon grey"><use xlink:href="/blog/assets/minima-social-icons.svg#github"></use></svg></a></li><li><a rel="me" href="https://twitter.com/ankitbko" title="ankitbko"><svg class="svg-icon grey"><use xlink:href="/blog/assets/minima-social-icons.svg#twitter"></use></svg></a></li></ul>
+</div>
+
+  </div>
+
+</footer>
+</body>
+
+</html>
