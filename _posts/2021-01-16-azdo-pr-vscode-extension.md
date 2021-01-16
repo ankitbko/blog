@@ -4,7 +4,7 @@ title: Azure Devops Pull Request Extension for VS Code
 comments: true
 categories: [azdo, azure devops, pull request, code review, vscode]
 description: Introducing Azure Devops Pull Request Extension for VS Code
-image: images/previews/azdo-pr-vscode-extension.jpg"
+image: images/previews/azdo-pr-vscode-extension.jpg
 source_code: https://github.com/ankitbko/vscode-pull-request-azdo
 ---
 
