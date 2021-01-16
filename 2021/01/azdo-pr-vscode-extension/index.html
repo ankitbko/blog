@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="twitter:card" content="summary_large_image" /><!-- Begin Jekyll SEO tag v2.6.1 -->
+<title>Azure Devops Pull Request Extension for VS Code | F5 - Squashing Bugs</title>
+<meta name="generator" content="Jekyll v4.0.0" />
+<meta property="og:title" content="Azure Devops Pull Request Extension for VS Code" />
+<meta name="author" content="Ankit Sinha" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="Introducing Azure Devops Pull Request Extension for VS Code" />
+<meta property="og:description" content="Introducing Azure Devops Pull Request Extension for VS Code" />
+<link rel="canonical" href="https://ankitbko.github.io/blog/2021/01/azdo-pr-vscode-extension/" />
+<meta property="og:url" content="https://ankitbko.github.io/blog/2021/01/azdo-pr-vscode-extension/" />
+<meta property="og:site_name" content="F5 - Squashing Bugs" />
+<meta property="og:image" content="https://ankitbko.github.io/blog/images/previews/azdo-pr-vscode-extension.jpg" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2021-01-16T00:00:00-06:00" />
+<script type="application/ld+json">
+{"author":{"@type":"Person","name":"Ankit Sinha"},"description":"Introducing Azure Devops Pull Request Extension for VS Code","mainEntityOfPage":{"@type":"WebPage","@id":"https://ankitbko.github.io/blog/2021/01/azdo-pr-vscode-extension/"},"@type":"BlogPosting","url":"https://ankitbko.github.io/blog/2021/01/azdo-pr-vscode-extension/","headline":"Azure Devops Pull Request Extension for VS Code","dateModified":"2021-01-16T00:00:00-06:00","datePublished":"2021-01-16T00:00:00-06:00","image":"https://ankitbko.github.io/blog/images/previews/azdo-pr-vscode-extension.jpg","@context":"https://schema.org"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="stylesheet" href="/blog/assets/css/style.css"><link type="application/atom+xml" rel="alternate" href="https://ankitbko.github.io/blog/feed.xml" title="F5 - Squashing Bugs" /><!-- the google_analytics_id gets auto inserted from the config file -->
+
+
+
+<script>(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)})(window,document,'script','//www.google-analytics.com/analytics.js','ga');ga('create','UA-75679348-1','auto');ga('require','displayfeatures');ga('send','pageview');</script>
+
+<link rel="shortcut icon" type="image/x-icon" href="/blog/images/favicon.ico"><link href="https://unpkg.com/@primer/css/dist/primer.css" rel="stylesheet" />
+<link rel="stylesheet" href="//use.fontawesome.com/releases/v5.0.7/css/all.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.11.1/dist/katex.min.css" integrity="sha384-zB1R0rpPzHqg7Kpt0Aljp8JPLqbXI3bhnPWROx27a9N0Ll6ZP/+DiW/UqRcLbRjq" crossorigin="anonymous">
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML"> </script>
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.11.1/dist/katex.min.js" integrity="sha384-y23I5Q6l+B6vatafAwxRu/0oK/79VlbSz7Q9aiSZUvyWYIYsd+qj+o24G5ZU2zJz" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.11.1/dist/contrib/auto-render.min.js" integrity="sha384-kWPLUVMOks5AQFrykwIup5lo0m3iMkkHrD0uJ4H5cjeGihAutqP0yW0J6dpFiVkI" crossorigin="anonymous"></script>
+    <script>
+    document.addEventListener("DOMContentLoaded", function() {
+        renderMathInElement( document.body, {
+        delimiters: [
+            {left: "$$", right: "$$", display: true},
+            {left: "[%", right: "%]", display: true},
+            {left: "$", right: "$", display: false}
+        ]}
+        );
+    });
+    </script>
+
+
+<script>
+function wrap_img(fn) {
+    if (document.attachEvent ? document.readyState === "complete" : document.readyState !== "loading") {
+        var elements = document.querySelectorAll(".post img");
+        Array.prototype.forEach.call(elements, function(el, i) {
+            if (el.getAttribute("title") && (el.className != "emoji")) {
+                const caption = document.createElement('figcaption');
+                var node = document.createTextNode(el.getAttribute("title"));
+                caption.appendChild(node);
+                const wrapper = document.createElement('figure');
+                wrapper.className = 'image';
+                el.parentNode.insertBefore(wrapper, el);
+                el.parentNode.removeChild(el);
+                wrapper.appendChild(el);
+                wrapper.appendChild(caption);
+            }
+        });
+    } else { document.addEventListener('DOMContentLoaded', fn); }
+}
+window.onload = wrap_img;
+</script>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function(){
+    // add link icon to anchor tags
+    var elem = document.querySelectorAll(".anchor-link")
+    elem.forEach(e => (e.innerHTML = '<i class="fas fa-link fa-xs"></i>'));
+    });
+</script>
+</head>
+<body><header class="site-header">
+
+  <div class="wrapper"><a class="site-title" rel="author" href="/blog/">F5 - Squashing Bugs</a><nav class="site-nav">
+        <input type="checkbox" id="nav-trigger" class="nav-trigger" />
+        <label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewBox="0 0 18 15" width="18px" height="15px">
+              <path d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.032C17.335,0,18,0.665,18,1.484L18,1.484z M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.032C17.335,6.031,18,6.696,18,7.516L18,7.516z M18,13.516C18,14.335,17.335,15,16.516,15H1.484 C0.665,15,0,14.335,0,13.516l0,0c0-0.82,0.665-1.483,1.484-1.483h15.032C17.335,12.031,18,12.695,18,13.516L18,13.516z"/>
+            </svg>
+          </span>
+        </label>
+
+        <div class="trigger"><a class="page-link" href="/blog/about/">About Me</a><a class="page-link" href="/blog/search/">Search</a><a class="page-link" href="/blog/categories/">Tags</a></div>
+      </nav></div>
+</header>
+<main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title p-name" itemprop="name headline">Azure Devops Pull Request Extension for VS Code</h1><p class="page-description">Introducing Azure Devops Pull Request Extension for VS Code</p><p class="post-meta post-meta-title"><time class="dt-published" datetime="2021-01-16T00:00:00-06:00" itemprop="datePublished">
+        Jan 16, 2021
+      </time>
+       • <span class="read-time" title="Estimated read time">
+    
+    
+      7 min read
+    
+</span></p>
+
+    
+      <p class="category-tags"><i class="fas fa-tags category-tags-icon"></i></i> 
+      
+        <a class="category-tags-link" href="/blog/categories/#azdo">azdo</a>
+        &nbsp;
+      
+        <a class="category-tags-link" href="/blog/categories/#azure devops">azure devops</a>
+        &nbsp;
+      
+        <a class="category-tags-link" href="/blog/categories/#pull request">pull request</a>
+        &nbsp;
+      
+        <a class="category-tags-link" href="/blog/categories/#code review">code review</a>
+        &nbsp;
+      
+        <a class="category-tags-link" href="/blog/categories/#vscode">vscode</a>
+        
+      
+      </p>
+    
+
+    
+		<div class="d-flex flex-wrap flex-justify-start flex-items-center">
+			<p class="page-description" style="margin-right: .5rem;">Source Code </p>
+			<div class="page-description">
+				<div class="px-2">
+    <a href="https://github.com/ankitbko/vscode-pull-request-azdo" role="button" target="_blank">
+        <img class="notebook-badge-image" src="/blog/assets/badges/github.svg" alt="View On GitHub">
+    </a>
+</div>
+
+			</div>
+		</div>
+	
+  </header>
+
+  <div class="post-content e-content" itemprop="articleBody">
+    <blockquote>
+  <p>Marketplace: <a href="https://marketplace.visualstudio.com/items?itemName=ankitbko.vscode-pull-request-azdo">https://marketplace.visualstudio.com/items?itemName=ankitbko.vscode-pull-request-azdo</a>.</p>
+</blockquote>
+
+<p>I have been fascinated with <a href="https://github.com/microsoft/vscode-pull-request-github">Github Pull Request VSCode Extension</a>. The extension bridges the gap that currently exists between development workflow and Pull Request review. You know how you have to switch from your development environment to some browser in order to review PR or address comments. This usually leads to loss of context and laziness when reviewing PRs. The extension solves it by integrating the PR review process within VS Code itself. Unfortunately my day work involves working in Azure Devops and not Github. So during this new year I decided to try porting this extension to support Azure Devops.</p>
+
+<p>Now I have never developed VS Code extension before and didn’t knew anything about what APIs are exposed by VS Code. To make matter worse the Github PR extension is quite huge and complicated. The Github PR extension is developed and maintained by VS Code team themselves so I was a little concerned if the team is using some internal vscode feature which is not publicly available. However over past 3 weeks I was able to port subset of features to support AzDO. Because of breadth of diversity that can exist in any repository or pull request it is impossible for me to test such different scenarios by myself. In hope of community will help me by trying out the extension in variety of projects I am releasing a preview version of extension today. Please give it a try and report any issues that you may encounter and I will fix it as soon as possible.</p>
+
+<p>In this blog post I will describe some of these features and the current state of extension. Let me know in the comments if you would like a technical deep dive post on how these features are implemented.</p>
+
+<blockquote>
+  <p><strong>As of today the extension will only work in VS Code Insiders</strong>. The support for VS Code Stable will come once the <a href="https://github.com/microsoft/vscode/issues/112249">Secrets API</a> from vscode becomes stable which is currently planned in upcoming release. I will update the repo’s README once its available. This extension is in very early stages of development. Raise an issue in the repository above if you face any problems.</p>
+</blockquote>
+
+<h1 id="features">Features</h1>
+
+<p>To get started simply download the extension from marketplace linked at the top and follow the <strong>Getting Started</strong> section in the extension page. I will not repeat the steps here as those may change in future.</p>
+
+<p>The extension will only start if you have a folder containing git repository open. To get started you will need to add 2 settings - <code class="highlighter-rouge">azdoPullRequests.orgUrl</code> and <code class="highlighter-rouge">azdoPullRequests.projectName</code>. The best places to add these is in workplace settings and commit them so others in your team won’t have to set these. Currently the app requires a PAT token to authenticate which in future I will change to OAuth based authentication. The scopes required for PAT token is in extension’s description.</p>
+
+<p>If everything works the extension will create a new tab in the activity bar (the leftmost bar). The features that are available to you depends on which mode you are on - <em>browse</em> mode or <em>review</em> mode. The type of <em>mode</em> depends upon whether the branch which you are currently on has any pull requests <em>from</em> it or not. In case you don’t have any pull requests you will be in <em>browse</em> mode. If you do have a PR from the current branch you will be in <em>review</em> mode. In <em>browse</em> mode you will be able to browse through the pull requests described in next section. In <em>review</em> mode you will get some additional functionality which is described later in the post.</p>
+
+<h2 id="browse-mode">Browse Mode</h2>
+
+<p>This mode shows a <em>View active pull requests</em> <code class="highlighter-rouge">TreeView</code> on the sidebar. This particular <code class="highlighter-rouge">TreeView</code> is shown in both the modes. It allows you to view any open (active) pull requests. There are some built in filters like PR’s raised by you or assigned to you. You can expand any of these nodes to fetch the PR’s in it. Expanding the PR will show you which files have changed in the PRs. A small <em>diamond</em> icon will appear on the files which have comments on it. You can click on any of these files to view the diff and the comments on the file.</p>
+
+<p><img src="/blog/assets/images/posts/azdo-pr-extn/pr_modified.jpg" alt="PR diff view" /></p>
+
+<p>As you can see in image above the comments are grouped in <em>threads</em> similar to how it is in AzDO. You can reply to any existing thread or create a new thread by clicking on the white line that shows beside the line number. You will only be able to create a new thread on modified lines +/-3 three lines. Its always regarded as good practice to review and comment on lines which have changed in PR instead of any arbitrary location. Based on feedback I may change this logic or make it configurable.</p>
+
+<p>Each thread has its status displayed on the title bar of the thread. At the extreme right of the thread’s title bar, just beside the collapse button, there is another button that allows you to change the thread’s status as shown in image below.</p>
+
+<p><img src="/blog/assets/images/posts/azdo-pr-extn/thread_status.jpg" alt="PR thread status" /></p>
+
+<p>All the threads and comments are also shown in a new “comments” window just beside the terminal (or output) window in the bottom. This window shows all the comments in that diff and allows you to quickly jump to a particular comment by clicking on it.</p>
+
+<p><img src="/blog/assets/images/posts/azdo-pr-extn/comment_tab.jpg" alt="Comment view" /></p>
+
+<p>In addition to all the files displayed for the PR you will also notice a node called <strong>Description</strong>. This is a separate React app that represents the <em>Overview</em> page in AzDO PR. This page allows you to view description of the PR, cast a vote (approve, reject, wait for author etc), view all the comments, perform Merge or Abandon action, etc. The page tries to mimic how PR looks in Azure DevOps. As of today certain functionality such as adding or removing reviewers or displaying work items does not work.</p>
+
+<p><img src="/blog/assets/images/posts/azdo-pr-extn/pr_dashboard.jpg" alt="Dashboard" /></p>
+
+<p>In the dashboard you will see a <strong>Checkout</strong> button that allows you to checkout the source branch of Pull Request. This is one way to get into <em>review</em> mode.</p>
+
+<h2 id="review-mode">Review Mode</h2>
+
+<p>In <em>review</em> mode a new <code class="highlighter-rouge">TreeView</code> is added that shows changes in the pull request. This view just shows the files changed in the checked out pull request. There is nothing special in this view as compared to the active pr view except that it shows changes only from one pull request. The advantage of the <em>review</em> mode is apparat when you switch back to Explorer in vscode. The purpose of the review mode is to be able to work on the pull request and review it in completeness. If you open any changed file normally through the Explorer tab you will get the same white line that denotes the modified lines along with any comments on the file. This enables you to work on addressing the comments right there in the file and then follow up with replying or changing status of comments without having to switch back to other window.</p>
+
+<p><img src="/blog/assets/images/posts/azdo-pr-extn/review_mode_explorer.jpg" alt="Review mode" /></p>
+
+<h1 id="current-state-and-future-of-the-extension">Current State and Future of the Extension</h1>
+
+<p>Its important to state that I work at Microsoft. And just because I work at Microsoft and this extension is fork of Microsoft’s Github PR extension does not mean this extension is an official release from Microsoft. This extension is a side project that I did as part of couple of weeks break during new year and is not by any means officially supported by Microsoft.</p>
+
+<p>Having said that I quite enjoyed developing this and will continue improving it in future. This is a very early release. There are lots of known issues and tons of unknown ones. This is expected as I have not tested the extension in variety of scenarios. If there is enough interests in this extension I may even add more features such as native jupyter notebook diffs, integration with work items etc. Give the extension a try and let me know your thoughts in comment below.</p>
+
+  </div>
+  <div class="PageNavigation">
+  
+  <div class="prevDiv">
+    <a class="prev" href="/blog/2020/09/bulk-import-using-sql-spark-connector-p3/">&laquo; Building large scale data ingestion solutions for Azure SQL using Azure databricks - Part 3</a>
+  </div>
+  
+  
+</div>
+<!-- from https://github.com/utterance/utterances -->
+<script src="https://utteranc.es/client.js"
+        repo="ankitbko/blog"
+        issue-term="title"
+        label="blogpost-comment"
+        theme="github-light"
+        crossorigin="anonymous"
+        async>
+</script><a class="u-url" href="/blog/2021/01/azdo-pr-vscode-extension/" hidden></a>
+</article>
+      </div>
+    </main><footer class="site-footer h-card">
+  <data class="u-url" href="/blog/"></data>
+
+  <div class="wrapper">
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col">
+        <p class="feed-subscribe">
+          <a href="/blog/feed.xml">
+            <svg class="svg-icon orange">
+              <use xlink:href="/blog/assets/minima-social-icons.svg#rss"></use>
+            </svg><span>Subscribe</span>
+          </a>
+        </p>
+        <ul class="contact-list">
+          <li class="p-name">Ankit Sinha</li>
+          
+        </ul>
+      </div>
+      <div class="footer-col">
+        <p>A technology blog focusing on random stuff</p>
+      </div>
+    </div>
+
+    <div class="social-links"><ul class="social-media-list"><li><a rel="me" href="https://github.com/ankitbko" title="ankitbko"><svg class="svg-icon grey"><use xlink:href="/blog/assets/minima-social-icons.svg#github"></use></svg></a></li><li><a rel="me" href="https://twitter.com/ankitbko" title="ankitbko"><svg class="svg-icon grey"><use xlink:href="/blog/assets/minima-social-icons.svg#twitter"></use></svg></a></li></ul>
+</div>
+
+  </div>
+
+</footer>
+</body>
+
+</html>
