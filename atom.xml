@@ -4,7 +4,7 @@
  <title>F5 - Squashing Bugs</title>
  <link href="https://ankitbko.github.io/atom.xml" rel="self"/>
  <link href="https://ankitbko.github.io/"/>
- <updated>2021-01-16T02:23:22-06:00</updated>
+ <updated>2021-02-05T05:10:57-06:00</updated>
  <id>https://ankitbko.github.io</id>
  <author>
    <name>Ankit Sinha</name>
@@ -28,7 +28,7 @@
 &lt;p&gt;In this blog post I will describe some of these features and the current state of extension. Let me know in the comments if you would like a technical deep dive post on how these features are implemented.&lt;/p&gt;
 
 &lt;blockquote&gt;
-  &lt;p&gt;&lt;strong&gt;As of today the extension will only work in VS Code Insiders&lt;/strong&gt;. The support for VS Code Stable will come once the &lt;a href=&quot;https://github.com/microsoft/vscode/issues/112249&quot;&gt;Secrets API&lt;/a&gt; from vscode becomes stable which is currently planned in upcoming release. I will update the repo’s README once its available. This extension is in very early stages of development. Raise an issue in the repository above if you face any problems.&lt;/p&gt;
+  &lt;p&gt;This extension is in very early stages of development. Raise an issue in the repository above if you face any problems.&lt;/p&gt;
 &lt;/blockquote&gt;
 
 &lt;h1 id=&quot;features&quot;&gt;Features&lt;/h1&gt;
