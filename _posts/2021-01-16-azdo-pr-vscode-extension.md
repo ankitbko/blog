@@ -16,7 +16,7 @@ Now I have never developed VS Code extension before and didn't knew anything abo
 
 In this blog post I will describe some of these features and the current state of extension. Let me know in the comments if you would like a technical deep dive post on how these features are implemented.
 
-> **As of today the extension will only work in VS Code Insiders**. The support for VS Code Stable will come once the [Secrets API](https://github.com/microsoft/vscode/issues/112249) from vscode becomes stable which is currently planned in upcoming release. I will update the repo's README once its available. This extension is in very early stages of development. Raise an issue in the repository above if you face any problems.
+> This extension is in very early stages of development. Raise an issue in the repository above if you face any problems.
 
 
 # Features
