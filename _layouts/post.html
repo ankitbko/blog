@@ -52,23 +52,11 @@ layout: default
         </div>
       {% endif -%}
     {% endif -%}
-	
-	{% if page.source_code != nil %}
-		<div class="d-flex flex-wrap flex-justify-start flex-items-center">
-			<p class="page-description" style="margin-right: .5rem;">Source Code </p>
-			<div class="page-description">
-				{% include source_code_github_link.html %}
-			</div>
-		</div>
-	{% endif -%}
-	
-	{% include credits.html %}
   </header>
 
   <div class="post-content e-content" itemprop="articleBody">
     {{ content | toc  }}
   </div>
-  {% include page_navigation.html %}
   {%- if page.comments -%}
     {%- include utterances.html -%}
   {%- endif -%}
