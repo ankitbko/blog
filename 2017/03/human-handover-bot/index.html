@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="twitter:card" content="summary_large_image" /><!-- Begin Jekyll SEO tag v2.6.1 -->
 <title>Transferring chat to a human agent using Microsoft Bot Framework | F5 - Squashing Bugs</title>
-<meta name="generator" content="Jekyll v4.0.0" />
+<meta name="generator" content="Jekyll v4.1.1" />
 <meta property="og:title" content="Transferring chat to a human agent using Microsoft Bot Framework" />
 <meta name="author" content="Ankit Sinha" />
 <meta property="og:locale" content="en_US" />
@@ -17,20 +17,29 @@
 <meta property="og:type" content="article" />
 <meta property="article:published_time" content="2017-03-28T00:00:00-05:00" />
 <script type="application/ld+json">
-{"author":{"@type":"Person","name":"Ankit Sinha"},"description":"A tutorial on how to perform live agent transfer / human handover using Microsoft Bot Framework","@type":"BlogPosting","url":"https://ankitbko.github.io/blog/2017/03/human-handover-bot/","headline":"Transferring chat to a human agent using Microsoft Bot Framework","dateModified":"2017-03-28T00:00:00-05:00","datePublished":"2017-03-28T00:00:00-05:00","mainEntityOfPage":{"@type":"WebPage","@id":"https://ankitbko.github.io/blog/2017/03/human-handover-bot/"},"@context":"https://schema.org"}</script>
+{"url":"https://ankitbko.github.io/blog/2017/03/human-handover-bot/","@type":"BlogPosting","headline":"Transferring chat to a human agent using Microsoft Bot Framework","dateModified":"2017-03-28T00:00:00-05:00","datePublished":"2017-03-28T00:00:00-05:00","mainEntityOfPage":{"@type":"WebPage","@id":"https://ankitbko.github.io/blog/2017/03/human-handover-bot/"},"author":{"@type":"Person","name":"Ankit Sinha"},"description":"A tutorial on how to perform live agent transfer / human handover using Microsoft Bot Framework","@context":"https://schema.org"}</script>
 <!-- End Jekyll SEO tag -->
 <link rel="stylesheet" href="/blog/assets/css/style.css"><link type="application/atom+xml" rel="alternate" href="https://ankitbko.github.io/blog/feed.xml" title="F5 - Squashing Bugs" /><!-- the google_analytics_id gets auto inserted from the config file -->
 
 
 
-<script>(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)})(window,document,'script','//www.google-analytics.com/analytics.js','ga');ga('create','UA-75679348-1','auto');ga('require','displayfeatures');ga('send','pageview');</script>
+<!-- Global site tag (gtag.js) - Google Analytics -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=UA-75679348-1"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
 
-<link rel="shortcut icon" type="image/x-icon" href="/blog/images/favicon.ico"><link href="https://unpkg.com/@primer/css/dist/primer.css" rel="stylesheet" />
-<link rel="stylesheet" href="//use.fontawesome.com/releases/v5.0.7/css/all.css">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.11.1/dist/katex.min.css" integrity="sha384-zB1R0rpPzHqg7Kpt0Aljp8JPLqbXI3bhnPWROx27a9N0Ll6ZP/+DiW/UqRcLbRjq" crossorigin="anonymous">
-    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML"> </script>
-    <script src="https://cdn.jsdelivr.net/npm/katex@0.11.1/dist/katex.min.js" integrity="sha384-y23I5Q6l+B6vatafAwxRu/0oK/79VlbSz7Q9aiSZUvyWYIYsd+qj+o24G5ZU2zJz" crossorigin="anonymous"></script>
-    <script src="https://cdn.jsdelivr.net/npm/katex@0.11.1/dist/contrib/auto-render.min.js" integrity="sha384-kWPLUVMOks5AQFrykwIup5lo0m3iMkkHrD0uJ4H5cjeGihAutqP0yW0J6dpFiVkI" crossorigin="anonymous"></script>
+  gtag('config', 'UA-75679348-1');
+</script>
+
+
+<link rel="shortcut icon" type="image/x-icon" href="/blog/images/favicon.ico"><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/Primer/15.2.0/primer.css" integrity="sha512-xTz2ys4coGAOz8vuV1NcQBkgVmKhsSEtjbqyMJbBHRplFuvKIUo6xhLHpAyPt9mfR6twHJgn9OgVLuqOvjeBhg==" crossorigin="anonymous" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.14.0/css/all.min.css" integrity="sha512-1PKOgIY59xJ8Co8+NE6FZ+LOAZKjy+KY8iq0G4B3CyeY6wYHN3yt9PW0XpSriVlkMXe40PTKnXrLnZ9+fkDaog==" crossorigin="anonymous" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.12.0/katex.min.css" integrity="sha512-h7nl+xz8wgDlNM4NqKEM4F1NkIRS17M9+uJwIGwuo8vGqIl4BhuCKdxjWEINm+xyrUjNCnK5dCrhM0sj+wTIXw==" crossorigin="anonymous" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.12.0/katex.min.js" integrity="sha512-/CMIhXiDA3m2c9kzRyd97MTb3MC6OVnx4TElQ7fkkoRghwDf6gi41gaT1PwF270W6+J60uTmwgeRpNpJdRV6sg==" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.12.0/contrib/auto-render.min.js" integrity="sha512-Do7uJAaHZm5OLrIv/yN4w0iG1dbu01kzdMNnFfu/mAqgUk6Nniv2JYHcwH+cNwjqgLcqcuBBk+JRvprLVI8azg==" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js" integrity="sha512-0doc9hKxR3PYwso42RD1p5ySZpzzuDiOwMrdCEh2WdJZCjcmFKc/wEnL+z8fBQrnHoiNWbo+3fiGkOYXBdQp4A==" crossorigin="anonymous"></script>
     <script>
     document.addEventListener("DOMContentLoaded", function() {
         renderMathInElement( document.body, {
@@ -163,20 +172,20 @@ window.onload = wrap_img;
 
 <ol>
   <li>
-    <p>Create a <a href="https://luis.ai">Luis app</a> by importing <code class="highlighter-rouge">LuisModel\AgentTransfer.json</code>.
-The bot uses Luis to understand if user wants to talk to an agent. If you don’t want to use Luis, I have included an <code class="highlighter-rouge">EchoDialog</code> class which would also work. You will need to modify the code to start <code class="highlighter-rouge">EchoDialog</code> instead of <code class="highlighter-rouge">TransferLuisDialog</code> when message arrives (left as exercise to the reader). If you do this, go to step 3.</p>
+    <p>Create a <a href="https://luis.ai">Luis app</a> by importing <code class="language-plaintext highlighter-rouge">LuisModel\AgentTransfer.json</code>.
+The bot uses Luis to understand if user wants to talk to an agent. If you don’t want to use Luis, I have included an <code class="language-plaintext highlighter-rouge">EchoDialog</code> class which would also work. You will need to modify the code to start <code class="language-plaintext highlighter-rouge">EchoDialog</code> instead of <code class="language-plaintext highlighter-rouge">TransferLuisDialog</code> when message arrives (left as exercise to the reader). If you do this, go to step 3.</p>
   </li>
   <li>
-    <p>Get the <em>ModelId</em> and <em>SubscriptionKey</em> of the Luis App and paste it into <code class="highlighter-rouge">LuisModel</code> attribute in <code class="highlighter-rouge">TransferLuisDialog.cs</code>.</p>
+    <p>Get the <em>ModelId</em> and <em>SubscriptionKey</em> of the Luis App and paste it into <code class="language-plaintext highlighter-rouge">LuisModel</code> attribute in <code class="language-plaintext highlighter-rouge">TransferLuisDialog.cs</code>.</p>
   </li>
   <li>
-    <p>Run the solution by pressing <code class="highlighter-rouge">F5</code>. By default, it should start at port 3979. If not, note the port it runs on and stop debugging.</p>
+    <p>Run the solution by pressing <code class="language-plaintext highlighter-rouge">F5</code>. By default, it should start at port 3979. If not, note the port it runs on and stop debugging.</p>
   </li>
   <li>
-    <p>We will use <a href="https://ngrok.com">ngrok</a> to debug the bot locally. Download and run <code class="highlighter-rouge">ngrok</code> using command <code class="highlighter-rouge">ngrok.exe http --host-header=rewrite &lt;port number&gt;</code>. Copy the <strong>Forwarding</strong> URL (https) which is genrated by ngrok.</p>
+    <p>We will use <a href="https://ngrok.com">ngrok</a> to debug the bot locally. Download and run <code class="language-plaintext highlighter-rouge">ngrok</code> using command <code class="language-plaintext highlighter-rouge">ngrok.exe http --host-header=rewrite &lt;port number&gt;</code>. Copy the <strong>Forwarding</strong> URL (https) which is genrated by ngrok.</p>
   </li>
   <li>
-    <p>Register a new bot in <a href="https://dev.botframework.com/bots/new">Bot Framework Portal</a> using URL generated by ngrok. Copy the Microsoft App Id and App Password and paste it in <code class="highlighter-rouge">web.config</code>.</p>
+    <p>Register a new bot in <a href="https://dev.botframework.com/bots/new">Bot Framework Portal</a> using URL generated by ngrok. Copy the Microsoft App Id and App Password and paste it in <code class="language-plaintext highlighter-rouge">web.config</code>.</p>
   </li>
   <li>
     <p>Agent Dashboard uses <em>Direct Line</em> as a channel. So, enable direct line and keep its <em>Secret Key</em> handy.</p>
@@ -186,7 +195,7 @@ The bot uses Luis to understand if user wants to talk to an agent. If you don’
   </li>
 </ol>
 
-<p>To open Agent Dashboard go to <a href="http://localhost:3979/agentdashboard/index.html?s=DIRECTLINE_SECRET_KEY">http://localhost:3979/agentdashboard/index.html?s=DIRECTLINE_SECRET_KEY</a>. Change the port number accordingly if it is not 3979. Notice the query string <code class="highlighter-rouge">?s=</code>. Enter the <em>Direct Line secret key</em> as the value of the query string.</p>
+<p>To open Agent Dashboard go to <a href="http://localhost:3979/agentdashboard/index.html?s=DIRECTLINE_SECRET_KEY">http://localhost:3979/agentdashboard/index.html?s=DIRECTLINE_SECRET_KEY</a>. Change the port number accordingly if it is not 3979. Notice the query string <code class="language-plaintext highlighter-rouge">?s=</code>. Enter the <em>Direct Line secret key</em> as the value of the query string.</p>
 
 <p>You will get the page similar to below.</p>
 
@@ -194,11 +203,11 @@ The bot uses Luis to understand if user wants to talk to an agent. If you don’
 
 <p>Click on <em>Connect</em> button to <strong>register</strong> yourself as an agent. If you get successfully registered, the heading in the page will change to show the “Connected” status. This makes the agent <strong>available</strong> for chat.</p>
 
-<p>Use any other channel (skype or web chat at bot portal) to simulate a user. Currently there is only one Luis intent <code class="highlighter-rouge">AgentTransfer</code> which is triggered by typing “<em>Connect me with customer care</em>”. Enter it to start talking with agent.
+<p>Use any other channel (skype or web chat at bot portal) to simulate a user. Currently there is only one Luis intent <code class="language-plaintext highlighter-rouge">AgentTransfer</code> which is triggered by typing “<em>Connect me with customer care</em>”. Enter it to start talking with agent.
 <strong>Using emulator will not work.</strong></p>
 
 <blockquote>
-  <p>If you are using <code class="highlighter-rouge">EchoDialog</code>, agent transfer can be achieved by typing anything starting with letter ‘<em>a</em>’. Typing anything else will just echo back.</p>
+  <p>If you are using <code class="language-plaintext highlighter-rouge">EchoDialog</code>, agent transfer can be achieved by typing anything starting with letter ‘<em>a</em>’. Typing anything else will just echo back.</p>
 </blockquote>
 
 <p>Once user has initiated the conversation with an agent, any messages user sends will be delivered to the agent (instead of being handled by bot) and vice versa.</p>
@@ -213,7 +222,7 @@ The bot uses Luis to understand if user wants to talk to an agent. If you don’
 
 <ul>
   <li>
-    <p><strong>Initiating Transfer</strong>: A user can <strong>initiate</strong> a transfer to an agent anytime. Initiation is successful if an agent is <strong>available</strong> for chat. A user can only talk to <strong>one</strong> agent at a time. Once initiated, all the messages from user will be routed to the agent instead of being handled by current <code class="highlighter-rouge">Dialog</code>.</p>
+    <p><strong>Initiating Transfer</strong>: A user can <strong>initiate</strong> a transfer to an agent anytime. Initiation is successful if an agent is <strong>available</strong> for chat. A user can only talk to <strong>one</strong> agent at a time. Once initiated, all the messages from user will be routed to the agent instead of being handled by current <code class="language-plaintext highlighter-rouge">Dialog</code>.</p>
   </li>
   <li>
     <p><strong>Agent Availability</strong>: An agent is termed <strong>available</strong> if he is <strong>not</strong> already in an exisiting conversation with a user. This effectively means that an agent can only talk to <strong>one</strong> user at a time. In other words, Agent and User have <em>1:1</em> mapping.</p>
@@ -243,66 +252,66 @@ The bot uses Luis to understand if user wants to talk to an agent. If you don’
 <ul>
   <li><strong>Agent</strong> folder contains everything related to agent management and routing implementation.</li>
   <li><strong>AgentDashboard</strong> folder contains <strong>index.html</strong> which has Web Chat control embedded. We will use this page for agent to chat. How it works we will see later.</li>
-  <li><strong>Scorable</strong> folder contains two <code class="highlighter-rouge">IScorable</code> implementations which serves as middleware to route messages. We will get into its details later.</li>
-  <li><strong>AgentModule</strong> class contains <code class="highlighter-rouge">Autofac</code> registrations for our project.</li>
+  <li><strong>Scorable</strong> folder contains two <code class="language-plaintext highlighter-rouge">IScorable</code> implementations which serves as middleware to route messages. We will get into its details later.</li>
+  <li><strong>AgentModule</strong> class contains <code class="language-plaintext highlighter-rouge">Autofac</code> registrations for our project.</li>
 </ul>
 
 <p>There are five key interfaces in our solution, all lying in <strong>Agent</strong> folder. They are -</p>
 
 <ul>
   <li>
-    <p><code class="highlighter-rouge">IAgentProvider</code>: Contains methods for <em>Adding</em>, <em>Removing</em> and getting <em>Next Available</em> agent. When agent connects, we <em>add</em> the agent to availability pool by using <code class="highlighter-rouge">AddAgent</code> method. Similarly, <code class="highlighter-rouge">RemoveAgent</code> method is used to remove the agent. <code class="highlighter-rouge">GetNextAvailableAgent</code> method should get the <em>next available</em> agent from availability pool <strong>and</strong> remove the agent from the pool in an atomic way, so that same agent is not returned twice.</p>
+    <p><code class="language-plaintext highlighter-rouge">IAgentProvider</code>: Contains methods for <em>Adding</em>, <em>Removing</em> and getting <em>Next Available</em> agent. When agent connects, we <em>add</em> the agent to availability pool by using <code class="language-plaintext highlighter-rouge">AddAgent</code> method. Similarly, <code class="language-plaintext highlighter-rouge">RemoveAgent</code> method is used to remove the agent. <code class="language-plaintext highlighter-rouge">GetNextAvailableAgent</code> method should get the <em>next available</em> agent from availability pool <strong>and</strong> remove the agent from the pool in an atomic way, so that same agent is not returned twice.</p>
   </li>
   <li>
-    <p><code class="highlighter-rouge">IUserToAgent</code>: As the name suggests, is used to send messages from user to agent. It’s method <code class="highlighter-rouge">SendToAgentAsync</code> does exactly that. It contains two other methods - <code class="highlighter-rouge">IntitiateConversationWithAgentAsync</code> to <strong>initate</strong> a transfer for first time and <code class="highlighter-rouge">AgentTransferRequiredAsync</code> to check if routing is required.</p>
+    <p><code class="language-plaintext highlighter-rouge">IUserToAgent</code>: As the name suggests, is used to send messages from user to agent. It’s method <code class="language-plaintext highlighter-rouge">SendToAgentAsync</code> does exactly that. It contains two other methods - <code class="language-plaintext highlighter-rouge">IntitiateConversationWithAgentAsync</code> to <strong>initate</strong> a transfer for first time and <code class="language-plaintext highlighter-rouge">AgentTransferRequiredAsync</code> to check if routing is required.</p>
   </li>
   <li>
-    <p><code class="highlighter-rouge">IAgentToUser</code>: Contains a single method <code class="highlighter-rouge">SendToUserAsync</code> to send the message from agent to user.</p>
+    <p><code class="language-plaintext highlighter-rouge">IAgentToUser</code>: Contains a single method <code class="language-plaintext highlighter-rouge">SendToUserAsync</code> to send the message from agent to user.</p>
   </li>
   <li>
-    <p><code class="highlighter-rouge">IAgentUserMapping</code>: Contains methods for adding, removing and fetching the <em>Agent User Mapping</em>.</p>
+    <p><code class="language-plaintext highlighter-rouge">IAgentUserMapping</code>: Contains methods for adding, removing and fetching the <em>Agent User Mapping</em>.</p>
   </li>
   <li>
-    <p><code class="highlighter-rouge">IAgentService</code>: Acts as a business class mainly for registering agent, unregistering agent and stopping a conversation. In addtion it contains other methods to check if agent is in existing conversation and whether the message is from an <em>actual/valid</em> agent.</p>
+    <p><code class="language-plaintext highlighter-rouge">IAgentService</code>: Acts as a business class mainly for registering agent, unregistering agent and stopping a conversation. In addtion it contains other methods to check if agent is in existing conversation and whether the message is from an <em>actual/valid</em> agent.</p>
   </li>
 </ul>
 
-<p>Apart from the interfaces, there are two scorables in <strong>Scorable</strong> folder. <code class="highlighter-rouge">Scorable</code> in Bot Framework acts as a middleware to the incoming messages. Using <code class="highlighter-rouge">Scorable</code> we can intercept message and take decisions before it is sent to the waiting dialog. We have following scorables in place -</p>
+<p>Apart from the interfaces, there are two scorables in <strong>Scorable</strong> folder. <code class="language-plaintext highlighter-rouge">Scorable</code> in Bot Framework acts as a middleware to the incoming messages. Using <code class="language-plaintext highlighter-rouge">Scorable</code> we can intercept message and take decisions before it is sent to the waiting dialog. We have following scorables in place -</p>
 
 <ul>
   <li>
-    <p><code class="highlighter-rouge">AgentToUserScorable</code>: Intercepts messages coming from <em>agent</em> and routes it to <em>user</em> <strong>if</strong> <em>agent</em> is in conversation with <em>user</em>.</p>
+    <p><code class="language-plaintext highlighter-rouge">AgentToUserScorable</code>: Intercepts messages coming from <em>agent</em> and routes it to <em>user</em> <strong>if</strong> <em>agent</em> is in conversation with <em>user</em>.</p>
   </li>
   <li>
-    <p><code class="highlighter-rouge">UserToAgentScorable</code>: Intercepts messages coming from <em>user</em> and routes it to <em>agent</em> <strong>if</strong> <em>user</em> is in conversation with <em>agent</em>.</p>
+    <p><code class="language-plaintext highlighter-rouge">UserToAgentScorable</code>: Intercepts messages coming from <em>user</em> and routes it to <em>agent</em> <strong>if</strong> <em>user</em> is in conversation with <em>agent</em>.</p>
   </li>
 </ul>
 
 <h3 id="availability-pool">Availability Pool</h3>
 
-<p>When an agent <em>connects</em> we add him to <strong>availability</strong> pool. <code class="highlighter-rouge">InMemoryAgentStore</code> which derives from <code class="highlighter-rouge">IAgentProvider</code>, maintains this pool using an in-memory <code class="highlighter-rouge">ConcurrentDictionary</code>. We are not worried about the implementation detail; however, it mimics a “queue” therefore guaranteeing that an agent is only fetched once.</p>
+<p>When an agent <em>connects</em> we add him to <strong>availability</strong> pool. <code class="language-plaintext highlighter-rouge">InMemoryAgentStore</code> which derives from <code class="language-plaintext highlighter-rouge">IAgentProvider</code>, maintains this pool using an in-memory <code class="language-plaintext highlighter-rouge">ConcurrentDictionary</code>. We are not worried about the implementation detail; however, it mimics a “queue” therefore guaranteeing that an agent is only fetched once.</p>
 
-<p>In an actual production scenario, you would maintain this list using an out-proc data store such as RabbitMQ and implement <code class="highlighter-rouge">IAgentProvider</code> to to interface with that.</p>
+<p>In an actual production scenario, you would maintain this list using an out-proc data store such as RabbitMQ and implement <code class="language-plaintext highlighter-rouge">IAgentProvider</code> to to interface with that.</p>
 
 <h4 id="agent-registration">Agent Registration</h4>
 
-<p>Agent registration is done through <code class="highlighter-rouge">RegisterAgentAsync(IActivity activity, CancellationToken cancellationToken)</code> of <code class="highlighter-rouge">AgentService</code>. This method is called when agent clicks on “Connect” button in the dashboard. <code class="highlighter-rouge">AgentService</code> is a concrete implementation of <code class="highlighter-rouge">IAgentService</code>.</p>
+<p>Agent registration is done through <code class="language-plaintext highlighter-rouge">RegisterAgentAsync(IActivity activity, CancellationToken cancellationToken)</code> of <code class="language-plaintext highlighter-rouge">AgentService</code>. This method is called when agent clicks on “Connect” button in the dashboard. <code class="language-plaintext highlighter-rouge">AgentService</code> is a concrete implementation of <code class="language-plaintext highlighter-rouge">IAgentService</code>.</p>
 
-<p><code class="highlighter-rouge">RegisterAgentAsync</code> method first adds a new instance of <code class="highlighter-rouge">Agent</code> in to the availability pool using <code class="highlighter-rouge">IAgentProvider</code> <code class="highlighter-rouge">AddAgent(Agent agent)</code> method.</p>
+<p><code class="language-plaintext highlighter-rouge">RegisterAgentAsync</code> method first adds a new instance of <code class="language-plaintext highlighter-rouge">Agent</code> in to the availability pool using <code class="language-plaintext highlighter-rouge">IAgentProvider</code> <code class="language-plaintext highlighter-rouge">AddAgent(Agent agent)</code> method.</p>
 
-<p>Once this is successful, it adds a <em>metadata</em> to the agent’s <code class="highlighter-rouge">UserData</code> store. We use this <em>metadata</em> information to identify whether the incoming message is from an agent or a user.</p>
+<p>Once this is successful, it adds a <em>metadata</em> to the agent’s <code class="language-plaintext highlighter-rouge">UserData</code> store. We use this <em>metadata</em> information to identify whether the incoming message is from an agent or a user.</p>
 
 <p>In a production use case this is not importnat as your agent would most likely require to logging in, and therefore you can identify them by passing a valid token (or in any other way depending upon your requirments). I added the <em>metadata</em> to keep things simple for this sample.</p>
 
 <h4 id="disconnecting-agent">Disconnecting Agent</h4>
 
-<p>When agent clicks on <em>Disconnect</em> button on dashboard, we just remove the agent from availability pool by calling <code class="highlighter-rouge">UnregisterAgentAsync(IActivity activity ...)</code> method in <code class="highlighter-rouge">IAgentService</code>. The same method also clears the <em>metadata</em> information which was stored in agent’s store.</p>
+<p>When agent clicks on <em>Disconnect</em> button on dashboard, we just remove the agent from availability pool by calling <code class="language-plaintext highlighter-rouge">UnregisterAgentAsync(IActivity activity ...)</code> method in <code class="language-plaintext highlighter-rouge">IAgentService</code>. The same method also clears the <em>metadata</em> information which was stored in agent’s store.</p>
 
 <p>In a production scenario, you would not allow agent to disconnect if he is already in a conversation with a user. However, in this sample I have not implemented this.</p>
 
 <h3 id="agent-user-mapping">Agent User Mapping</h3>
 
-<p><em>Agent User Mapping</em> is a crucial piece in our overall design.  Methods for <em>Setting</em> and <em>Getting</em> this mapping is present in <code class="highlighter-rouge">IAgentUserMapping</code> interface. <code class="highlighter-rouge">BotStateMappingStorage</code> implements this interface and provides implementation of proper storage of these mapping. The mapping is <strong>not</strong> stored in memory. Instead it is stored in <a href="https://docs.botframework.com/en-us/core-concepts/userdata/#navtitle">Bot State Service</a>.</p>
+<p><em>Agent User Mapping</em> is a crucial piece in our overall design.  Methods for <em>Setting</em> and <em>Getting</em> this mapping is present in <code class="language-plaintext highlighter-rouge">IAgentUserMapping</code> interface. <code class="language-plaintext highlighter-rouge">BotStateMappingStorage</code> implements this interface and provides implementation of proper storage of these mapping. The mapping is <strong>not</strong> stored in memory. Instead it is stored in <a href="https://docs.botframework.com/en-us/core-concepts/userdata/#navtitle">Bot State Service</a>.</p>
 
 <p>To give a brief background, Microsoft Bot Framework provides three stores to store user state. These are</p>
 
@@ -332,11 +341,11 @@ The bot uses Luis to understand if user wants to talk to an agent. If you don’
 <p>This clever design (😄) makes the <em>Agent User Mapping</em> storage distributed and moves the responsibility of maintaining it to Bot State Service.</p>
 
 <p><strong>But what do we save in the states?</strong>
-We save the <em>address</em> of the agnet and the user respectively. More specifically we save the <code class="highlighter-rouge">ConversationReference</code> of the user and agent. <code class="highlighter-rouge">ConversationReference</code> can then be used to route message to the receiver on proper channel.
-We have two classes named <code class="highlighter-rouge">Agent</code> and <code class="highlighter-rouge">User</code> each having a property of type <code class="highlighter-rouge">ConversationReference</code>. We store <code class="highlighter-rouge">Agent</code> and <code class="highlighter-rouge">User</code> class instances into <em>User</em> and <em>Agent</em> store respectively.</p>
+We save the <em>address</em> of the agnet and the user respectively. More specifically we save the <code class="language-plaintext highlighter-rouge">ConversationReference</code> of the user and agent. <code class="language-plaintext highlighter-rouge">ConversationReference</code> can then be used to route message to the receiver on proper channel.
+We have two classes named <code class="language-plaintext highlighter-rouge">Agent</code> and <code class="language-plaintext highlighter-rouge">User</code> each having a property of type <code class="language-plaintext highlighter-rouge">ConversationReference</code>. We store <code class="language-plaintext highlighter-rouge">Agent</code> and <code class="language-plaintext highlighter-rouge">User</code> class instances into <em>User</em> and <em>Agent</em> store respectively.</p>
 
 <h3 id="initiating-conversation">Initiating Conversation</h3>
-<p>When a user wants to connect to the agent, we call <code class="highlighter-rouge">IntitiateConversationWithAgentAsync</code> of <code class="highlighter-rouge">IUserToAgent</code>. The method first checks if there are any available agent and fetches the next agent from availability pool. Once we get an agent, we create <em>Agent User Mapping</em> and store it into the states as described in previous section.</p>
+<p>When a user wants to connect to the agent, we call <code class="language-plaintext highlighter-rouge">IntitiateConversationWithAgentAsync</code> of <code class="language-plaintext highlighter-rouge">IUserToAgent</code>. The method first checks if there are any available agent and fetches the next agent from availability pool. Once we get an agent, we create <em>Agent User Mapping</em> and store it into the states as described in previous section.</p>
 
 <h3 id="message-routing">Message Routing</h3>
 
@@ -344,34 +353,34 @@ We have two classes named <code class="highlighter-rouge">Agent</code> and <code
 
 <h4 id="user-to-agent-route">User to Agent Route</h4>
 
-<p>When <em>user</em> sends a message <code class="highlighter-rouge">UserToAgentScorable</code> checks if the message needs to be routed to an <em>agent</em> or not. This check is done by calling <code class="highlighter-rouge">AgentTransferRequiredAsync</code> method in <code class="highlighter-rouge">IUserToAgent</code>.</p>
+<p>When <em>user</em> sends a message <code class="language-plaintext highlighter-rouge">UserToAgentScorable</code> checks if the message needs to be routed to an <em>agent</em> or not. This check is done by calling <code class="language-plaintext highlighter-rouge">AgentTransferRequiredAsync</code> method in <code class="language-plaintext highlighter-rouge">IUserToAgent</code>.</p>
 
-<p><code class="highlighter-rouge">AgentTransferRequiredAsync</code> method just checks if the user has the agent mapping in its store. If we find <code class="highlighter-rouge">Agent</code> class in its store, it means that the user is in the conversation with an agent. The scorable will then route the message to the agent by calling <code class="highlighter-rouge">SendToAgentAsync</code> method in <code class="highlighter-rouge">IUserToAgent</code>.</p>
+<p><code class="language-plaintext highlighter-rouge">AgentTransferRequiredAsync</code> method just checks if the user has the agent mapping in its store. If we find <code class="language-plaintext highlighter-rouge">Agent</code> class in its store, it means that the user is in the conversation with an agent. The scorable will then route the message to the agent by calling <code class="language-plaintext highlighter-rouge">SendToAgentAsync</code> method in <code class="language-plaintext highlighter-rouge">IUserToAgent</code>.</p>
 
-<p><code class="highlighter-rouge">SendToAgentAsync</code> will use the <code class="highlighter-rouge">ConversationReference</code> of agent to create a new <code class="highlighter-rouge">Activity</code> and send it to agent through Bot Connector.</p>
+<p><code class="language-plaintext highlighter-rouge">SendToAgentAsync</code> will use the <code class="language-plaintext highlighter-rouge">ConversationReference</code> of agent to create a new <code class="language-plaintext highlighter-rouge">Activity</code> and send it to agent through Bot Connector.</p>
 
 <blockquote>
-  <p>Due to our implemetnation of <code class="highlighter-rouge">Scorable</code>, we are not modifying the <code class="highlighter-rouge">DialogStack</code> of the user. This means that when the conversation with agent is stopped, the user returns to same state (Dialog) he was with the bot before the transfer.</p>
+  <p>Due to our implemetnation of <code class="language-plaintext highlighter-rouge">Scorable</code>, we are not modifying the <code class="language-plaintext highlighter-rouge">DialogStack</code> of the user. This means that when the conversation with agent is stopped, the user returns to same state (Dialog) he was with the bot before the transfer.</p>
 </blockquote>
 
 <h4 id="agent-to-user-route">Agent to User Route</h4>
 
-<p>Agent to user flow is also very similar to the above. When a message arrives, <code class="highlighter-rouge">AgentToUserScorable</code> first check if the sender is an <em>agent</em>. It does so by checking the <em>metadata</em> information which we store when registering the agent.
-Depending upon your requirements, you would have your own logic of checking if the <code class="highlighter-rouge">Activity</code> is from an actual <em>agent</em>.</p>
+<p>Agent to user flow is also very similar to the above. When a message arrives, <code class="language-plaintext highlighter-rouge">AgentToUserScorable</code> first check if the sender is an <em>agent</em>. It does so by checking the <em>metadata</em> information which we store when registering the agent.
+Depending upon your requirements, you would have your own logic of checking if the <code class="language-plaintext highlighter-rouge">Activity</code> is from an actual <em>agent</em>.</p>
 
-<p>Once we get a message from a valid agent, we then check if the agent is already in an existing conversation. This is done in similar way as described in last section. If we get a valid <code class="highlighter-rouge">User</code> in agent’s store, <code class="highlighter-rouge">AgentToUserScorable</code> will route the message to the user by calling <code class="highlighter-rouge">SendToUserAsync</code> method in <code class="highlighter-rouge">IAgentToUser</code>.</p>
+<p>Once we get a message from a valid agent, we then check if the agent is already in an existing conversation. This is done in similar way as described in last section. If we get a valid <code class="language-plaintext highlighter-rouge">User</code> in agent’s store, <code class="language-plaintext highlighter-rouge">AgentToUserScorable</code> will route the message to the user by calling <code class="language-plaintext highlighter-rouge">SendToUserAsync</code> method in <code class="language-plaintext highlighter-rouge">IAgentToUser</code>.</p>
 
 <h3 id="stopping-conversation">Stopping Conversation</h3>
 
-<p>Stopping a conversation simply means removing the <em>Agent User Mapping</em>. If this mapping is removed, no further messages would be routed from either user or agent. The implementation of it is done in <code class="highlighter-rouge">AgentService</code> class. In this sample only an agent can stop the conversation bbby clicking “Stop Conversation with User” button in dashboard.</p>
+<p>Stopping a conversation simply means removing the <em>Agent User Mapping</em>. If this mapping is removed, no further messages would be routed from either user or agent. The implementation of it is done in <code class="language-plaintext highlighter-rouge">AgentService</code> class. In this sample only an agent can stop the conversation bbby clicking “Stop Conversation with User” button in dashboard.</p>
 
 <h3 id="agent-dashboard">Agent Dashboard</h3>
 
-<p>As mentioned before, we use <a href="https://github.com/Microsoft/BotFramework-WebChat">Bot Framework Web Chat</a> as a channel for agent. But instead of just using an <code class="highlighter-rouge">&lt;iframe&gt;</code>, we directly reference the javascript. I have included <code class="highlighter-rouge">botchat.js</code> and <code class="highlighter-rouge">botchat.css</code> in the solution by building the Bot Framework Web Chat project. Directly referencing the web chat allows us to use its advanced features which we will see below.</p>
+<p>As mentioned before, we use <a href="https://github.com/Microsoft/BotFramework-WebChat">Bot Framework Web Chat</a> as a channel for agent. But instead of just using an <code class="language-plaintext highlighter-rouge">&lt;iframe&gt;</code>, we directly reference the javascript. I have included <code class="language-plaintext highlighter-rouge">botchat.js</code> and <code class="language-plaintext highlighter-rouge">botchat.css</code> in the solution by building the Bot Framework Web Chat project. Directly referencing the web chat allows us to use its advanced features which we will see below.</p>
 
-<p>To give a short introduction, Web Chat uses <strong>Redux</strong> architecture to manage its state. It uses <a href="https://github.com/microsoft/botframework-directlinejs">DirectLineJs</a> to connect with the Direct Line API. <code class="highlighter-rouge">DirectLineJs</code> uses <a href="https://github.com/Reactive-Extensions/RxJS">RxJs</a> to create an <code class="highlighter-rouge">Observable</code> which we could subscribe to receive events.</p>
+<p>To give a short introduction, Web Chat uses <strong>Redux</strong> architecture to manage its state. It uses <a href="https://github.com/microsoft/botframework-directlinejs">DirectLineJs</a> to connect with the Direct Line API. <code class="language-plaintext highlighter-rouge">DirectLineJs</code> uses <a href="https://github.com/Reactive-Extensions/RxJS">RxJs</a> to create an <code class="language-plaintext highlighter-rouge">Observable</code> which we could subscribe to receive events.</p>
 
-<p>First, we create <code class="highlighter-rouge">DirectLine</code> instance. Notice the direct line <em>secret</em> is passed through query string parameter.</p>
+<p>First, we create <code class="language-plaintext highlighter-rouge">DirectLine</code> instance. Notice the direct line <em>secret</em> is passed through query string parameter.</p>
 
 <div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">var</span> <span class="nx">botConnection</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">BotChat</span><span class="p">.</span><span class="nx">DirectLine</span><span class="p">({</span>
     <span class="na">secret</span><span class="p">:</span> <span class="nx">params</span><span class="p">[</span><span class="dl">'</span><span class="s1">s</span><span class="dl">'</span><span class="p">],</span>
@@ -381,7 +390,7 @@ Depending upon your requirements, you would have your own logic of checking if t
 <span class="p">});</span>
 </code></pre></div></div>
 
-<p>Next, we use call <code class="highlighter-rouge">BotChat.App</code> passing the Direct Line instance we created above.</p>
+<p>Next, we use call <code class="language-plaintext highlighter-rouge">BotChat.App</code> passing the Direct Line instance we created above.</p>
 
 <div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nx">BotChat</span><span class="p">.</span><span class="nx">App</span><span class="p">({</span>
     <span class="na">botConnection</span><span class="p">:</span> <span class="nx">botConnection</span><span class="p">,</span>
@@ -391,16 +400,16 @@ Depending upon your requirements, you would have your own logic of checking if t
 </code></pre></div></div>
 
 <blockquote>
-  <p>Tip: You can specify an <em>id</em> and a <em>name</em> in <code class="highlighter-rouge">user</code> object. These values will be reflected in <code class="highlighter-rouge">From</code> field in <code class="highlighter-rouge">Activity</code> which is received by out bot.</p>
+  <p>Tip: You can specify an <em>id</em> and a <em>name</em> in <code class="language-plaintext highlighter-rouge">user</code> object. These values will be reflected in <code class="language-plaintext highlighter-rouge">From</code> field in <code class="language-plaintext highlighter-rouge">Activity</code> which is received by out bot.</p>
 </blockquote>
 
-<p>Now here comes the interesting part. The two buttons in the page do not make ajax calls to any controller explicitly. Instead they use <code class="highlighter-rouge">DirectLineJs</code> to send a message to our bot. These messages are different than messages sent when user types something in the chat window. These messages have different <strong>type</strong>.</p>
+<p>Now here comes the interesting part. The two buttons in the page do not make ajax calls to any controller explicitly. Instead they use <code class="language-plaintext highlighter-rouge">DirectLineJs</code> to send a message to our bot. These messages are different than messages sent when user types something in the chat window. These messages have different <strong>type</strong>.</p>
 
-<p>If you have noticed, our <code class="highlighter-rouge">Activity</code> class has a <code class="highlighter-rouge">Type</code> field. A normal chat message <code class="highlighter-rouge">Activity</code> has <code class="highlighter-rouge">Type = "message"</code>. You might be aware that there are messages with different <em>types</em> such as <strong>conversationUpdate</strong>, <strong>typing</strong>, <strong>ping</strong> etc. Messages of some of these <em>types</em> are sent by Bot Framework itself such as <strong>conversationUpdate</strong> is sent when a memeber is added or removed from conversation.</p>
+<p>If you have noticed, our <code class="language-plaintext highlighter-rouge">Activity</code> class has a <code class="language-plaintext highlighter-rouge">Type</code> field. A normal chat message <code class="language-plaintext highlighter-rouge">Activity</code> has <code class="language-plaintext highlighter-rouge">Type = "message"</code>. You might be aware that there are messages with different <em>types</em> such as <strong>conversationUpdate</strong>, <strong>typing</strong>, <strong>ping</strong> etc. Messages of some of these <em>types</em> are sent by Bot Framework itself such as <strong>conversationUpdate</strong> is sent when a memeber is added or removed from conversation.</p>
 
-<p>There is another type called <strong>event</strong> which represents an <em>external event</em>. As of now, Bot Framework by default does not send any messaages of type <strong>event</strong>. This is left for us developers to use depending upon our requiremnts. We can create a message of type <strong>event</strong> and sent it to our bot. The bot would recieve it as a normal <code class="highlighter-rouge">Activity</code> which would have all the relevant fields populated such as <code class="highlighter-rouge">From</code>, <code class="highlighter-rouge">Recipient</code>, <code class="highlighter-rouge">Conversation</code> etc.</p>
+<p>There is another type called <strong>event</strong> which represents an <em>external event</em>. As of now, Bot Framework by default does not send any messaages of type <strong>event</strong>. This is left for us developers to use depending upon our requiremnts. We can create a message of type <strong>event</strong> and sent it to our bot. The bot would recieve it as a normal <code class="language-plaintext highlighter-rouge">Activity</code> which would have all the relevant fields populated such as <code class="language-plaintext highlighter-rouge">From</code>, <code class="language-plaintext highlighter-rouge">Recipient</code>, <code class="language-plaintext highlighter-rouge">Conversation</code> etc.</p>
 
-<p>In this example, on button clicks we send messages of type <strong>event</strong>. For <em>connect</em> button we send message of type <code class="highlighter-rouge">event</code> and <code class="highlighter-rouge">name="connect"</code>. Similarly, for <em>disconnect</em> we send message with <code class="highlighter-rouge">name="disconnect"</code>.</p>
+<p>In this example, on button clicks we send messages of type <strong>event</strong>. For <em>connect</em> button we send message of type <code class="language-plaintext highlighter-rouge">event</code> and <code class="language-plaintext highlighter-rouge">name="connect"</code>. Similarly, for <em>disconnect</em> we send message with <code class="language-plaintext highlighter-rouge">name="disconnect"</code>.</p>
 
 <div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">const</span> <span class="nx">connect</span> <span class="o">=</span> <span class="p">()</span> <span class="o">=&gt;</span> <span class="p">{</span>
     <span class="kd">var</span> <span class="nx">name</span><span class="p">;</span>
@@ -414,7 +423,7 @@ Depending upon your requirements, you would have your own logic of checking if t
 <span class="p">};</span>
 </code></pre></div></div>
 
-<p>To send messages we use <code class="highlighter-rouge">postActivity</code> method of <code class="highlighter-rouge">botConnection</code>. We then subscribe to it so we can get back the status whether it was successful or not.</p>
+<p>To send messages we use <code class="language-plaintext highlighter-rouge">postActivity</code> method of <code class="language-plaintext highlighter-rouge">botConnection</code>. We then subscribe to it so we can get back the status whether it was successful or not.</p>
 
 <p>Stop Conversation button works in exactly same way.</p>
 
@@ -425,7 +434,7 @@ Depending upon your requirements, you would have your own logic of checking if t
 <span class="p">};</span>
 </code></pre></div></div>
 
-<p>In our bot, we handle these messages in <code class="highlighter-rouge">HandleSystemMessage</code> method in <code class="highlighter-rouge">MessageController</code> class.</p>
+<p>In our bot, we handle these messages in <code class="language-plaintext highlighter-rouge">HandleSystemMessage</code> method in <code class="language-plaintext highlighter-rouge">MessageController</code> class.</p>
 
 <div class="language-csharp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">else</span> <span class="k">if</span> <span class="p">(</span><span class="n">message</span><span class="p">.</span><span class="n">Type</span> <span class="p">==</span> <span class="n">ActivityTypes</span><span class="p">.</span><span class="n">Event</span><span class="p">)</span>
 <span class="p">{</span>

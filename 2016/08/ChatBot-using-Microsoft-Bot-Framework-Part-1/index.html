@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="twitter:card" content="summary_large_image" /><!-- Begin Jekyll SEO tag v2.6.1 -->
 <title>Chatbot using Microsoft Bot Framework - Part 1 | F5 - Squashing Bugs</title>
-<meta name="generator" content="Jekyll v4.0.0" />
+<meta name="generator" content="Jekyll v4.1.1" />
 <meta property="og:title" content="Chatbot using Microsoft Bot Framework - Part 1" />
 <meta name="author" content="Ankit Sinha" />
 <meta property="og:locale" content="en_US" />
@@ -17,20 +17,29 @@
 <meta property="og:type" content="article" />
 <meta property="article:published_time" content="2016-08-22T00:00:00-05:00" />
 <script type="application/ld+json">
-{"author":{"@type":"Person","name":"Ankit Sinha"},"description":"A guide on how to build chat bots using Microsoft Bot Framework - Part 1","@type":"BlogPosting","url":"https://ankitbko.github.io/blog/2016/08/ChatBot-using-Microsoft-Bot-Framework-Part-1/","headline":"Chatbot using Microsoft Bot Framework - Part 1","dateModified":"2016-08-22T00:00:00-05:00","datePublished":"2016-08-22T00:00:00-05:00","mainEntityOfPage":{"@type":"WebPage","@id":"https://ankitbko.github.io/blog/2016/08/ChatBot-using-Microsoft-Bot-Framework-Part-1/"},"@context":"https://schema.org"}</script>
+{"url":"https://ankitbko.github.io/blog/2016/08/ChatBot-using-Microsoft-Bot-Framework-Part-1/","@type":"BlogPosting","headline":"Chatbot using Microsoft Bot Framework - Part 1","dateModified":"2016-08-22T00:00:00-05:00","datePublished":"2016-08-22T00:00:00-05:00","mainEntityOfPage":{"@type":"WebPage","@id":"https://ankitbko.github.io/blog/2016/08/ChatBot-using-Microsoft-Bot-Framework-Part-1/"},"author":{"@type":"Person","name":"Ankit Sinha"},"description":"A guide on how to build chat bots using Microsoft Bot Framework - Part 1","@context":"https://schema.org"}</script>
 <!-- End Jekyll SEO tag -->
 <link rel="stylesheet" href="/blog/assets/css/style.css"><link type="application/atom+xml" rel="alternate" href="https://ankitbko.github.io/blog/feed.xml" title="F5 - Squashing Bugs" /><!-- the google_analytics_id gets auto inserted from the config file -->
 
 
 
-<script>(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)})(window,document,'script','//www.google-analytics.com/analytics.js','ga');ga('create','UA-75679348-1','auto');ga('require','displayfeatures');ga('send','pageview');</script>
+<!-- Global site tag (gtag.js) - Google Analytics -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=UA-75679348-1"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
 
-<link rel="shortcut icon" type="image/x-icon" href="/blog/images/favicon.ico"><link href="https://unpkg.com/@primer/css/dist/primer.css" rel="stylesheet" />
-<link rel="stylesheet" href="//use.fontawesome.com/releases/v5.0.7/css/all.css">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.11.1/dist/katex.min.css" integrity="sha384-zB1R0rpPzHqg7Kpt0Aljp8JPLqbXI3bhnPWROx27a9N0Ll6ZP/+DiW/UqRcLbRjq" crossorigin="anonymous">
-    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML"> </script>
-    <script src="https://cdn.jsdelivr.net/npm/katex@0.11.1/dist/katex.min.js" integrity="sha384-y23I5Q6l+B6vatafAwxRu/0oK/79VlbSz7Q9aiSZUvyWYIYsd+qj+o24G5ZU2zJz" crossorigin="anonymous"></script>
-    <script src="https://cdn.jsdelivr.net/npm/katex@0.11.1/dist/contrib/auto-render.min.js" integrity="sha384-kWPLUVMOks5AQFrykwIup5lo0m3iMkkHrD0uJ4H5cjeGihAutqP0yW0J6dpFiVkI" crossorigin="anonymous"></script>
+  gtag('config', 'UA-75679348-1');
+</script>
+
+
+<link rel="shortcut icon" type="image/x-icon" href="/blog/images/favicon.ico"><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/Primer/15.2.0/primer.css" integrity="sha512-xTz2ys4coGAOz8vuV1NcQBkgVmKhsSEtjbqyMJbBHRplFuvKIUo6xhLHpAyPt9mfR6twHJgn9OgVLuqOvjeBhg==" crossorigin="anonymous" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.14.0/css/all.min.css" integrity="sha512-1PKOgIY59xJ8Co8+NE6FZ+LOAZKjy+KY8iq0G4B3CyeY6wYHN3yt9PW0XpSriVlkMXe40PTKnXrLnZ9+fkDaog==" crossorigin="anonymous" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.12.0/katex.min.css" integrity="sha512-h7nl+xz8wgDlNM4NqKEM4F1NkIRS17M9+uJwIGwuo8vGqIl4BhuCKdxjWEINm+xyrUjNCnK5dCrhM0sj+wTIXw==" crossorigin="anonymous" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.12.0/katex.min.js" integrity="sha512-/CMIhXiDA3m2c9kzRyd97MTb3MC6OVnx4TElQ7fkkoRghwDf6gi41gaT1PwF270W6+J60uTmwgeRpNpJdRV6sg==" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.12.0/contrib/auto-render.min.js" integrity="sha512-Do7uJAaHZm5OLrIv/yN4w0iG1dbu01kzdMNnFfu/mAqgUk6Nniv2JYHcwH+cNwjqgLcqcuBBk+JRvprLVI8azg==" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js" integrity="sha512-0doc9hKxR3PYwso42RD1p5ySZpzzuDiOwMrdCEh2WdJZCjcmFKc/wEnL+z8fBQrnHoiNWbo+3fiGkOYXBdQp4A==" crossorigin="anonymous"></script>
     <script>
     document.addEventListener("DOMContentLoaded", function() {
         renderMathInElement( document.body, {
@@ -170,7 +179,7 @@ window.onload = wrap_img;
 
 <h4 id="setup-project">Setup Project</h4>
 
-<p>We will add features incrementally to the bot and over multiple blog posts. But first step is to create a project using Bot Application Template. You can download the Visual Studio Template <a href="https://docs.botframework.com/en-us/downloads">here</a>. Next, update the nuget package of <code class="highlighter-rouge">Microsoft.Bot.Builder</code> to latest version. Bot Template is not updated as frequently as the SDK, so always check and update the SDK to newer version when creating a new project from the template. While you are at it, also download and install Bot Framework Emulator from the above link. The emulator will help us to test our bot locally while development.</p>
+<p>We will add features incrementally to the bot and over multiple blog posts. But first step is to create a project using Bot Application Template. You can download the Visual Studio Template <a href="https://docs.botframework.com/en-us/downloads">here</a>. Next, update the nuget package of <code class="language-plaintext highlighter-rouge">Microsoft.Bot.Builder</code> to latest version. Bot Template is not updated as frequently as the SDK, so always check and update the SDK to newer version when creating a new project from the template. While you are at it, also download and install Bot Framework Emulator from the above link. The emulator will help us to test our bot locally while development.</p>
 
 <p><img src="/blog/assets/images/posts/mebot-1/Template.png" alt="New Project" /></p>
 
@@ -180,13 +189,13 @@ window.onload = wrap_img;
 
 <ul>
   <li>
-    <p><code class="highlighter-rouge">Activity</code>: Activity is the JSON data (POST Body) that we send to and receive from the Bot Connector. You can view <code class="highlighter-rouge">Activity.cs</code> class to see all the data which are reviewed and sent. The one which interests us most is <code class="highlighter-rouge">Text</code> property which will contain the message which user typed. You can get to know more about <code class="highlighter-rouge">Activity</code> in official <a href="https://docs.botframework.com/en-us/csharp/builder/sdkreference/connector.html">documentation</a></p>
+    <p><code class="language-plaintext highlighter-rouge">Activity</code>: Activity is the JSON data (POST Body) that we send to and receive from the Bot Connector. You can view <code class="language-plaintext highlighter-rouge">Activity.cs</code> class to see all the data which are reviewed and sent. The one which interests us most is <code class="language-plaintext highlighter-rouge">Text</code> property which will contain the message which user typed. You can get to know more about <code class="language-plaintext highlighter-rouge">Activity</code> in official <a href="https://docs.botframework.com/en-us/csharp/builder/sdkreference/connector.html">documentation</a></p>
   </li>
   <li>
-    <p><code class="highlighter-rouge">Dialog</code>: Dialogs are building blocks of the bot. Dialogs model a conversation between user and the bot. It is a serializable class which has the state and the methods through which the interactions are managed. Dialogs are created by implementing <code class="highlighter-rouge">IDialog</code> interface. Dialogs can also be composed with other dialogs, making it reusable.</p>
+    <p><code class="language-plaintext highlighter-rouge">Dialog</code>: Dialogs are building blocks of the bot. Dialogs model a conversation between user and the bot. It is a serializable class which has the state and the methods through which the interactions are managed. Dialogs are created by implementing <code class="language-plaintext highlighter-rouge">IDialog</code> interface. Dialogs can also be composed with other dialogs, making it reusable.</p>
   </li>
   <li>
-    <p><code class="highlighter-rouge">Dialog Context</code>: Dialog Context maintains a stack of active dialogs. When the bot replies, it serializes the Dialog stack and sends it to the Bot Connector along with the <code class="highlighter-rouge">Activity</code> in the POST Body. The Bot Connector will store the stack internally. When the user sends another message, the Bot Connector will attach the Dialog Stack for the particular conversation and send it to our bot. The Bot Builder, upon receiving the Dialog stack, deserializes it, pops the top most dialog and executes the next method.</p>
+    <p><code class="language-plaintext highlighter-rouge">Dialog Context</code>: Dialog Context maintains a stack of active dialogs. When the bot replies, it serializes the Dialog stack and sends it to the Bot Connector along with the <code class="language-plaintext highlighter-rouge">Activity</code> in the POST Body. The Bot Connector will store the stack internally. When the user sends another message, the Bot Connector will attach the Dialog Stack for the particular conversation and send it to our bot. The Bot Builder, upon receiving the Dialog stack, deserializes it, pops the top most dialog and executes the next method.</p>
   </li>
 </ul>
 
@@ -194,13 +203,13 @@ window.onload = wrap_img;
 
 <h4 id="back-to-our-project">Back to our project</h4>
 
-<p>Open the <code class="highlighter-rouge">MessageController.cs</code> and you will find single POST method which accepts <code class="highlighter-rouge">Activity</code> object. The first line <code class="highlighter-rouge">if (activity.Type == ActivityTypes.Message)</code> checks if the <code class="highlighter-rouge">Activity</code> is of type <code class="highlighter-rouge">Message</code>. <code class="highlighter-rouge">Message</code> ActivityType represents communication between a Bot &lt;–&gt; User. There are other ActivityType which are present in <code class="highlighter-rouge">HandleSystemMessage(Activity message)</code> method. The comments there are self explanatory and more information on ActivityTypes are mentioned in the <a href="https://docs.botframework.com/en-us/csharp/builder/sdkreference/activities.html">documentation</a>.</p>
+<p>Open the <code class="language-plaintext highlighter-rouge">MessageController.cs</code> and you will find single POST method which accepts <code class="language-plaintext highlighter-rouge">Activity</code> object. The first line <code class="language-plaintext highlighter-rouge">if (activity.Type == ActivityTypes.Message)</code> checks if the <code class="language-plaintext highlighter-rouge">Activity</code> is of type <code class="language-plaintext highlighter-rouge">Message</code>. <code class="language-plaintext highlighter-rouge">Message</code> ActivityType represents communication between a Bot &lt;–&gt; User. There are other ActivityType which are present in <code class="language-plaintext highlighter-rouge">HandleSystemMessage(Activity message)</code> method. The comments there are self explanatory and more information on ActivityTypes are mentioned in the <a href="https://docs.botframework.com/en-us/csharp/builder/sdkreference/activities.html">documentation</a>.</p>
 
-<p>The <code class="highlighter-rouge">If</code> block handles the case when user has sent a text message to the bot. The bot will get the incoming text, count the length of the message, reply it back to the user. Note how the reply is created and sent to the Bot Connector. The reply is sent as a separate HTTP request rather than inline to current one. The <code class="highlighter-rouge">Else</code> block handles special ActivityType which we will ignore for the moment.</p>
+<p>The <code class="language-plaintext highlighter-rouge">If</code> block handles the case when user has sent a text message to the bot. The bot will get the incoming text, count the length of the message, reply it back to the user. Note how the reply is created and sent to the Bot Connector. The reply is sent as a separate HTTP request rather than inline to current one. The <code class="language-plaintext highlighter-rouge">Else</code> block handles special ActivityType which we will ignore for the moment.</p>
 
 <h4 id="run-the-project">Run the project</h4>
 
-<p>The default template creates a simple bot which echoes back number of character user typed. Before proceeding let us check if everything is working. Press F5 and run the bot in IIS Express. Open the Bot Emulator and change the Bot Url to hosted one and send any message. If everything is working, the bot should reply back the number of characters you entered which we see on the left window. On the right we see the JSON request and response for the message. This is what gets deserialized into <code class="highlighter-rouge">Activity</code> object.</p>
+<p>The default template creates a simple bot which echoes back number of character user typed. Before proceeding let us check if everything is working. Press F5 and run the bot in IIS Express. Open the Bot Emulator and change the Bot Url to hosted one and send any message. If everything is working, the bot should reply back the number of characters you entered which we see on the left window. On the right we see the JSON request and response for the message. This is what gets deserialized into <code class="language-plaintext highlighter-rouge">Activity</code> object.</p>
 
 <p><img src="/blog/assets/images/posts/mebot-1/Emulator.png" alt="Emulator" /></p>
 

@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="twitter:card" content="summary_large_image" /><!-- Begin Jekyll SEO tag v2.6.1 -->
 <title>Skype Call your bot - Microsoft Bot Framework with Bing Speech | F5 - Squashing Bugs</title>
-<meta name="generator" content="Jekyll v4.0.0" />
+<meta name="generator" content="Jekyll v4.1.1" />
 <meta property="og:title" content="Skype Call your bot - Microsoft Bot Framework with Bing Speech" />
 <meta name="author" content="Ankit Sinha" />
 <meta property="og:locale" content="en_US" />
@@ -17,20 +17,29 @@
 <meta property="og:type" content="article" />
 <meta property="article:published_time" content="2016-11-09T00:00:00-06:00" />
 <script type="application/ld+json">
-{"author":{"@type":"Person","name":"Ankit Sinha"},"description":"Skype Call your bot by integrating Microsoft Bot Framework with Bing Speech","@type":"BlogPosting","url":"https://ankitbko.github.io/blog/2016/11/skype-call-your-bot/","headline":"Skype Call your bot - Microsoft Bot Framework with Bing Speech","dateModified":"2016-11-09T00:00:00-06:00","datePublished":"2016-11-09T00:00:00-06:00","mainEntityOfPage":{"@type":"WebPage","@id":"https://ankitbko.github.io/blog/2016/11/skype-call-your-bot/"},"@context":"https://schema.org"}</script>
+{"url":"https://ankitbko.github.io/blog/2016/11/skype-call-your-bot/","@type":"BlogPosting","headline":"Skype Call your bot - Microsoft Bot Framework with Bing Speech","dateModified":"2016-11-09T00:00:00-06:00","datePublished":"2016-11-09T00:00:00-06:00","mainEntityOfPage":{"@type":"WebPage","@id":"https://ankitbko.github.io/blog/2016/11/skype-call-your-bot/"},"author":{"@type":"Person","name":"Ankit Sinha"},"description":"Skype Call your bot by integrating Microsoft Bot Framework with Bing Speech","@context":"https://schema.org"}</script>
 <!-- End Jekyll SEO tag -->
 <link rel="stylesheet" href="/blog/assets/css/style.css"><link type="application/atom+xml" rel="alternate" href="https://ankitbko.github.io/blog/feed.xml" title="F5 - Squashing Bugs" /><!-- the google_analytics_id gets auto inserted from the config file -->
 
 
 
-<script>(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)})(window,document,'script','//www.google-analytics.com/analytics.js','ga');ga('create','UA-75679348-1','auto');ga('require','displayfeatures');ga('send','pageview');</script>
+<!-- Global site tag (gtag.js) - Google Analytics -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=UA-75679348-1"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
 
-<link rel="shortcut icon" type="image/x-icon" href="/blog/images/favicon.ico"><link href="https://unpkg.com/@primer/css/dist/primer.css" rel="stylesheet" />
-<link rel="stylesheet" href="//use.fontawesome.com/releases/v5.0.7/css/all.css">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.11.1/dist/katex.min.css" integrity="sha384-zB1R0rpPzHqg7Kpt0Aljp8JPLqbXI3bhnPWROx27a9N0Ll6ZP/+DiW/UqRcLbRjq" crossorigin="anonymous">
-    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML"> </script>
-    <script src="https://cdn.jsdelivr.net/npm/katex@0.11.1/dist/katex.min.js" integrity="sha384-y23I5Q6l+B6vatafAwxRu/0oK/79VlbSz7Q9aiSZUvyWYIYsd+qj+o24G5ZU2zJz" crossorigin="anonymous"></script>
-    <script src="https://cdn.jsdelivr.net/npm/katex@0.11.1/dist/contrib/auto-render.min.js" integrity="sha384-kWPLUVMOks5AQFrykwIup5lo0m3iMkkHrD0uJ4H5cjeGihAutqP0yW0J6dpFiVkI" crossorigin="anonymous"></script>
+  gtag('config', 'UA-75679348-1');
+</script>
+
+
+<link rel="shortcut icon" type="image/x-icon" href="/blog/images/favicon.ico"><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/Primer/15.2.0/primer.css" integrity="sha512-xTz2ys4coGAOz8vuV1NcQBkgVmKhsSEtjbqyMJbBHRplFuvKIUo6xhLHpAyPt9mfR6twHJgn9OgVLuqOvjeBhg==" crossorigin="anonymous" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.14.0/css/all.min.css" integrity="sha512-1PKOgIY59xJ8Co8+NE6FZ+LOAZKjy+KY8iq0G4B3CyeY6wYHN3yt9PW0XpSriVlkMXe40PTKnXrLnZ9+fkDaog==" crossorigin="anonymous" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.12.0/katex.min.css" integrity="sha512-h7nl+xz8wgDlNM4NqKEM4F1NkIRS17M9+uJwIGwuo8vGqIl4BhuCKdxjWEINm+xyrUjNCnK5dCrhM0sj+wTIXw==" crossorigin="anonymous" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.12.0/katex.min.js" integrity="sha512-/CMIhXiDA3m2c9kzRyd97MTb3MC6OVnx4TElQ7fkkoRghwDf6gi41gaT1PwF270W6+J60uTmwgeRpNpJdRV6sg==" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.12.0/contrib/auto-render.min.js" integrity="sha512-Do7uJAaHZm5OLrIv/yN4w0iG1dbu01kzdMNnFfu/mAqgUk6Nniv2JYHcwH+cNwjqgLcqcuBBk+JRvprLVI8azg==" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js" integrity="sha512-0doc9hKxR3PYwso42RD1p5ySZpzzuDiOwMrdCEh2WdJZCjcmFKc/wEnL+z8fBQrnHoiNWbo+3fiGkOYXBdQp4A==" crossorigin="anonymous"></script>
     <script>
     document.addEventListener("DOMContentLoaded", function() {
         renderMathInElement( document.body, {
@@ -139,7 +148,7 @@ window.onload = wrap_img;
 Source code is available over my <a href="https://github.com/ankitbko/RentACarBot">github repo</a>.</p>
 
 <blockquote>
-  <p>I developed this sample over weekend just to find out whether it could be done or not. It is not a very cleanly written sample and there is a design flaw due to which the bot cannot be scaled out. I will address this design issue and also explain how we can make it scalable. Nonetheless, I decided to write down this blog because it provides a nice insight into Skype Calling Bot and also how to intercept the responses from Bot by implementing <code class="highlighter-rouge">IBotToUser</code> interface.</p>
+  <p>I developed this sample over weekend just to find out whether it could be done or not. It is not a very cleanly written sample and there is a design flaw due to which the bot cannot be scaled out. I will address this design issue and also explain how we can make it scalable. Nonetheless, I decided to write down this blog because it provides a nice insight into Skype Calling Bot and also how to intercept the responses from Bot by implementing <code class="language-plaintext highlighter-rouge">IBotToUser</code> interface.</p>
 </blockquote>
 
 <p>For this <em>fun</em> project, we will use the Bot Builder Calling SDK which is now part of Bot Framework, to make a call to our bot. Once we get the audio stream of the caller, we will use <a href="https://www.microsoft.com/cognitive-services/en-us/speech-api">Bing Speech API</a> for Speech-to-Text conversion. After we receive the text, we will just pass it to our bot and our bot will behave in the same way as it does for text input. The trick here is to not let our bot reply back to user through bot connector, but to intercept the reply messages and pass it onto Skype Calling APIs which manages Text-to-Speech conversion and would <em>speak</em> back to the user. The plan is to utilize feature rich Bot Builder SDK to build our bot and plugin the voice calling functionality on top of it, without having to modify any of the bot logic.</p>
@@ -150,7 +159,7 @@ Source code is available over my <a href="https://github.com/ankitbko/RentACarBo
 
 <p>Bot Builder Calling SDK is just a nice client package to call <a href="https://docs.botframework.com/en-us/skype/calling">Skype Calling APIs</a>. I recommend you read through the API documentation to understand how calling works through Skype. I will just explain it briefly here.</p>
 
-<p>When a call arrive to Skype Bot Platform, it would notify our bot by calling our bot’s HTTPS endpoint. Once we receive this notification, we(our bot) can reply back by providing a list of actions called <strong>workflow</strong> to execute. So for the initial call notification, we can either reply back by <code class="highlighter-rouge">Answer</code> or <code class="highlighter-rouge">Reject</code> action. The Skype Bot Platform will then execute the workflow and return us the result of last action executed. The SDK will raise an appropriate <code class="highlighter-rouge">Event</code> which we can subscribe to and handle the action outcome in our code. For example, on initial call notification, sdk will raise <code class="highlighter-rouge">OnIncomingCallReceived</code> event. On each event, we have opportunity to send another workflow to the user. In fact it is mandatory to return list of actions otherwise the sdk will throw an error and the call would get disconnected.
+<p>When a call arrive to Skype Bot Platform, it would notify our bot by calling our bot’s HTTPS endpoint. Once we receive this notification, we(our bot) can reply back by providing a list of actions called <strong>workflow</strong> to execute. So for the initial call notification, we can either reply back by <code class="language-plaintext highlighter-rouge">Answer</code> or <code class="language-plaintext highlighter-rouge">Reject</code> action. The Skype Bot Platform will then execute the workflow and return us the result of last action executed. The SDK will raise an appropriate <code class="language-plaintext highlighter-rouge">Event</code> which we can subscribe to and handle the action outcome in our code. For example, on initial call notification, sdk will raise <code class="language-plaintext highlighter-rouge">OnIncomingCallReceived</code> event. On each event, we have opportunity to send another workflow to the user. In fact it is mandatory to return list of actions otherwise the sdk will throw an error and the call would get disconnected.
 The below image, which I shamelessly copied from official documentation, explains how Skype calling works.</p>
 
 <p><img src="/blog/assets/images/posts/skypecall/flow.png" alt="Skype Call Flow" /></p>
@@ -159,11 +168,11 @@ The below image, which I shamelessly copied from official documentation, explain
 
 <p>We will use <a href="https://www.microsoft.com/cognitive-services/en-us/speech-api">Bing Speech API</a> for Speech-to-Text(STT) conversion. Microsoft team has released a thin C# client library for STT conversion using Bing Speech API. The samples are available on <a href="https://github.com/Microsoft/Cognitive-Speech-STT-Windows">github</a> and the library is available over nuget. For some reason they have different libraries for x64 and x86. Make sure you use the correct one depending upon your system.</p>
 
-<p>The first thing to do is get a Speech API subscription key (free) by signing up for <a href="https://www.microsoft.com/cognitive-services/en-US/subscriptions">Cognitive Services</a>. The STT sdk also works on event based model. In simple terms, the audio stream is sent to Speech API, which then returns the recognized text which is available in the argument <code class="highlighter-rouge">OnResponseReceived</code> event which is raised. The Speech API also returns partially converted text, but in our case we ignore them.</p>
+<p>The first thing to do is get a Speech API subscription key (free) by signing up for <a href="https://www.microsoft.com/cognitive-services/en-US/subscriptions">Cognitive Services</a>. The STT sdk also works on event based model. In simple terms, the audio stream is sent to Speech API, which then returns the recognized text which is available in the argument <code class="language-plaintext highlighter-rouge">OnResponseReceived</code> event which is raised. The Speech API also returns partially converted text, but in our case we ignore them.</p>
 
 <h3 id="putting-it-all-together">Putting it all together</h3>
 
-<p>But before that, we need to get develop a bot which works text inputs. I have gone ahead and created a very simple bot using FormFlow which allows user to rent a car. LUIS is used for text classification which returns the intent as <code class="highlighter-rouge">Rent</code> and entities such as <code class="highlighter-rouge">PickLocation</code> and <code class="highlighter-rouge">Pickup Date and Time</code>. Following which I just pass the entities to the FormFlow which takes care of asking appropriate questions and filling out rest of the form. Simple.</p>
+<p>But before that, we need to get develop a bot which works text inputs. I have gone ahead and created a very simple bot using FormFlow which allows user to rent a car. LUIS is used for text classification which returns the intent as <code class="language-plaintext highlighter-rouge">Rent</code> and entities such as <code class="language-plaintext highlighter-rouge">PickLocation</code> and <code class="language-plaintext highlighter-rouge">Pickup Date and Time</code>. Following which I just pass the entities to the FormFlow which takes care of asking appropriate questions and filling out rest of the form. Simple.</p>
 
 <p><img src="/blog/assets/images/posts/skypecall/rentcar.png" alt="Skype Call Flow" /></p>
 
@@ -171,15 +180,15 @@ The below image, which I shamelessly copied from official documentation, explain
 
 <ul>
   <li>There are 2 layers of event based models which needs to be wired together - Skype Calling SDK and Bing Speech SDK.</li>
-  <li>The STT output needs to be supplied to the Bot Builder in <em>correct</em> format. Our bot expects an <code class="highlighter-rouge">IMessageActivity</code> instance with properly filled in IDs such as Conversation ID, Channel ID etc so that it can fetch correct state from State Service.</li>
+  <li>The STT output needs to be supplied to the Bot Builder in <em>correct</em> format. Our bot expects an <code class="language-plaintext highlighter-rouge">IMessageActivity</code> instance with properly filled in IDs such as Conversation ID, Channel ID etc so that it can fetch correct state from State Service.</li>
   <li>The response from the bot needs to be intercepted and somehow returned back to event based model of Skype SDK.</li>
 </ul>
 
 <p>We will address each of them one by one.</p>
 
-<p>To start with we create a project from <a href="https://aka.ms/bf-builder-calling">Calling Bot Template</a>. The template creates a very basic IVR bot with a <code class="highlighter-rouge">CallingController</code> which receives the request from Skype Bot Platform and a <code class="highlighter-rouge">SimpleCallingBot</code> class which derives from <code class="highlighter-rouge">ICallingBot</code> which handles all the events which are raised by the Calling Bot SDK. The template also have a <code class="highlighter-rouge">MessageController</code> with default bot implementation.</p>
+<p>To start with we create a project from <a href="https://aka.ms/bf-builder-calling">Calling Bot Template</a>. The template creates a very basic IVR bot with a <code class="language-plaintext highlighter-rouge">CallingController</code> which receives the request from Skype Bot Platform and a <code class="language-plaintext highlighter-rouge">SimpleCallingBot</code> class which derives from <code class="language-plaintext highlighter-rouge">ICallingBot</code> which handles all the events which are raised by the Calling Bot SDK. The template also have a <code class="language-plaintext highlighter-rouge">MessageController</code> with default bot implementation.</p>
 
-<p>Next create a new class <code class="highlighter-rouge">RentCarCallingBot</code> and derive it with <code class="highlighter-rouge">ICallingBot</code>. I have used <code class="highlighter-rouge">SimpleCallingBot</code> as a reference therefore you will see basic structure and few methods are same. In the constructor we subscribe to the events which will be raised when a workflow is completed.</p>
+<p>Next create a new class <code class="language-plaintext highlighter-rouge">RentCarCallingBot</code> and derive it with <code class="language-plaintext highlighter-rouge">ICallingBot</code>. I have used <code class="language-plaintext highlighter-rouge">SimpleCallingBot</code> as a reference therefore you will see basic structure and few methods are same. In the constructor we subscribe to the events which will be raised when a workflow is completed.</p>
 
 <div class="language-csharp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">public</span> <span class="nf">RentCarCallingBot</span><span class="p">(</span><span class="n">ICallingBotService</span> <span class="n">callingBotService</span><span class="p">)</span>
 <span class="p">{</span>
@@ -198,10 +207,10 @@ The below image, which I shamelessly copied from official documentation, explain
 <p>We subscribe to only 4 events -</p>
 
 <ul>
-  <li><code class="highlighter-rouge">OnIncomingCallReceived</code>: Is fired when a call arrives at Skype Bot Platform. This is the same event which I explained earlier. Here we can either accept or reject the call.</li>
-  <li><code class="highlighter-rouge">OnPlayPromptCompleted</code>: Is fired when <code class="highlighter-rouge">PlayPrompt</code> action is completed. <code class="highlighter-rouge">PlayPrompt</code> action performs Text-to-Speech(TTS) conversion and plays back the supplied text to the caller. Once the playback is complete and if it is the last action in the workflow, then this event is raised.</li>
-  <li><code class="highlighter-rouge">OnRecordCompleted</code>: Similar to above, this event is raised when <code class="highlighter-rouge">Record</code> action completes. <code class="highlighter-rouge">Record</code> action allows us to record the caller’s voice and gives us an audio stream. This is the primary way to receive the audio of caller.</li>
-  <li><code class="highlighter-rouge">OnHangupCompleted</code>: As name suggests, is raised when we hangup.</li>
+  <li><code class="language-plaintext highlighter-rouge">OnIncomingCallReceived</code>: Is fired when a call arrives at Skype Bot Platform. This is the same event which I explained earlier. Here we can either accept or reject the call.</li>
+  <li><code class="language-plaintext highlighter-rouge">OnPlayPromptCompleted</code>: Is fired when <code class="language-plaintext highlighter-rouge">PlayPrompt</code> action is completed. <code class="language-plaintext highlighter-rouge">PlayPrompt</code> action performs Text-to-Speech(TTS) conversion and plays back the supplied text to the caller. Once the playback is complete and if it is the last action in the workflow, then this event is raised.</li>
+  <li><code class="language-plaintext highlighter-rouge">OnRecordCompleted</code>: Similar to above, this event is raised when <code class="language-plaintext highlighter-rouge">Record</code> action completes. <code class="language-plaintext highlighter-rouge">Record</code> action allows us to record the caller’s voice and gives us an audio stream. This is the primary way to receive the audio of caller.</li>
+  <li><code class="language-plaintext highlighter-rouge">OnHangupCompleted</code>: As name suggests, is raised when we hangup.</li>
 </ul>
 
 <h4 id="onincomingcallreceived">OnIncomingCallReceived</h4>
@@ -218,7 +227,7 @@ The below image, which I shamelessly copied from official documentation, explain
 <span class="p">}</span>
 </code></pre></div></div>
 
-<p>Upon receiving a call, we get an <code class="highlighter-rouge">IncomingCallEvent</code> object as argument. To this, we can add next steps of actions to be executed in the workflow. We add 2 events to the workflow - <em>Answer</em> and <em>Record</em>. We first answer the call and then start a <em>Record</em> action to get the caller’s input. Skype will start recording after speaking welcome message. The recorded stream will be available to us in <code class="highlighter-rouge">OnRecordCompleted</code> event.
+<p>Upon receiving a call, we get an <code class="language-plaintext highlighter-rouge">IncomingCallEvent</code> object as argument. To this, we can add next steps of actions to be executed in the workflow. We add 2 events to the workflow - <em>Answer</em> and <em>Record</em>. We first answer the call and then start a <em>Record</em> action to get the caller’s input. Skype will start recording after speaking welcome message. The recorded stream will be available to us in <code class="language-plaintext highlighter-rouge">OnRecordCompleted</code> event.
 A thing to note is that we must specify an <em>OperationId</em> to each action. It is used to correlate the outcome of the event.</p>
 
 <h4 id="onrecordcompleted">OnRecordCompleted</h4>
@@ -267,10 +276,10 @@ A thing to note is that we must specify an <em>OperationId</em> to each action. 
 <span class="p">}</span>
 </code></pre></div></div>
 
-<p>There are three sections in this method. The first if block is executed when we have successfully recorded the voice of the caller. We get the recorded content and pass it to <code class="highlighter-rouge">BingSpeech</code> class. It accepts 3 arguments in constructor, the first being the <code class="highlighter-rouge">ConversationResult</code>, the second and third being 2 delegates. The first delegate is used add a string to <code class="highlighter-rouge">response</code> property which is a <code class="highlighter-rouge">List&lt;string&gt;</code>. The <code class="highlighter-rouge">response</code> list maintains the list of messages which bot will send to the caller. The second delegate sets a flag if the STT conversion failed. In short this class calls the Bing Speech API and upon receiving the STT output, it goes ahead and passes it to our bot.
-Then we go ahead and add a <code class="highlighter-rouge">PlayPrompt</code> action which just keeps silence for specified period of time. This is required as we do not have result from bot immediately as we will see later.</p>
+<p>There are three sections in this method. The first if block is executed when we have successfully recorded the voice of the caller. We get the recorded content and pass it to <code class="language-plaintext highlighter-rouge">BingSpeech</code> class. It accepts 3 arguments in constructor, the first being the <code class="language-plaintext highlighter-rouge">ConversationResult</code>, the second and third being 2 delegates. The first delegate is used add a string to <code class="language-plaintext highlighter-rouge">response</code> property which is a <code class="language-plaintext highlighter-rouge">List&lt;string&gt;</code>. The <code class="language-plaintext highlighter-rouge">response</code> list maintains the list of messages which bot will send to the caller. The second delegate sets a flag if the STT conversion failed. In short this class calls the Bing Speech API and upon receiving the STT output, it goes ahead and passes it to our bot.
+Then we go ahead and add a <code class="language-plaintext highlighter-rouge">PlayPrompt</code> action which just keeps silence for specified period of time. This is required as we do not have result from bot immediately as we will see later.</p>
 
-<p>If we do not receive a successful recoding, we give the caller a chance to speak again once more. If the recording fails again, we disconnect the call gracefully. The <code class="highlighter-rouge">silenceTimes</code> counter is used for this purpose.</p>
+<p>If we do not receive a successful recoding, we give the caller a chance to speak again once more. If the recording fails again, we disconnect the call gracefully. The <code class="language-plaintext highlighter-rouge">silenceTimes</code> counter is used for this purpose.</p>
 
 <h4 id="onplaypromptcompleted">OnPlayPromptCompleted</h4>
 
@@ -325,8 +334,8 @@ Then we go ahead and add a <code class="highlighter-rouge">PlayPrompt</code> act
 <span class="p">}</span>
 </code></pre></div></div>
 
-<p>The first time this event is raised is when we have recorded the user’s input and have passed it to the <code class="highlighter-rouge">BingSpeech</code> class. At this point of time, we may or may not have any output from the bot itself. If there are any output(reply) from the bot, it will be added to <code class="highlighter-rouge">response</code> list. The <code class="highlighter-rouge">response</code> field contains the <code class="highlighter-rouge">List&lt;string&gt;</code> which are returned by bot to the user. If <code class="highlighter-rouge">response</code> is not empty, we get the <code class="highlighter-rouge">PlayPrompt</code> Action for the responses and add it to the workflow. We add a <code class="highlighter-rouge">Record</code> action after <code class="highlighter-rouge">PlayPrompt</code> to capture the next input from caller.
-In case the <code class="highlighter-rouge">response</code> is empty, it may mean one of the following two things, either the STT conversion failed or the processing of earlier input is yet not completed by the bot. If the STT conversion failed, we play a prompt to user and ask him to repeat and start the recording again. If the bot has not yet processed the previous input, then we start another <em>silence</em> prompt. We maintain a counter for how many times did we end up waiting for bot to complete processing, if it increases a threshold, we gracefully hangup.</p>
+<p>The first time this event is raised is when we have recorded the user’s input and have passed it to the <code class="language-plaintext highlighter-rouge">BingSpeech</code> class. At this point of time, we may or may not have any output from the bot itself. If there are any output(reply) from the bot, it will be added to <code class="language-plaintext highlighter-rouge">response</code> list. The <code class="language-plaintext highlighter-rouge">response</code> field contains the <code class="language-plaintext highlighter-rouge">List&lt;string&gt;</code> which are returned by bot to the user. If <code class="language-plaintext highlighter-rouge">response</code> is not empty, we get the <code class="language-plaintext highlighter-rouge">PlayPrompt</code> Action for the responses and add it to the workflow. We add a <code class="language-plaintext highlighter-rouge">Record</code> action after <code class="language-plaintext highlighter-rouge">PlayPrompt</code> to capture the next input from caller.
+In case the <code class="language-plaintext highlighter-rouge">response</code> is empty, it may mean one of the following two things, either the STT conversion failed or the processing of earlier input is yet not completed by the bot. If the STT conversion failed, we play a prompt to user and ask him to repeat and start the recording again. If the bot has not yet processed the previous input, then we start another <em>silence</em> prompt. We maintain a counter for how many times did we end up waiting for bot to complete processing, if it increases a threshold, we gracefully hangup.</p>
 
 <h4 id="onhangupcompleted">OnHangupCompleted</h4>
 
@@ -343,7 +352,7 @@ In case the <code class="highlighter-rouge">response</code> is empty, it may mea
 
 <h3 id="intercepting-bot-response">Intercepting Bot response</h3>
 
-<p>Microsoft Bot Framework does not return the response/reply in-line to the HTTP request. Instead it sends a separate HTTP request to Bot Connector with the reply message. We can intercept this flow by implementing <code class="highlighter-rouge">IBotToUser</code> interface. The default implementation which sends the message to Bot Connector is called <code class="highlighter-rouge">AlwaysSendDirect_BotToUser</code>. We will create a class <code class="highlighter-rouge">BotToUserSpeech</code> and derive this interface.</p>
+<p>Microsoft Bot Framework does not return the response/reply in-line to the HTTP request. Instead it sends a separate HTTP request to Bot Connector with the reply message. We can intercept this flow by implementing <code class="language-plaintext highlighter-rouge">IBotToUser</code> interface. The default implementation which sends the message to Bot Connector is called <code class="language-plaintext highlighter-rouge">AlwaysSendDirect_BotToUser</code>. We will create a class <code class="language-plaintext highlighter-rouge">BotToUserSpeech</code> and derive this interface.</p>
 
 <div class="language-csharp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">public</span> <span class="nf">BotToUserSpeech</span><span class="p">(</span><span class="n">IMessageActivity</span> <span class="n">toBot</span><span class="p">,</span> <span class="n">Action</span><span class="p">&lt;</span><span class="kt">string</span><span class="p">&gt;</span> <span class="n">_callback</span><span class="p">)</span>
 <span class="p">{</span>
@@ -364,13 +373,13 @@ In case the <code class="highlighter-rouge">response</code> is empty, it may mea
 <span class="p">}</span>
 </code></pre></div></div>
 
-<p>The constructor takes two parameters, the first being <code class="highlighter-rouge">IMessageActivity</code> and the second being a delegate to return the response to. This is the same delegate which was passed in <code class="highlighter-rouge">BingSpeech</code> class constructor in <code class="highlighter-rouge">OnRecordCompleted</code> event. The delegate just adds the string to <code class="highlighter-rouge">response</code> field. We need to implement just two method to MakeMessage and PostAsync. In MakeMessage we just return back the <code class="highlighter-rouge">IMessageActivity</code> object that we received from constructor. In PostAsync, we call the _callback delegate with the message text field. If the message has any attachment, we convert the buttons and cards in the attachment to plain string which is then passed to _callback. This ensures that buttons which are displayed to user normally in chat windows, gets converted to simple text so that the caller has all the options.</p>
+<p>The constructor takes two parameters, the first being <code class="language-plaintext highlighter-rouge">IMessageActivity</code> and the second being a delegate to return the response to. This is the same delegate which was passed in <code class="language-plaintext highlighter-rouge">BingSpeech</code> class constructor in <code class="language-plaintext highlighter-rouge">OnRecordCompleted</code> event. The delegate just adds the string to <code class="language-plaintext highlighter-rouge">response</code> field. We need to implement just two method to MakeMessage and PostAsync. In MakeMessage we just return back the <code class="language-plaintext highlighter-rouge">IMessageActivity</code> object that we received from constructor. In PostAsync, we call the _callback delegate with the message text field. If the message has any attachment, we convert the buttons and cards in the attachment to plain string which is then passed to _callback. This ensures that buttons which are displayed to user normally in chat windows, gets converted to simple text so that the caller has all the options.</p>
 
-<p>Once we have this class ready, we just need to wire it up in the dependency container which we do in <code class="highlighter-rouge">BingSpeech</code> class.</p>
+<p>Once we have this class ready, we just need to wire it up in the dependency container which we do in <code class="language-plaintext highlighter-rouge">BingSpeech</code> class.</p>
 
 <h3 id="bingspeech">BingSpeech</h3>
 
-<p>This class performs three tasks (talk about SRP!!!). First it receives the audio stream and sends it in chunks to Bing Speech API. Second it receives the event which is raised once the Bing Speech completes the STT conversion. Third it takes the STT output, and sends it to our RentACar bot. For this step it must setup the required dependencies and get instances through container to pass the message in <em>correct</em> format. Let’s step through each of them one by one. But before that, put the Bing Speech API subscription key in <code class="highlighter-rouge">SubscriptionKey</code> property.</p>
+<p>This class performs three tasks (talk about SRP!!!). First it receives the audio stream and sends it in chunks to Bing Speech API. Second it receives the event which is raised once the Bing Speech completes the STT conversion. Third it takes the STT output, and sends it to our RentACar bot. For this step it must setup the required dependencies and get instances through container to pass the message in <em>correct</em> format. Let’s step through each of them one by one. But before that, put the Bing Speech API subscription key in <code class="language-plaintext highlighter-rouge">SubscriptionKey</code> property.</p>
 
 <div class="language-csharp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kt">string</span> <span class="n">SubscriptionKey</span> <span class="p">{</span> <span class="k">get</span><span class="p">;</span> <span class="p">}</span> <span class="p">=</span> <span class="s">"Bing Speech subscription key"</span><span class="p">;</span>
 </code></pre></div></div>
@@ -388,17 +397,17 @@ In case the <code class="highlighter-rouge">response</code> is empty, it may mea
 <span class="p">}</span>
 </code></pre></div></div>
 
-<p>First we ask <code class="highlighter-rouge">SpeechRecognitionServiceFactory</code> to give us a <code class="highlighter-rouge">DataClient</code> instance. <code class="highlighter-rouge">SpeechRecognitionServiceFactory</code> can give us 4 types of clients -</p>
+<p>First we ask <code class="language-plaintext highlighter-rouge">SpeechRecognitionServiceFactory</code> to give us a <code class="language-plaintext highlighter-rouge">DataClient</code> instance. <code class="language-plaintext highlighter-rouge">SpeechRecognitionServiceFactory</code> can give us 4 types of clients -</p>
 
 <ul>
   <li>MicrophoneClient: Used to get audio stream by using device’s microphone and then perform STT conversion.</li>
-  <li>DataClient: No microphone support. You can use it to pass audio from <code class="highlighter-rouge">Stream</code>.</li>
+  <li>DataClient: No microphone support. You can use it to pass audio from <code class="language-plaintext highlighter-rouge">Stream</code>.</li>
   <li>MicrophoneClientWithIntent: Same functionality as MicrophoneClient. Additionally it will also send the text to LUIS and return LUIS entities and intents along with the text.</li>
   <li>DataClientWithIntent: Same as DataClient. Additionally it too will send the STT result to LUIS to perform intent and entity detection.</li>
 </ul>
 
-<p>In our scenario, we already receive voice stream from Skype and the NLP part will be done by our bot, therefore <code class="highlighter-rouge">DataClient</code> would work out for us.
-Next we subscribe to event <code class="highlighter-rouge">OnResponseReceived</code>, as this will be raised once STT processing is done by Bing Speech for complete stream.</p>
+<p>In our scenario, we already receive voice stream from Skype and the NLP part will be done by our bot, therefore <code class="language-plaintext highlighter-rouge">DataClient</code> would work out for us.
+Next we subscribe to event <code class="language-plaintext highlighter-rouge">OnResponseReceived</code>, as this will be raised once STT processing is done by Bing Speech for complete stream.</p>
 
 <div class="language-csharp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">public</span> <span class="k">void</span> <span class="nf">SendAudioHelper</span><span class="p">(</span><span class="n">Stream</span> <span class="n">recordedStream</span><span class="p">)</span>
 <span class="p">{</span>
@@ -428,7 +437,7 @@ Next we subscribe to event <code class="highlighter-rouge">OnResponseReceived</c
 <span class="p">}</span>
 </code></pre></div></div>
 
-<p><code class="highlighter-rouge">SendAudioHelper</code> will use dataClient to send the audio stream to Bing Speech Service. Once the entire stream is processed, the result will be available in <code class="highlighter-rouge">OnResponseReceived</code> event.</p>
+<p><code class="language-plaintext highlighter-rouge">SendAudioHelper</code> will use dataClient to send the audio stream to Bing Speech Service. Once the entire stream is processed, the result will be available in <code class="language-plaintext highlighter-rouge">OnResponseReceived</code> event.</p>
 
 <div class="language-csharp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">private</span> <span class="k">async</span> <span class="k">void</span> <span class="nf">OnDataShortPhraseResponseReceivedHandler</span><span class="p">(</span><span class="kt">object</span> <span class="n">sender</span><span class="p">,</span> <span class="n">SpeechResponseEventArgs</span> <span class="n">e</span><span class="p">)</span>
 <span class="p">{</span>
@@ -445,11 +454,11 @@ Next we subscribe to event <code class="highlighter-rouge">OnResponseReceived</c
 <span class="p">}</span>
 </code></pre></div></div>
 
-<p>If the STT conversion is successful, we order the result by confidence score and send it to our bot. Otherwise we call the callback for failure which sets a flag to true. This flag was then checked back at <code class="highlighter-rouge">OnPlayPromptCompleted</code> to either proceed or request caller to speak again.</p>
+<p>If the STT conversion is successful, we order the result by confidence score and send it to our bot. Otherwise we call the callback for failure which sets a flag to true. This flag was then checked back at <code class="language-plaintext highlighter-rouge">OnPlayPromptCompleted</code> to either proceed or request caller to speak again.</p>
 
 <h4 id="send-to-bot">Send to bot</h4>
 
-<p>Next challenge is to take the STT result and construct a valid <code class="highlighter-rouge">Activity</code> instance. Why? Because everything in Bot Builder depends upon a proper instance of <code class="highlighter-rouge">IMessageActivity</code>. Moreover we need to wire-in our <code class="highlighter-rouge">BotToUserSpeech</code> class. We do this by registering it into Autofac <code class="highlighter-rouge">ConnectionBuilder</code> while starting a new <code class="highlighter-rouge">LifetimeScope</code>.</p>
+<p>Next challenge is to take the STT result and construct a valid <code class="language-plaintext highlighter-rouge">Activity</code> instance. Why? Because everything in Bot Builder depends upon a proper instance of <code class="language-plaintext highlighter-rouge">IMessageActivity</code>. Moreover we need to wire-in our <code class="language-plaintext highlighter-rouge">BotToUserSpeech</code> class. We do this by registering it into Autofac <code class="language-plaintext highlighter-rouge">ConnectionBuilder</code> while starting a new <code class="language-plaintext highlighter-rouge">LifetimeScope</code>.</p>
 
 <div class="language-csharp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">private</span> <span class="k">async</span> <span class="n">Task</span> <span class="nf">SendToBot</span><span class="p">(</span><span class="n">RecognizedPhrase</span> <span class="n">recognizedPhrase</span><span class="p">)</span>
 <span class="p">{</span>
@@ -488,13 +497,13 @@ Next we subscribe to event <code class="highlighter-rouge">OnResponseReceived</c
 <span class="p">}</span>
 </code></pre></div></div>
 
-<p>The <code class="highlighter-rouge">Activity</code> instance must be valid. At least the 3 IDs needs to be specified to get and set context from state service. For the IDs, we can use <code class="highlighter-rouge">ConversationResult.Id</code> which is a unique for each conversation. We also have <code class="highlighter-rouge">ConversationResult.AppId</code> which is AppId of the caller but for some reason it was always null for me. Along with them, ServiceUrl and ChannelId should also be correct, otherwise bot will throw exception. Once we have a valid <code class="highlighter-rouge">Activity</code> instance, we assign it’s text property to our STT output.</p>
+<p>The <code class="language-plaintext highlighter-rouge">Activity</code> instance must be valid. At least the 3 IDs needs to be specified to get and set context from state service. For the IDs, we can use <code class="language-plaintext highlighter-rouge">ConversationResult.Id</code> which is a unique for each conversation. We also have <code class="language-plaintext highlighter-rouge">ConversationResult.AppId</code> which is AppId of the caller but for some reason it was always null for me. Along with them, ServiceUrl and ChannelId should also be correct, otherwise bot will throw exception. Once we have a valid <code class="language-plaintext highlighter-rouge">Activity</code> instance, we assign it’s text property to our STT output.</p>
 
-<p>To send this <code class="highlighter-rouge">Activity</code> instance to the bot, we need to resolve instance of <code class="highlighter-rouge">IPostToBot</code>. Once we get it, we just call it’s <code class="highlighter-rouge">PostAsync</code> method and pass the <code class="highlighter-rouge">Activity</code> instance. This would kick start our bot, deserialize the Dialog State and resume/start the conversation. This is exact flow which happens when we call <code class="highlighter-rouge">Conversation.SendAsync</code> from <code class="highlighter-rouge">MessageController</code>.</p>
+<p>To send this <code class="language-plaintext highlighter-rouge">Activity</code> instance to the bot, we need to resolve instance of <code class="language-plaintext highlighter-rouge">IPostToBot</code>. Once we get it, we just call it’s <code class="language-plaintext highlighter-rouge">PostAsync</code> method and pass the <code class="language-plaintext highlighter-rouge">Activity</code> instance. This would kick start our bot, deserialize the Dialog State and resume/start the conversation. This is exact flow which happens when we call <code class="language-plaintext highlighter-rouge">Conversation.SendAsync</code> from <code class="language-plaintext highlighter-rouge">MessageController</code>.</p>
 
 <h4 id="callingcontroller">CallingController</h4>
 
-<p>Finally in <code class="highlighter-rouge">CallingController</code> pass the instance of <code class="highlighter-rouge">RentCarCallingBot</code> when registering the calling bot in the constructor.</p>
+<p>Finally in <code class="language-plaintext highlighter-rouge">CallingController</code> pass the instance of <code class="language-plaintext highlighter-rouge">RentCarCallingBot</code> when registering the calling bot in the constructor.</p>
 
 <div class="language-csharp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">public</span> <span class="nf">CallingController</span><span class="p">()</span>
     <span class="p">:</span> <span class="k">base</span><span class="p">()</span>
@@ -505,16 +514,16 @@ Next we subscribe to event <code class="highlighter-rouge">OnResponseReceived</c
 
 <h3 id="scalability-problems">Scalability Problems</h3>
 
-<p>The response from bot will eventually arrive at our <code class="highlighter-rouge">BotToUserSpeech</code> class, which would just pass the response text to our delegate which would add it to a list maintained in <code class="highlighter-rouge">RentCarCallingBot</code>. The list is then monitored when the workflow is finished and Skype API sends us a callback with result. We have put together everything in such a that once the bot finishes user recording, it then plays a silent prompt and monitors the response list.</p>
+<p>The response from bot will eventually arrive at our <code class="language-plaintext highlighter-rouge">BotToUserSpeech</code> class, which would just pass the response text to our delegate which would add it to a list maintained in <code class="language-plaintext highlighter-rouge">RentCarCallingBot</code>. The list is then monitored when the workflow is finished and Skype API sends us a callback with result. We have put together everything in such a that once the bot finishes user recording, it then plays a silent prompt and monitors the response list.</p>
 
-<p>This is where the problem lies. Our <code class="highlighter-rouge">BotToUserSpeech</code> class will capture the response and add it to the List. However in scenario where we have scaled out and have multiple bot services running behind a load balance, there is no knowing where the next callback from Skype API is going to land. Our current implementation locks us to only single bot service and prevents us from scaling.</p>
+<p>This is where the problem lies. Our <code class="language-plaintext highlighter-rouge">BotToUserSpeech</code> class will capture the response and add it to the List. However in scenario where we have scaled out and have multiple bot services running behind a load balance, there is no knowing where the next callback from Skype API is going to land. Our current implementation locks us to only single bot service and prevents us from scaling.</p>
 
-<p>We can resolve this issue by changing our implementation of <code class="highlighter-rouge">BotToUserSpeech</code> class. For example, instead of passing the response to a delegate, we can push it into a queue such as RabbitMQ. On the <code class="highlighter-rouge">OnPlayPromptCompleted</code> method, we can then check if there are any messages in the queue to play to the user. We must also take care of posting message to the queue when STT failed. So in short, both our delegates needs to be replaced by an out of process storing mechanism which can be accessed by multiple running services. Since RabbitMQ or any other queue can be monitored by multiple bot services, it solves our scalability issue.</p>
+<p>We can resolve this issue by changing our implementation of <code class="language-plaintext highlighter-rouge">BotToUserSpeech</code> class. For example, instead of passing the response to a delegate, we can push it into a queue such as RabbitMQ. On the <code class="language-plaintext highlighter-rouge">OnPlayPromptCompleted</code> method, we can then check if there are any messages in the queue to play to the user. We must also take care of posting message to the queue when STT failed. So in short, both our delegates needs to be replaced by an out of process storing mechanism which can be accessed by multiple running services. Since RabbitMQ or any other queue can be monitored by multiple bot services, it solves our scalability issue.</p>
 
 <h3 id="testing-our-bot">Testing our bot</h3>
 
 <p>We can test our bot locally by using ngrok. Ngrok creates a secure tunnel to localhost and provides us a public URL. Any call to public url will be forwarded to a service running on localhost at our system.
-We create a tunnel <code class="highlighter-rouge">ngrok http --host-header=localhost 3999</code> to forward request to localhost:3999 where we will host our bot. Ngrok will then generate a random public URL. Note the https forwarding URL.</p>
+We create a tunnel <code class="language-plaintext highlighter-rouge">ngrok http --host-header=localhost 3999</code> to forward request to localhost:3999 where we will host our bot. Ngrok will then generate a random public URL. Note the https forwarding URL.</p>
 
 <p><img src="/blog/assets/images/posts/skypecall/ngrok.png" alt="ngrok" /></p>
 

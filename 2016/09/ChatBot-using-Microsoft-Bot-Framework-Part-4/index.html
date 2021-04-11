@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="twitter:card" content="summary_large_image" /><!-- Begin Jekyll SEO tag v2.6.1 -->
 <title>Chatbot using Microsoft Bot Framework - Part 4 | F5 - Squashing Bugs</title>
-<meta name="generator" content="Jekyll v4.0.0" />
+<meta name="generator" content="Jekyll v4.1.1" />
 <meta property="og:title" content="Chatbot using Microsoft Bot Framework - Part 4" />
 <meta name="author" content="Ankit Sinha" />
 <meta property="og:locale" content="en_US" />
@@ -17,20 +17,29 @@
 <meta property="og:type" content="article" />
 <meta property="article:published_time" content="2016-09-23T00:00:00-05:00" />
 <script type="application/ld+json">
-{"author":{"@type":"Person","name":"Ankit Sinha"},"description":"A guide on how to build chat bots using Microsoft Bot Framework - Part 4","@type":"BlogPosting","url":"https://ankitbko.github.io/blog/2016/09/ChatBot-using-Microsoft-Bot-Framework-Part-4/","headline":"Chatbot using Microsoft Bot Framework - Part 4","dateModified":"2016-09-23T00:00:00-05:00","datePublished":"2016-09-23T00:00:00-05:00","mainEntityOfPage":{"@type":"WebPage","@id":"https://ankitbko.github.io/blog/2016/09/ChatBot-using-Microsoft-Bot-Framework-Part-4/"},"@context":"https://schema.org"}</script>
+{"url":"https://ankitbko.github.io/blog/2016/09/ChatBot-using-Microsoft-Bot-Framework-Part-4/","@type":"BlogPosting","headline":"Chatbot using Microsoft Bot Framework - Part 4","dateModified":"2016-09-23T00:00:00-05:00","datePublished":"2016-09-23T00:00:00-05:00","mainEntityOfPage":{"@type":"WebPage","@id":"https://ankitbko.github.io/blog/2016/09/ChatBot-using-Microsoft-Bot-Framework-Part-4/"},"author":{"@type":"Person","name":"Ankit Sinha"},"description":"A guide on how to build chat bots using Microsoft Bot Framework - Part 4","@context":"https://schema.org"}</script>
 <!-- End Jekyll SEO tag -->
 <link rel="stylesheet" href="/blog/assets/css/style.css"><link type="application/atom+xml" rel="alternate" href="https://ankitbko.github.io/blog/feed.xml" title="F5 - Squashing Bugs" /><!-- the google_analytics_id gets auto inserted from the config file -->
 
 
 
-<script>(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)})(window,document,'script','//www.google-analytics.com/analytics.js','ga');ga('create','UA-75679348-1','auto');ga('require','displayfeatures');ga('send','pageview');</script>
+<!-- Global site tag (gtag.js) - Google Analytics -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=UA-75679348-1"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
 
-<link rel="shortcut icon" type="image/x-icon" href="/blog/images/favicon.ico"><link href="https://unpkg.com/@primer/css/dist/primer.css" rel="stylesheet" />
-<link rel="stylesheet" href="//use.fontawesome.com/releases/v5.0.7/css/all.css">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.11.1/dist/katex.min.css" integrity="sha384-zB1R0rpPzHqg7Kpt0Aljp8JPLqbXI3bhnPWROx27a9N0Ll6ZP/+DiW/UqRcLbRjq" crossorigin="anonymous">
-    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML"> </script>
-    <script src="https://cdn.jsdelivr.net/npm/katex@0.11.1/dist/katex.min.js" integrity="sha384-y23I5Q6l+B6vatafAwxRu/0oK/79VlbSz7Q9aiSZUvyWYIYsd+qj+o24G5ZU2zJz" crossorigin="anonymous"></script>
-    <script src="https://cdn.jsdelivr.net/npm/katex@0.11.1/dist/contrib/auto-render.min.js" integrity="sha384-kWPLUVMOks5AQFrykwIup5lo0m3iMkkHrD0uJ4H5cjeGihAutqP0yW0J6dpFiVkI" crossorigin="anonymous"></script>
+  gtag('config', 'UA-75679348-1');
+</script>
+
+
+<link rel="shortcut icon" type="image/x-icon" href="/blog/images/favicon.ico"><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/Primer/15.2.0/primer.css" integrity="sha512-xTz2ys4coGAOz8vuV1NcQBkgVmKhsSEtjbqyMJbBHRplFuvKIUo6xhLHpAyPt9mfR6twHJgn9OgVLuqOvjeBhg==" crossorigin="anonymous" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.14.0/css/all.min.css" integrity="sha512-1PKOgIY59xJ8Co8+NE6FZ+LOAZKjy+KY8iq0G4B3CyeY6wYHN3yt9PW0XpSriVlkMXe40PTKnXrLnZ9+fkDaog==" crossorigin="anonymous" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.12.0/katex.min.css" integrity="sha512-h7nl+xz8wgDlNM4NqKEM4F1NkIRS17M9+uJwIGwuo8vGqIl4BhuCKdxjWEINm+xyrUjNCnK5dCrhM0sj+wTIXw==" crossorigin="anonymous" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.12.0/katex.min.js" integrity="sha512-/CMIhXiDA3m2c9kzRyd97MTb3MC6OVnx4TElQ7fkkoRghwDf6gi41gaT1PwF270W6+J60uTmwgeRpNpJdRV6sg==" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.12.0/contrib/auto-render.min.js" integrity="sha512-Do7uJAaHZm5OLrIv/yN4w0iG1dbu01kzdMNnFfu/mAqgUk6Nniv2JYHcwH+cNwjqgLcqcuBBk+JRvprLVI8azg==" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js" integrity="sha512-0doc9hKxR3PYwso42RD1p5ySZpzzuDiOwMrdCEh2WdJZCjcmFKc/wEnL+z8fBQrnHoiNWbo+3fiGkOYXBdQp4A==" crossorigin="anonymous"></script>
     <script>
     document.addEventListener("DOMContentLoaded", function() {
         renderMathInElement( document.body, {
@@ -143,13 +152,13 @@ window.onload = wrap_img;
 
 <p>Till now we have only created conversations which are very shallow. In other words, it is a simple QA scenario where conversation does not flow deep and their are no context to maintain. However, there are many scenarios where we would need to take a more guided approach, where we may require multiple inputs from user and bot may take different path based on previous inputs. In short, we will need to create a state machine. A good example is ordering a pizza. We will need to ask a lot of questions such as size, crust, toppings, etc. and we will need to maintain them in the context. We will also need to provide a way for user to change previously entered data and we must only complete order once we have all the information with us. All of this would require managing a lot of state and workflow. This is where FormFlow comes in.</p>
 
-<p>FormFlow sacrifices some of the flexibility of Dialogs to provide an easy way to achieve all the above. FormFlow itself is derived from <code class="highlighter-rouge">IDialog</code> so it can be nested within another dialog.</p>
+<p>FormFlow sacrifices some of the flexibility of Dialogs to provide an easy way to achieve all the above. FormFlow itself is derived from <code class="language-plaintext highlighter-rouge">IDialog</code> so it can be nested within another dialog.</p>
 
-<p>The basic idea behind <code class="highlighter-rouge">FormFlow</code> is <em>forms</em> i.e. collection of fields. Think of it as filling a form in any website. To order a pizza online, you would go to your favorite pizza restaurant’s website, fill out a <em>form</em> with details such as type of pizza, crust, size etc, put down delivery address and then order it. At any point before placing the order, you can revisit and change any aspect of pizza.</p>
+<p>The basic idea behind <code class="language-plaintext highlighter-rouge">FormFlow</code> is <em>forms</em> i.e. collection of fields. Think of it as filling a form in any website. To order a pizza online, you would go to your favorite pizza restaurant’s website, fill out a <em>form</em> with details such as type of pizza, crust, size etc, put down delivery address and then order it. At any point before placing the order, you can revisit and change any aspect of pizza.</p>
 
 <p>To accomplish the same using FormFlow, we start with creating a class and adding public fields or properties. Each public field and property corresponds to a <em>field in the form</em>. So the user will be asked to input values for each field before <em>completing</em> the form. The way FormFlow achieves this is by creating a state machine in background and maintaining the transition between states. It also allows user to change any previously entered value for any field and view the current status of the <em>form</em>. You can read more about FormFlow in the <a href="https://docs.botframework.com/en-us/csharp/builder/sdkreference/forms.html">docs here</a>.</p>
 
-<p>In our scenario of implementing feedback functionality, before allowing user to send a feedback, we will ask him to enter his name and contact info. Only when we have both the information, would we allow him to send a feedback message. To achieve this, we first create a class called <code class="highlighter-rouge">FeedbackForm</code> and properties for <code class="highlighter-rouge">Name</code>, <code class="highlighter-rouge">Contact</code> and <code class="highlighter-rouge">Feedback</code>.</p>
+<p>In our scenario of implementing feedback functionality, before allowing user to send a feedback, we will ask him to enter his name and contact info. Only when we have both the information, would we allow him to send a feedback message. To achieve this, we first create a class called <code class="language-plaintext highlighter-rouge">FeedbackForm</code> and properties for <code class="language-plaintext highlighter-rouge">Name</code>, <code class="language-plaintext highlighter-rouge">Contact</code> and <code class="language-plaintext highlighter-rouge">Feedback</code>.</p>
 
 <div class="language-csharp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">public</span> <span class="k">class</span> <span class="nc">FeedbackForm</span>
 <span class="p">{</span>
@@ -173,17 +182,17 @@ window.onload = wrap_img;
 <span class="p">}</span>
 </code></pre></div></div>
 
-<p>The <code class="highlighter-rouge">Prompt</code> attribute on top of fields allow us to specify what message would be shown to the user for asking him to enter value for the respective fields. Do note that FormFlow only accepts .NET primitive types, <code class="highlighter-rouge">enum</code> and <code class="highlighter-rouge">List&lt;enum&gt;</code> as Type for properties or fields. The <code class="highlighter-rouge">BuildForm</code> static method returns an <code class="highlighter-rouge">IForm&lt;&gt;</code> which would be used by <code class="highlighter-rouge">FormDialog</code> to build forms later. I will explain each line of the method -</p>
+<p>The <code class="language-plaintext highlighter-rouge">Prompt</code> attribute on top of fields allow us to specify what message would be shown to the user for asking him to enter value for the respective fields. Do note that FormFlow only accepts .NET primitive types, <code class="language-plaintext highlighter-rouge">enum</code> and <code class="language-plaintext highlighter-rouge">List&lt;enum&gt;</code> as Type for properties or fields. The <code class="language-plaintext highlighter-rouge">BuildForm</code> static method returns an <code class="language-plaintext highlighter-rouge">IForm&lt;&gt;</code> which would be used by <code class="language-plaintext highlighter-rouge">FormDialog</code> to build forms later. I will explain each line of the method -</p>
 
 <ul>
-  <li><code class="highlighter-rouge">new FormBuilder&lt;FeedbackForm&gt;()</code>: Create a new FormBuilder of type FeedbackForm. FormBuilder has fluent api to help us build it.</li>
-  <li><code class="highlighter-rouge">.Field(nameof(Contact), validate: ValidateContactInformation)</code>: Add the property <code class="highlighter-rouge">Contact</code> to the form and set a delegate to validate the input. ValidateContactInformation delegate will be called whenever user inputs for this field.</li>
-  <li><code class="highlighter-rouge">.Field(nameof(Feedback), active: FeedbackEnabled)</code>: Add the property <code class="highlighter-rouge">Feedback</code> to the form and assign an <code class="highlighter-rouge">ActiveDelegate</code> to it. This means that this field will be visible only when <code class="highlighter-rouge">ActiveDelegate</code> returns <code class="highlighter-rouge">true</code>.</li>
-  <li><code class="highlighter-rouge">.AddRemainingFields()</code>: Add any remaining valid public fields and properties to the form. In this case <code class="highlighter-rouge">Name</code>.</li>
-  <li><code class="highlighter-rouge">.Build();</code>: Build the form and return an <code class="highlighter-rouge">IForm&lt;FeedbackForm&gt;</code>.</li>
+  <li><code class="language-plaintext highlighter-rouge">new FormBuilder&lt;FeedbackForm&gt;()</code>: Create a new FormBuilder of type FeedbackForm. FormBuilder has fluent api to help us build it.</li>
+  <li><code class="language-plaintext highlighter-rouge">.Field(nameof(Contact), validate: ValidateContactInformation)</code>: Add the property <code class="language-plaintext highlighter-rouge">Contact</code> to the form and set a delegate to validate the input. ValidateContactInformation delegate will be called whenever user inputs for this field.</li>
+  <li><code class="language-plaintext highlighter-rouge">.Field(nameof(Feedback), active: FeedbackEnabled)</code>: Add the property <code class="language-plaintext highlighter-rouge">Feedback</code> to the form and assign an <code class="language-plaintext highlighter-rouge">ActiveDelegate</code> to it. This means that this field will be visible only when <code class="language-plaintext highlighter-rouge">ActiveDelegate</code> returns <code class="language-plaintext highlighter-rouge">true</code>.</li>
+  <li><code class="language-plaintext highlighter-rouge">.AddRemainingFields()</code>: Add any remaining valid public fields and properties to the form. In this case <code class="language-plaintext highlighter-rouge">Name</code>.</li>
+  <li><code class="language-plaintext highlighter-rouge">.Build();</code>: Build the form and return an <code class="language-plaintext highlighter-rouge">IForm&lt;FeedbackForm&gt;</code>.</li>
 </ul>
 
-<p>The <code class="highlighter-rouge">ValidateContactInformation</code> delegate validates that the input is either a valid email address or starts with ‘@’ to signify twitter handle.</p>
+<p>The <code class="language-plaintext highlighter-rouge">ValidateContactInformation</code> delegate validates that the input is either a valid email address or starts with ‘@’ to signify twitter handle.</p>
 
 <div class="language-csharp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">private</span> <span class="k">static</span> <span class="n">Task</span><span class="p">&lt;</span><span class="n">ValidateResult</span><span class="p">&gt;</span> <span class="nf">ValidateContactInformation</span><span class="p">(</span><span class="n">FeedbackForm</span> <span class="n">state</span><span class="p">,</span> <span class="kt">object</span> <span class="n">response</span><span class="p">)</span>
 <span class="p">{</span>
@@ -203,9 +212,9 @@ window.onload = wrap_img;
 <span class="p">}</span>
 </code></pre></div></div>
 
-<p>The <code class="highlighter-rouge">ValidateAsyncDelegate</code> must return a <code class="highlighter-rouge">ValidateResult</code> object whose property <code class="highlighter-rouge">IsValid</code> should be set appropriately. If <code class="highlighter-rouge">IsValid</code> is set to <code class="highlighter-rouge">true</code>, FormFlow will assign the field to the value in <code class="highlighter-rouge">Value</code> property. This gives us chance to transform the user input before assigning it to the form. If the <code class="highlighter-rouge">IsValid</code> is set to <code class="highlighter-rouge">false</code>, text in <code class="highlighter-rouge">Feedback</code> field will be displayed to the user. This allows us to notify user why validation failed and give clear instructions as to what to do next. If the validation fails, the FormFlow will ask user to enter the value again.</p>
+<p>The <code class="language-plaintext highlighter-rouge">ValidateAsyncDelegate</code> must return a <code class="language-plaintext highlighter-rouge">ValidateResult</code> object whose property <code class="language-plaintext highlighter-rouge">IsValid</code> should be set appropriately. If <code class="language-plaintext highlighter-rouge">IsValid</code> is set to <code class="language-plaintext highlighter-rouge">true</code>, FormFlow will assign the field to the value in <code class="language-plaintext highlighter-rouge">Value</code> property. This gives us chance to transform the user input before assigning it to the form. If the <code class="language-plaintext highlighter-rouge">IsValid</code> is set to <code class="language-plaintext highlighter-rouge">false</code>, text in <code class="language-plaintext highlighter-rouge">Feedback</code> field will be displayed to the user. This allows us to notify user why validation failed and give clear instructions as to what to do next. If the validation fails, the FormFlow will ask user to enter the value again.</p>
 
-<p>Each field can be controlled as to whether it is available to be filled or not by <code class="highlighter-rouge">ActiveDelegate</code>. The <code class="highlighter-rouge">ActiveDelegate</code> returns a <code class="highlighter-rouge">bool</code>, if it is <code class="highlighter-rouge">true</code> the field is available to be filled by the user else it will be not be shown.</p>
+<p>Each field can be controlled as to whether it is available to be filled or not by <code class="language-plaintext highlighter-rouge">ActiveDelegate</code>. The <code class="language-plaintext highlighter-rouge">ActiveDelegate</code> returns a <code class="language-plaintext highlighter-rouge">bool</code>, if it is <code class="language-plaintext highlighter-rouge">true</code> the field is available to be filled by the user else it will be not be shown.</p>
 
 <div class="language-csharp highlighter-rouge"><div class="highlight"><pre class="highlight"><code> <span class="k">private</span> <span class="k">static</span> <span class="kt">bool</span> <span class="nf">FeedbackEnabled</span><span class="p">(</span><span class="n">FeedbackForm</span> <span class="n">state</span><span class="p">)</span> <span class="p">=&gt;</span>
     <span class="p">!</span><span class="kt">string</span><span class="p">.</span><span class="nf">IsNullOrWhiteSpace</span><span class="p">(</span><span class="n">state</span><span class="p">.</span><span class="n">Contact</span><span class="p">)</span> <span class="p">&amp;&amp;</span> <span class="p">!</span><span class="kt">string</span><span class="p">.</span><span class="nf">IsNullOrWhiteSpace</span><span class="p">(</span><span class="n">state</span><span class="p">.</span><span class="n">Name</span><span class="p">);</span>
@@ -232,11 +241,11 @@ window.onload = wrap_img;
 <span class="p">}</span>
 </code></pre></div></div>
 
-<p>Here we create a new <code class="highlighter-rouge">FormDialog</code> object by passing the new instance of <code class="highlighter-rouge">FeedbackForm</code> and <code class="highlighter-rouge">BuildFormDelegate</code> which we have defined above. The <code class="highlighter-rouge">BuildFormDelegate</code> will be used by FormFlow to build the form. <code class="highlighter-rouge">FormOptions.PromptInStart</code> tells the bot to prompt user for the first field to be filled as soon as the dialog starts. FormDialog has another optional parameter which takes <code class="highlighter-rouge">IEnumerable&lt;EntityRecommendation&gt;</code>. This can be used to pass the entities returned by the LUIS and FormFlow will <em>pre-populate</em> the form and will not ask the user to fill in those fields.</p>
+<p>Here we create a new <code class="language-plaintext highlighter-rouge">FormDialog</code> object by passing the new instance of <code class="language-plaintext highlighter-rouge">FeedbackForm</code> and <code class="language-plaintext highlighter-rouge">BuildFormDelegate</code> which we have defined above. The <code class="language-plaintext highlighter-rouge">BuildFormDelegate</code> will be used by FormFlow to build the form. <code class="language-plaintext highlighter-rouge">FormOptions.PromptInStart</code> tells the bot to prompt user for the first field to be filled as soon as the dialog starts. FormDialog has another optional parameter which takes <code class="language-plaintext highlighter-rouge">IEnumerable&lt;EntityRecommendation&gt;</code>. This can be used to pass the entities returned by the LUIS and FormFlow will <em>pre-populate</em> the form and will not ask the user to fill in those fields.</p>
 
-<p>Next we use <code class="highlighter-rouge">context.Call</code> to push our <code class="highlighter-rouge">FormDialog</code> to top of the <code class="highlighter-rouge">DialogStack</code>. Unlike <code class="highlighter-rouge">context.Forward</code>, <code class="highlighter-rouge">context.Call</code> will not pass the current message to the Dialog. Instead the next message from the user will be routed to the child dialog.</p>
+<p>Next we use <code class="language-plaintext highlighter-rouge">context.Call</code> to push our <code class="language-plaintext highlighter-rouge">FormDialog</code> to top of the <code class="language-plaintext highlighter-rouge">DialogStack</code>. Unlike <code class="language-plaintext highlighter-rouge">context.Forward</code>, <code class="language-plaintext highlighter-rouge">context.Call</code> will not pass the current message to the Dialog. Instead the next message from the user will be routed to the child dialog.</p>
 
-<p><code class="highlighter-rouge">FeedbackFormComplete</code> is called once all the fields in the our form is successfully filled and the form completes. I also get the completed form passed in the <code class="highlighter-rouge">result</code> parameter.</p>
+<p><code class="language-plaintext highlighter-rouge">FeedbackFormComplete</code> is called once all the fields in the our form is successfully filled and the form completes. I also get the completed form passed in the <code class="language-plaintext highlighter-rouge">result</code> parameter.</p>
 
 <div class="language-csharp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">private</span> <span class="k">async</span> <span class="n">Task</span> <span class="nf">FeedbackFormComplete</span><span class="p">(</span><span class="n">IDialogContext</span> <span class="n">context</span><span class="p">,</span> <span class="n">IAwaitable</span><span class="p">&lt;</span><span class="n">FeedbackForm</span><span class="p">&gt;</span> <span class="n">result</span><span class="p">)</span>
 <span class="p">{</span>
@@ -269,14 +278,14 @@ window.onload = wrap_img;
 <span class="p">}</span>
 </code></pre></div></div>
 
-<p>I use SendGrid to send a mail to myself with the feedback message which I get from completed form. The interesting part here is the catch block for <code class="highlighter-rouge">FormCanceledException</code>.
-<code class="highlighter-rouge">FormCanceledException</code> is thrown when user quits or cancels the form. This is another feature of FormFlow. User can quit the form anytime by typing ‘quit’ or ‘bye’. Along with this, user can type ‘Help’ anytime to view all the available options if he feels stuck anywhere and ‘Status’ to view the current state of form. These <em>commands</em> are configurable and list of them is available in ‘Help’ menu.</p>
+<p>I use SendGrid to send a mail to myself with the feedback message which I get from completed form. The interesting part here is the catch block for <code class="language-plaintext highlighter-rouge">FormCanceledException</code>.
+<code class="language-plaintext highlighter-rouge">FormCanceledException</code> is thrown when user quits or cancels the form. This is another feature of FormFlow. User can quit the form anytime by typing ‘quit’ or ‘bye’. Along with this, user can type ‘Help’ anytime to view all the available options if he feels stuck anywhere and ‘Status’ to view the current state of form. These <em>commands</em> are configurable and list of them is available in ‘Help’ menu.</p>
 
 <p><img src="/blog/assets/images/posts/mebot-4/help.png" alt="Help" />
 <img src="/blog/assets/images/posts/mebot-4/status.png" alt="Status" /></p>
 
 <h3 id="wrapping-up">Wrapping up</h3>
-<p>This is it. We have created a bot and in the process I have explained fundamentals of bots and Microsoft Bot Framework. But in no way have I touched upon every feature of Bot Framework. There are many other features such as <code class="highlighter-rouge">Scorable</code>, <code class="highlighter-rouge">BotState</code>, <code class="highlighter-rouge">IPostToBot</code>, <code class="highlighter-rouge">IBotToUser</code> etc. which are very useful and you should definitely explore. Voice calling through Skype is an upcoming feature which can be integrated to the bot. There are many other cognitive services which can be integrated with bots to make it more smarter. Microsoft Bot Framework is a powerful and feature rich platform to build bots. The open source community around it is great and developers are quick to respond to any issues.</p>
+<p>This is it. We have created a bot and in the process I have explained fundamentals of bots and Microsoft Bot Framework. But in no way have I touched upon every feature of Bot Framework. There are many other features such as <code class="language-plaintext highlighter-rouge">Scorable</code>, <code class="language-plaintext highlighter-rouge">BotState</code>, <code class="language-plaintext highlighter-rouge">IPostToBot</code>, <code class="language-plaintext highlighter-rouge">IBotToUser</code> etc. which are very useful and you should definitely explore. Voice calling through Skype is an upcoming feature which can be integrated to the bot. There are many other cognitive services which can be integrated with bots to make it more smarter. Microsoft Bot Framework is a powerful and feature rich platform to build bots. The open source community around it is great and developers are quick to respond to any issues.</p>
 
 <p>I will write more about above things in future. If you have any specific topic which you would like me to write about, drop a comment or send a feedback through bot :).</p>
 

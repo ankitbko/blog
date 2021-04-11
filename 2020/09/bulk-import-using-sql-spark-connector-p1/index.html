@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="twitter:card" content="summary_large_image" /><!-- Begin Jekyll SEO tag v2.6.1 -->
 <title>Building large scale data ingestion solutions for Azure SQL using Azure databricks - Part 1 | F5 - Squashing Bugs</title>
-<meta name="generator" content="Jekyll v4.0.0" />
+<meta name="generator" content="Jekyll v4.1.1" />
 <meta property="og:title" content="Building large scale data ingestion solutions for Azure SQL using Azure databricks - Part 1" />
 <meta name="author" content="Ankit Sinha" />
 <meta property="og:locale" content="en_US" />
@@ -18,20 +18,29 @@
 <meta property="og:type" content="article" />
 <meta property="article:published_time" content="2020-09-01T00:00:00-05:00" />
 <script type="application/ld+json">
-{"image":"https://ankitbko.github.io/blog/images/previews/spark-connector-1-preview.svg","author":{"@type":"Person","name":"Ankit Sinha"},"description":"Discover how to bulk insert million of rows into Azure SQL Hyperscale using Databricks","@type":"BlogPosting","url":"https://ankitbko.github.io/blog/2020/09/bulk-import-using-sql-spark-connector-p1/","headline":"Building large scale data ingestion solutions for Azure SQL using Azure databricks - Part 1","dateModified":"2020-09-01T00:00:00-05:00","datePublished":"2020-09-01T00:00:00-05:00","mainEntityOfPage":{"@type":"WebPage","@id":"https://ankitbko.github.io/blog/2020/09/bulk-import-using-sql-spark-connector-p1/"},"@context":"https://schema.org"}</script>
+{"url":"https://ankitbko.github.io/blog/2020/09/bulk-import-using-sql-spark-connector-p1/","@type":"BlogPosting","headline":"Building large scale data ingestion solutions for Azure SQL using Azure databricks - Part 1","dateModified":"2020-09-01T00:00:00-05:00","datePublished":"2020-09-01T00:00:00-05:00","image":"https://ankitbko.github.io/blog/images/previews/spark-connector-1-preview.svg","mainEntityOfPage":{"@type":"WebPage","@id":"https://ankitbko.github.io/blog/2020/09/bulk-import-using-sql-spark-connector-p1/"},"author":{"@type":"Person","name":"Ankit Sinha"},"description":"Discover how to bulk insert million of rows into Azure SQL Hyperscale using Databricks","@context":"https://schema.org"}</script>
 <!-- End Jekyll SEO tag -->
 <link rel="stylesheet" href="/blog/assets/css/style.css"><link type="application/atom+xml" rel="alternate" href="https://ankitbko.github.io/blog/feed.xml" title="F5 - Squashing Bugs" /><!-- the google_analytics_id gets auto inserted from the config file -->
 
 
 
-<script>(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)})(window,document,'script','//www.google-analytics.com/analytics.js','ga');ga('create','UA-75679348-1','auto');ga('require','displayfeatures');ga('send','pageview');</script>
+<!-- Global site tag (gtag.js) - Google Analytics -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=UA-75679348-1"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
 
-<link rel="shortcut icon" type="image/x-icon" href="/blog/images/favicon.ico"><link href="https://unpkg.com/@primer/css/dist/primer.css" rel="stylesheet" />
-<link rel="stylesheet" href="//use.fontawesome.com/releases/v5.0.7/css/all.css">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.11.1/dist/katex.min.css" integrity="sha384-zB1R0rpPzHqg7Kpt0Aljp8JPLqbXI3bhnPWROx27a9N0Ll6ZP/+DiW/UqRcLbRjq" crossorigin="anonymous">
-    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML"> </script>
-    <script src="https://cdn.jsdelivr.net/npm/katex@0.11.1/dist/katex.min.js" integrity="sha384-y23I5Q6l+B6vatafAwxRu/0oK/79VlbSz7Q9aiSZUvyWYIYsd+qj+o24G5ZU2zJz" crossorigin="anonymous"></script>
-    <script src="https://cdn.jsdelivr.net/npm/katex@0.11.1/dist/contrib/auto-render.min.js" integrity="sha384-kWPLUVMOks5AQFrykwIup5lo0m3iMkkHrD0uJ4H5cjeGihAutqP0yW0J6dpFiVkI" crossorigin="anonymous"></script>
+  gtag('config', 'UA-75679348-1');
+</script>
+
+
+<link rel="shortcut icon" type="image/x-icon" href="/blog/images/favicon.ico"><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/Primer/15.2.0/primer.css" integrity="sha512-xTz2ys4coGAOz8vuV1NcQBkgVmKhsSEtjbqyMJbBHRplFuvKIUo6xhLHpAyPt9mfR6twHJgn9OgVLuqOvjeBhg==" crossorigin="anonymous" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.14.0/css/all.min.css" integrity="sha512-1PKOgIY59xJ8Co8+NE6FZ+LOAZKjy+KY8iq0G4B3CyeY6wYHN3yt9PW0XpSriVlkMXe40PTKnXrLnZ9+fkDaog==" crossorigin="anonymous" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.12.0/katex.min.css" integrity="sha512-h7nl+xz8wgDlNM4NqKEM4F1NkIRS17M9+uJwIGwuo8vGqIl4BhuCKdxjWEINm+xyrUjNCnK5dCrhM0sj+wTIXw==" crossorigin="anonymous" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.12.0/katex.min.js" integrity="sha512-/CMIhXiDA3m2c9kzRyd97MTb3MC6OVnx4TElQ7fkkoRghwDf6gi41gaT1PwF270W6+J60uTmwgeRpNpJdRV6sg==" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.12.0/contrib/auto-render.min.js" integrity="sha512-Do7uJAaHZm5OLrIv/yN4w0iG1dbu01kzdMNnFfu/mAqgUk6Nniv2JYHcwH+cNwjqgLcqcuBBk+JRvprLVI8azg==" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js" integrity="sha512-0doc9hKxR3PYwso42RD1p5ySZpzzuDiOwMrdCEh2WdJZCjcmFKc/wEnL+z8fBQrnHoiNWbo+3fiGkOYXBdQp4A==" crossorigin="anonymous"></script>
     <script>
     document.addEventListener("DOMContentLoaded", function() {
         renderMathInElement( document.body, {
@@ -158,13 +167,6 @@ window.onload = wrap_img;
 
 <div class="container" id="notebook-container">
         
-    
-    
-<div class="cell border-box-sizing code_cell rendered">
-
-</div>
-    
-
 <div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
 <p>With rise of big data, polyglot persistence and availability of cheaper storage technology it is becoming increasingly common to keep data into cheaper long term storage such as ADLS and load them into OLTP or OLAP databases as needed. In this 3 part blog series we will check out newly released <a href="https://github.com/microsoft/sql-spark-connector">Apache Spark Connector for SQL Server and Azure SQL</a> (refered as Microsoft SQL Spark Connector) and use it to insert large amount of data into Azure SQL Hyperscale. We will also capture benchmarks and also discuss some common problems we faced and solutions to them.</p>
@@ -178,7 +180,7 @@ window.onload = wrap_img;
 <div class="text_cell_render border-box-sizing rendered_html">
 <h2 id="Getting-started-with-Microsoft-SQL-Spark-Connector">Getting started with Microsoft SQL Spark Connector<a class="anchor-link" href="#Getting-started-with-Microsoft-SQL-Spark-Connector"> </a></h2><p>Microsoft SQL Spark Connector is an evolution of now deprecated <a href="https://github.com/Azure/azure-sqldb-spark">Azure SQL Spark Connector</a>. It provides hosts of different features to easily integrate with SQL Server and Azure SQL from spark. At the time of writing this blog, the connector is in active development and a release package is not yet published to maven repository. So in order to get it you can either download precompiled <em>jar</em> file from the <a href="https://github.com/microsoft/sql-spark-connector/releases">releases</a> tab in repository, or build the master branch locally. Once you have the jar file install it into your databricks cluster.<br />
 <div class="flash">
-    <svg class="octicon octicon-info" viewBox="0 0 14 16" version="1.1" width="14" height="16" aria-hidden="true"><path fill-rule="evenodd" d="M6.3 5.69a.942.942 0 01-.28-.7c0-.28.09-.52.28-.7.19-.18.42-.28.7-.28.28 0 .52.09.7.28.18.19.28.42.28.7 0 .28-.09.52-.28.7a1 1 0 01-.7.3c-.28 0-.52-.11-.7-.3zM8 7.99c-.02-.25-.11-.48-.31-.69-.2-.19-.42-.3-.69-.31H6c-.27.02-.48.13-.69.31-.2.2-.3.44-.31.69h1v3c.02.27.11.5.31.69.2.2.42.31.69.31h1c.27 0 .48-.11.69-.31.2-.19.3-.42.31-.69H8V7.98v.01zM7 2.3c-3.14 0-5.7 2.54-5.7 5.68 0 3.14 2.56 5.7 5.7 5.7s5.7-2.55 5.7-5.7c0-3.15-2.56-5.69-5.7-5.69v.01zM7 .98c3.86 0 7 3.14 7 7s-3.14 7-7 7-7-3.12-7-7 3.14-7 7-7z"></path></svg>
+    <svg class="octicon octicon-info" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path fill-rule="evenodd" d="M8 1.5a6.5 6.5 0 100 13 6.5 6.5 0 000-13zM0 8a8 8 0 1116 0A8 8 0 010 8zm6.5-.25A.75.75 0 017.25 7h1a.75.75 0 01.75.75v2.75h.25a.75.75 0 010 1.5h-2a.75.75 0 010-1.5h.25v-2h-.25a.75.75 0 01-.75-.75zM8 6a1 1 0 100-2 1 1 0 000 2z"></path></svg>
     <strong>Note: </strong>As of writing this post, the connector does not support Spark 3.0.
 </div></p>
 
@@ -214,7 +216,7 @@ window.onload = wrap_img;
 <p>There are no foreign key in the tables so Surrogate Key of store (<code>s_store_sk</code>) will be used to query and group results from store_sales (<code>ss_store_sk</code>) and store_returns (<code>sr_store_sk</code>).</p>
 <p>This dataset was already available in my Azure SQL database and is then exported as parquet files using <a href="https://github.com/ankitbko/sql-spark-connector-sample/blob/master/notebooks/00-export-parquet-sql.ipynb">export notebook</a>. In case you have the dataset as text files you can modify the export notebook accordingly. 
 <div class="flash">
-    <svg class="octicon octicon-info octicon octicon-info" viewBox="0 0 14 16" version="1.1" width="14" height="16" aria-hidden="true"><path fill-rule="evenodd" d="M6.3 5.69a.942.942 0 01-.28-.7c0-.28.09-.52.28-.7.19-.18.42-.28.7-.28.28 0 .52.09.7.28.18.19.28.42.28.7 0 .28-.09.52-.28.7a1 1 0 01-.7.3c-.28 0-.52-.11-.7-.3zM8 7.99c-.02-.25-.11-.48-.31-.69-.2-.19-.42-.3-.69-.31H6c-.27.02-.48.13-.69.31-.2.2-.3.44-.31.69h1v3c.02.27.11.5.31.69.2.2.42.31.69.31h1c.27 0 .48-.11.69-.31.2-.19.3-.42.31-.69H8V7.98v.01zM7 2.3c-3.14 0-5.7 2.54-5.7 5.68 0 3.14 2.56 5.7 5.7 5.7s5.7-2.55 5.7-5.7c0-3.15-2.56-5.69-5.7-5.69v.01zM7 .98c3.86 0 7 3.14 7 7s-3.14 7-7 7-7-3.12-7-7 3.14-7 7-7z"></path></svg>
+    <svg class="octicon octicon-info octicon octicon-info" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path fill-rule="evenodd" d="M8 1.5a6.5 6.5 0 100 13 6.5 6.5 0 000-13zM0 8a8 8 0 1116 0A8 8 0 010 8zm6.5-.25A.75.75 0 017.25 7h1a.75.75 0 01.75.75v2.75h.25a.75.75 0 010 1.5h-2a.75.75 0 010-1.5h.25v-2h-.25a.75.75 0 01-.75-.75zM8 6a1 1 0 100-2 1 1 0 000 2z"></path></svg>
     <strong>Note: </strong>If you generate parquet files from any text format such as (csv, pipe-separated etc) you will need to correctly specify schema while writing to parquet. You can find the schema in specification document of TPC-DS toolkit.
 </div></p>
 
@@ -590,8 +592,7 @@ window.onload = wrap_img;
 
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="c1"># Temporary workaround until Issue #5 gets fixed https://github.com/microsoft/sql-spark-connector/issues/5</span>
-<span class="k">def</span> <span class="nf">create_valid_table_schema</span><span class="p">(</span><span class="n">table_name</span><span class="p">,</span> <span class="n">df_schema</span><span class="p">):</span> 
+<div class=" highlight hl-ipython3"><pre><span></span><span class="k">def</span> <span class="nf">create_valid_table_schema</span><span class="p">(</span><span class="n">table_name</span><span class="p">,</span> <span class="n">df_schema</span><span class="p">):</span> 
   <span class="k">return</span> <span class="n">StructType</span><span class="p">([</span><span class="n">x</span> <span class="k">if</span> <span class="n">x</span><span class="o">.</span><span class="n">name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="nb">map</span><span class="p">(</span><span class="k">lambda</span> <span class="n">n</span><span class="p">:</span> <span class="n">n</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">table_schema_map</span><span class="p">[</span><span class="n">table_name</span><span class="p">])</span> <span class="k">else</span> <span class="nb">next</span><span class="p">(</span><span class="nb">filter</span><span class="p">(</span><span class="k">lambda</span> <span class="n">f</span><span class="p">:</span> <span class="n">f</span><span class="o">.</span><span class="n">name</span> <span class="o">==</span> <span class="n">x</span><span class="o">.</span><span class="n">name</span> <span class="p">,</span><span class="n">table_schema_map</span><span class="p">[</span><span class="n">table_name</span><span class="p">]))</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">df_schema</span><span class="p">])</span>
 
 <span class="k">def</span> <span class="nf">import_single_store</span><span class="p">(</span><span class="n">url</span><span class="p">,</span> <span class="n">table_name</span><span class="p">,</span> <span class="n">store_sk</span><span class="p">):</span> 

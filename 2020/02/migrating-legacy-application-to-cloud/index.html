@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="twitter:card" content="summary_large_image" /><!-- Begin Jekyll SEO tag v2.6.1 -->
 <title>Modernizing a legacy application | F5 - Squashing Bugs</title>
-<meta name="generator" content="Jekyll v4.0.0" />
+<meta name="generator" content="Jekyll v4.1.1" />
 <meta property="og:title" content="Modernizing a legacy application" />
 <meta name="author" content="Ankit Sinha" />
 <meta property="og:locale" content="en_US" />
@@ -17,20 +17,29 @@
 <meta property="og:type" content="article" />
 <meta property="article:published_time" content="2020-02-17T00:00:00-06:00" />
 <script type="application/ld+json">
-{"author":{"@type":"Person","name":"Ankit Sinha"},"description":"Migration approach for legacy WCF service into ASP.NET Core","@type":"BlogPosting","url":"https://ankitbko.github.io/blog/2020/02/migrating-legacy-application-to-cloud/","headline":"Modernizing a legacy application","dateModified":"2020-02-17T00:00:00-06:00","datePublished":"2020-02-17T00:00:00-06:00","mainEntityOfPage":{"@type":"WebPage","@id":"https://ankitbko.github.io/blog/2020/02/migrating-legacy-application-to-cloud/"},"@context":"https://schema.org"}</script>
+{"url":"https://ankitbko.github.io/blog/2020/02/migrating-legacy-application-to-cloud/","@type":"BlogPosting","headline":"Modernizing a legacy application","dateModified":"2020-02-17T00:00:00-06:00","datePublished":"2020-02-17T00:00:00-06:00","mainEntityOfPage":{"@type":"WebPage","@id":"https://ankitbko.github.io/blog/2020/02/migrating-legacy-application-to-cloud/"},"author":{"@type":"Person","name":"Ankit Sinha"},"description":"Migration approach for legacy WCF service into ASP.NET Core","@context":"https://schema.org"}</script>
 <!-- End Jekyll SEO tag -->
 <link rel="stylesheet" href="/blog/assets/css/style.css"><link type="application/atom+xml" rel="alternate" href="https://ankitbko.github.io/blog/feed.xml" title="F5 - Squashing Bugs" /><!-- the google_analytics_id gets auto inserted from the config file -->
 
 
 
-<script>(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)})(window,document,'script','//www.google-analytics.com/analytics.js','ga');ga('create','UA-75679348-1','auto');ga('require','displayfeatures');ga('send','pageview');</script>
+<!-- Global site tag (gtag.js) - Google Analytics -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=UA-75679348-1"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
 
-<link rel="shortcut icon" type="image/x-icon" href="/blog/images/favicon.ico"><link href="https://unpkg.com/@primer/css/dist/primer.css" rel="stylesheet" />
-<link rel="stylesheet" href="//use.fontawesome.com/releases/v5.0.7/css/all.css">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.11.1/dist/katex.min.css" integrity="sha384-zB1R0rpPzHqg7Kpt0Aljp8JPLqbXI3bhnPWROx27a9N0Ll6ZP/+DiW/UqRcLbRjq" crossorigin="anonymous">
-    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML"> </script>
-    <script src="https://cdn.jsdelivr.net/npm/katex@0.11.1/dist/katex.min.js" integrity="sha384-y23I5Q6l+B6vatafAwxRu/0oK/79VlbSz7Q9aiSZUvyWYIYsd+qj+o24G5ZU2zJz" crossorigin="anonymous"></script>
-    <script src="https://cdn.jsdelivr.net/npm/katex@0.11.1/dist/contrib/auto-render.min.js" integrity="sha384-kWPLUVMOks5AQFrykwIup5lo0m3iMkkHrD0uJ4H5cjeGihAutqP0yW0J6dpFiVkI" crossorigin="anonymous"></script>
+  gtag('config', 'UA-75679348-1');
+</script>
+
+
+<link rel="shortcut icon" type="image/x-icon" href="/blog/images/favicon.ico"><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/Primer/15.2.0/primer.css" integrity="sha512-xTz2ys4coGAOz8vuV1NcQBkgVmKhsSEtjbqyMJbBHRplFuvKIUo6xhLHpAyPt9mfR6twHJgn9OgVLuqOvjeBhg==" crossorigin="anonymous" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.14.0/css/all.min.css" integrity="sha512-1PKOgIY59xJ8Co8+NE6FZ+LOAZKjy+KY8iq0G4B3CyeY6wYHN3yt9PW0XpSriVlkMXe40PTKnXrLnZ9+fkDaog==" crossorigin="anonymous" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.12.0/katex.min.css" integrity="sha512-h7nl+xz8wgDlNM4NqKEM4F1NkIRS17M9+uJwIGwuo8vGqIl4BhuCKdxjWEINm+xyrUjNCnK5dCrhM0sj+wTIXw==" crossorigin="anonymous" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.12.0/katex.min.js" integrity="sha512-/CMIhXiDA3m2c9kzRyd97MTb3MC6OVnx4TElQ7fkkoRghwDf6gi41gaT1PwF270W6+J60uTmwgeRpNpJdRV6sg==" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.12.0/contrib/auto-render.min.js" integrity="sha512-Do7uJAaHZm5OLrIv/yN4w0iG1dbu01kzdMNnFfu/mAqgUk6Nniv2JYHcwH+cNwjqgLcqcuBBk+JRvprLVI8azg==" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js" integrity="sha512-0doc9hKxR3PYwso42RD1p5ySZpzzuDiOwMrdCEh2WdJZCjcmFKc/wEnL+z8fBQrnHoiNWbo+3fiGkOYXBdQp4A==" crossorigin="anonymous"></script>
     <script>
     document.addEventListener("DOMContentLoaded", function() {
         renderMathInElement( document.body, {
@@ -154,7 +163,7 @@ window.onload = wrap_img;
 
 <ol>
   <li>
-    <p><strong>Investigation phase <em>(Top-Down)</em></strong>: Start out with the outermost layer of the application and drill down into inner layers to understand the <em>flow</em>. Most of the legacy application follow typical <em>N layer</em> design i.e view/service layer, business logic layer followed by data access layer. In this scenario outermost layer is view* or <em>service</em> layer and innermost is data access/repository layer. Our objective here is to have the understanding of how the application is structured and find out all the dependencies of a function. For example if there is a function <code class="highlighter-rouge">Foo</code> in outer layer, we need to find is what all dependencies/functions that needs to be migrated before we can migrate <code class="highlighter-rouge">Foo</code>. In this way we end up creating a mental map or a tree of dependencies of every function.</p>
+    <p><strong>Investigation phase <em>(Top-Down)</em></strong>: Start out with the outermost layer of the application and drill down into inner layers to understand the <em>flow</em>. Most of the legacy application follow typical <em>N layer</em> design i.e view/service layer, business logic layer followed by data access layer. In this scenario outermost layer is view* or <em>service</em> layer and innermost is data access/repository layer. Our objective here is to have the understanding of how the application is structured and find out all the dependencies of a function. For example if there is a function <code class="language-plaintext highlighter-rouge">Foo</code> in outer layer, we need to find is what all dependencies/functions that needs to be migrated before we can migrate <code class="language-plaintext highlighter-rouge">Foo</code>. In this way we end up creating a mental map or a tree of dependencies of every function.</p>
   </li>
   <li>
     <p><strong>Execution phase <em>(Bottom-Up)</em></strong>: Once we have the dependency tree mapped out, we start migrating the innermost dependency (leaf node in dependency tree) and work our way upwards. Actual migration steps will depend upon what is the target technology and the extent of rework required to make the existing code work.</p>
@@ -171,9 +180,9 @@ window.onload = wrap_img;
 
 <h4 id="setup">Setup</h4>
 
-<p>I am using Visual Studio 2019 16.4.4 version for this migration. Run the <code class="highlighter-rouge">Northwind.sql</code> script and create the database in SQL Server. You can use SQL Server express for this. Then edit the <code class="highlighter-rouge">Web.config</code> file in <code class="highlighter-rouge">GH.Northwind.Business.Host</code> project and edit the connection string as required.</p>
+<p>I am using Visual Studio 2019 16.4.4 version for this migration. Run the <code class="language-plaintext highlighter-rouge">Northwind.sql</code> script and create the database in SQL Server. You can use SQL Server express for this. Then edit the <code class="language-plaintext highlighter-rouge">Web.config</code> file in <code class="language-plaintext highlighter-rouge">GH.Northwind.Business.Host</code> project and edit the connection string as required.</p>
 
-<p>Thats it, try starting the Host project and it should launch the WCF service. Navigate to <code class="highlighter-rouge">/northwindSvr.svc/GetCustomers</code> and you should get back a JSON response.</p>
+<p>Thats it, try starting the Host project and it should launch the WCF service. Navigate to <code class="language-plaintext highlighter-rouge">/northwindSvr.svc/GetCustomers</code> and you should get back a JSON response.</p>
 
 <p>We will be targeting .NET Core 3.0 so download it from <a href="https://dotnet.microsoft.com/download">here</a>.</p>
 
@@ -189,19 +198,19 @@ window.onload = wrap_img;
 
 <p><img src="/blog/assets/images/posts/migration/pasummary.png" alt="Portability Summary" /></p>
 
-<p>Going into Details tab we see what <em>type</em> used in current application is not supported. You would notice most of the unsupported type are either from <code class="highlighter-rouge">System.Data</code> or <code class="highlighter-rouge">System.ServiceModel</code> namespace. <code class="highlighter-rouge">System.Data</code> namespace corresponds to EntityFramework 4 while <code class="highlighter-rouge">System.ServiceModel</code> is used by WCF. With EntityFramework there has been significant changes that we will get to shortly. Meanwhile we would be completely dropping the WCF and its associated types.</p>
+<p>Going into Details tab we see what <em>type</em> used in current application is not supported. You would notice most of the unsupported type are either from <code class="language-plaintext highlighter-rouge">System.Data</code> or <code class="language-plaintext highlighter-rouge">System.ServiceModel</code> namespace. <code class="language-plaintext highlighter-rouge">System.Data</code> namespace corresponds to EntityFramework 4 while <code class="language-plaintext highlighter-rouge">System.ServiceModel</code> is used by WCF. With EntityFramework there has been significant changes that we will get to shortly. Meanwhile we would be completely dropping the WCF and its associated types.</p>
 
 <p><img src="/blog/assets/images/posts/migration/padetail.png" alt="Portability Details" /></p>
 
 <h3 id="investigation-phase">Investigation Phase</h3>
 
-<p>Here we will broaden our understanding of the the <code class="highlighter-rouge">GetCustomer</code> use case and find out all the dependencies of this flow. Delving into the code we see that WCF contracts are defined in <code class="highlighter-rouge">GH.Northwind.Business.Interfaces</code> and implemented in <code class="highlighter-rouge">GH.Northwind.Business</code> class library. Meanwhile <code class="highlighter-rouge">GH.Northwind.Business.Host</code> acts as our hosting project. A single ASP.NET Core project may replace these three projects.</p>
+<p>Here we will broaden our understanding of the the <code class="language-plaintext highlighter-rouge">GetCustomer</code> use case and find out all the dependencies of this flow. Delving into the code we see that WCF contracts are defined in <code class="language-plaintext highlighter-rouge">GH.Northwind.Business.Interfaces</code> and implemented in <code class="language-plaintext highlighter-rouge">GH.Northwind.Business</code> class library. Meanwhile <code class="language-plaintext highlighter-rouge">GH.Northwind.Business.Host</code> acts as our hosting project. A single ASP.NET Core project may replace these three projects.</p>
 
-<p><code class="highlighter-rouge">NorthwindSvr.cs</code> in <code class="highlighter-rouge">GH.Northwind.Business</code> contains the service implementation. Its <code class="highlighter-rouge">static</code> constructor immediately catches our attention which sets up a Service Locater for dependency injection. It also does some AutoMapper configuration.</p>
+<p><code class="language-plaintext highlighter-rouge">NorthwindSvr.cs</code> in <code class="language-plaintext highlighter-rouge">GH.Northwind.Business</code> contains the service implementation. Its <code class="language-plaintext highlighter-rouge">static</code> constructor immediately catches our attention which sets up a Service Locater for dependency injection. It also does some AutoMapper configuration.</p>
 
-<p>We are interested in <code class="highlighter-rouge">public List&lt;CustomerDto&gt; GetCustomers()</code> method which returns list of <code class="highlighter-rouge">CustomerDto</code>. This method calls a static method <code class="highlighter-rouge">PersistSvr.GetAll</code> and maps the result using AutoMapper. Going into aforementioned method we see it resolves the type <code class="highlighter-rouge">IPersistence&lt;T&gt;</code> from the Service Locater and calls its <code class="highlighter-rouge">GetAll</code> method. Looking at the registration we find there is a <code class="highlighter-rouge">CustomerPrst</code> class which derives from <code class="highlighter-rouge">PersistenceBase&lt;T&gt;</code> base class which hosts our <code class="highlighter-rouge">GetAll</code> method. This seems like an implementation of a repository pattern. <code class="highlighter-rouge">PersistenceBase&lt;T&gt;</code> contains a static property of type <code class="highlighter-rouge">DbContext</code> which is used for database operation. The context itself is created in WCF contract static constructor using connection string read from Web.config.</p>
+<p>We are interested in <code class="language-plaintext highlighter-rouge">public List&lt;CustomerDto&gt; GetCustomers()</code> method which returns list of <code class="language-plaintext highlighter-rouge">CustomerDto</code>. This method calls a static method <code class="language-plaintext highlighter-rouge">PersistSvr.GetAll</code> and maps the result using AutoMapper. Going into aforementioned method we see it resolves the type <code class="language-plaintext highlighter-rouge">IPersistence&lt;T&gt;</code> from the Service Locater and calls its <code class="language-plaintext highlighter-rouge">GetAll</code> method. Looking at the registration we find there is a <code class="language-plaintext highlighter-rouge">CustomerPrst</code> class which derives from <code class="language-plaintext highlighter-rouge">PersistenceBase&lt;T&gt;</code> base class which hosts our <code class="language-plaintext highlighter-rouge">GetAll</code> method. This seems like an implementation of a repository pattern. <code class="language-plaintext highlighter-rouge">PersistenceBase&lt;T&gt;</code> contains a static property of type <code class="language-plaintext highlighter-rouge">DbContext</code> which is used for database operation. The context itself is created in WCF contract static constructor using connection string read from Web.config.</p>
 
-<p>This essentially completes our investigation phase and we now have understanding of the application. The flow is <code class="highlighter-rouge">NorthwindSvr -&gt; PersistSvr -&gt; CustomerPrst -&gt; PersistenceBase</code>. We need to start migrating functions in reverse order.</p>
+<p>This essentially completes our investigation phase and we now have understanding of the application. The flow is <code class="language-plaintext highlighter-rouge">NorthwindSvr -&gt; PersistSvr -&gt; CustomerPrst -&gt; PersistenceBase</code>. We need to start migrating functions in reverse order.</p>
 
 <h3 id="execution-phase">Execution Phase</h3>
 
@@ -211,11 +220,11 @@ window.onload = wrap_img;
 
 <p>The current project uses Entity Framework 4 which does not support .NET Standard. We have two options - either go with EF Core or EF6.4. What we would want to use will depend primarily upon the features that we need. <a href="https://docs.microsoft.com/en-us/ef/efcore-and-ef6/">EF Docs</a> contains helpful feature comparison between EF Core and EF6.4. In our scenario both of them would work so we would go ahead with EF Core which has slightly better tooling support at the moment.</p>
 
-<p>We start with creating a new .NET Standard class project named <code class="highlighter-rouge">Modern.NW.Persistence</code> and target .NET Standard 2.0. EF Core does not support database first approach and <em>.edmx</em>. EricEJ’s <a href="https://marketplace.visualstudio.com/items?itemName=ErikEJ.EFCorePowerTools">EF Core Power Tools</a> is useful tool to scaffold the context and entities. Once installed, right-click on the project -&gt; EF Core Power Tools -&gt; Reverse Engineer. Select the database and make sure “<em>Use EF Core 3.x</em>” checkbox is ticked. Select same tables that are in our <em>edmx</em> file. In the next screen you can change the context name and folder location of generated classes. Select the options as required and click “OK”.</p>
+<p>We start with creating a new .NET Standard class project named <code class="language-plaintext highlighter-rouge">Modern.NW.Persistence</code> and target .NET Standard 2.0. EF Core does not support database first approach and <em>.edmx</em>. EricEJ’s <a href="https://marketplace.visualstudio.com/items?itemName=ErikEJ.EFCorePowerTools">EF Core Power Tools</a> is useful tool to scaffold the context and entities. Once installed, right-click on the project -&gt; EF Core Power Tools -&gt; Reverse Engineer. Select the database and make sure “<em>Use EF Core 3.x</em>” checkbox is ticked. Select same tables that are in our <em>edmx</em> file. In the next screen you can change the context name and folder location of generated classes. Select the options as required and click “OK”.</p>
 
 <p><img src="/blog/assets/images/posts/migration/efpowertool.png" alt="EF Core Power Tools" /></p>
 
-<p>We want to maintain the existing design and structure as much as possible so we keep the repository pattern implementation same. Based on your project you may decide to change this implementation or even redesign this layer. We start by copy pasting the <code class="highlighter-rouge">IPersistence.cs</code> and <code class="highlighter-rouge">PersistenceBase.cs</code> from old solution to new solution. We no longer need <code class="highlighter-rouge">BusinessEntityBase</code> that derives from <code class="highlighter-rouge">IValidatableObject</code> as validation should happen at a layer above and not in the repository. In <code class="highlighter-rouge">PersistenceBase</code> we convert static properties to instance properties and inject them through the constructor. This means even the <code class="highlighter-rouge">DbContext</code> is injected. We will manage the lifetime of the <code class="highlighter-rouge">DbContext</code> from outer layer and set it to <em>per request</em> as recommended by EF. In .NET Core we want to use dependency injection at all possible place. Next port the <code class="highlighter-rouge">CustomerPrst</code> class which derives from <code class="highlighter-rouge">PersistenceBase</code> and constructor inject the parameters required by its base class.</p>
+<p>We want to maintain the existing design and structure as much as possible so we keep the repository pattern implementation same. Based on your project you may decide to change this implementation or even redesign this layer. We start by copy pasting the <code class="language-plaintext highlighter-rouge">IPersistence.cs</code> and <code class="language-plaintext highlighter-rouge">PersistenceBase.cs</code> from old solution to new solution. We no longer need <code class="language-plaintext highlighter-rouge">BusinessEntityBase</code> that derives from <code class="language-plaintext highlighter-rouge">IValidatableObject</code> as validation should happen at a layer above and not in the repository. In <code class="language-plaintext highlighter-rouge">PersistenceBase</code> we convert static properties to instance properties and inject them through the constructor. This means even the <code class="language-plaintext highlighter-rouge">DbContext</code> is injected. We will manage the lifetime of the <code class="language-plaintext highlighter-rouge">DbContext</code> from outer layer and set it to <em>per request</em> as recommended by EF. In .NET Core we want to use dependency injection at all possible place. Next port the <code class="language-plaintext highlighter-rouge">CustomerPrst</code> class which derives from <code class="language-plaintext highlighter-rouge">PersistenceBase</code> and constructor inject the parameters required by its base class.</p>
 
 <p>One of the major changes that is present is .NET Framework 4.5+ is the Task Parallel Library. TPL allows us to asynchronously execute the code and wait for it without blocking the thread. This means our request thread will not be blocked for the duration of database call and will be available to serve other requests. Entity Framework exposes an <em>async</em> version of most of its methods which must be awaited by the caller. <strong>If there exist an <em>async</em> alternative of a method then use it.</strong> Go over the repository and replace the EF calls with it’s <em>async</em> counterpart. This will have overarching changes as all such methods must be changed to async and return Task. This change will bubble up across the application as signature of all the methods in the method chain will need to be changed. Even though this change will be big, it will result in massive performance gain by our application.</p>
 
@@ -225,7 +234,7 @@ window.onload = wrap_img;
 
 <p>We start by creating a ASP.NET Core 3.0 Web API project and referencing our persistence project. So as to not make this blog post about ASP.NET Core 3 tutorial, I will skip the basics and assume you are already familiar with it. Everything that you would need to know is available in <a href="https://docs.microsoft.com/en-us/aspnet/core/?view=aspnetcore-3.1">official documentation</a>. Install <em>AutoMapper</em> and <em>AutoMapper.Extensions.Microsoft.DependencyInjection</em> nuget packages</p>
 
-<p>If we were to mimic the WCF service we will end up having a single controller containing all the actions. Instead we may want to refactor and modularize the API and create a proper RESTful APIs. So lets start with creating a <code class="highlighter-rouge">Customer</code> controller. We no longer need <code class="highlighter-rouge">PersistSvr</code> class to resolve the dependency from service locater. We implement inversion of control through dependency injection and ASP.NET Core comes with DI inbuilt. So we inject the <code class="highlighter-rouge">IPersistence</code> in our controller through constructor to use it to get the customers.</p>
+<p>If we were to mimic the WCF service we will end up having a single controller containing all the actions. Instead we may want to refactor and modularize the API and create a proper RESTful APIs. So lets start with creating a <code class="language-plaintext highlighter-rouge">Customer</code> controller. We no longer need <code class="language-plaintext highlighter-rouge">PersistSvr</code> class to resolve the dependency from service locater. We implement inversion of control through dependency injection and ASP.NET Core comes with DI inbuilt. So we inject the <code class="language-plaintext highlighter-rouge">IPersistence</code> in our controller through constructor to use it to get the customers.</p>
 
 <div class="language-csharp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">private</span> <span class="k">readonly</span> <span class="n">IPersistence</span><span class="p">&lt;</span><span class="n">Customer</span><span class="p">&gt;</span> <span class="n">repository</span><span class="p">;</span>
 <span class="k">private</span> <span class="k">readonly</span> <span class="n">IMapper</span> <span class="n">mapper</span><span class="p">;</span>
@@ -242,9 +251,9 @@ window.onload = wrap_img;
 <span class="p">}</span>
 </code></pre></div></div>
 
-<p>We will need to migrate the data contracts from existing application which were used return the result from WCF. Since they are just POCO classes just copy pasting them would work. They are present in DTO folder in <code class="highlighter-rouge">GH.Northwind.Business.Interfaces</code>. We move them to a new folder called Models in our ASP.NET Core Web API project. Remove all the <code class="highlighter-rouge">DataContract</code> and <code class="highlighter-rouge">DataMember</code> attributes as we no longer need them.</p>
+<p>We will need to migrate the data contracts from existing application which were used return the result from WCF. Since they are just POCO classes just copy pasting them would work. They are present in DTO folder in <code class="language-plaintext highlighter-rouge">GH.Northwind.Business.Interfaces</code>. We move them to a new folder called Models in our ASP.NET Core Web API project. Remove all the <code class="language-plaintext highlighter-rouge">DataContract</code> and <code class="language-plaintext highlighter-rouge">DataMember</code> attributes as we no longer need them.</p>
 
-<p>We create a <code class="highlighter-rouge">Get</code> action method that returns <code class="highlighter-rouge">Task&lt;ActionResult&lt;IEnumerable&lt;CustomerDto&gt;&gt;&gt;</code> and call our repository from there.</p>
+<p>We create a <code class="language-plaintext highlighter-rouge">Get</code> action method that returns <code class="language-plaintext highlighter-rouge">Task&lt;ActionResult&lt;IEnumerable&lt;CustomerDto&gt;&gt;&gt;</code> and call our repository from there.</p>
 
 <div class="language-csharp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="p">[</span><span class="n">HttpGet</span><span class="p">]</span>
 <span class="k">public</span> <span class="k">async</span> <span class="n">Task</span><span class="p">&lt;</span><span class="n">ActionResult</span><span class="p">&lt;</span><span class="n">IEnumerable</span><span class="p">&lt;</span><span class="n">CustomerDto</span><span class="p">&gt;&gt;&gt;</span> <span class="nf">Get</span><span class="p">()</span>
@@ -262,7 +271,7 @@ window.onload = wrap_img;
 <span class="p">}</span>
 </code></pre></div></div>
 
-<p>Its time to setup the DI container. Open <code class="highlighter-rouge">Startup.cs</code> and configure <code class="highlighter-rouge">DbContext</code>, container and AutoMapper in <code class="highlighter-rouge">ConfigureServices</code> method.</p>
+<p>Its time to setup the DI container. Open <code class="language-plaintext highlighter-rouge">Startup.cs</code> and configure <code class="language-plaintext highlighter-rouge">DbContext</code>, container and AutoMapper in <code class="language-plaintext highlighter-rouge">ConfigureServices</code> method.</p>
 
 <div class="language-csharp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">public</span> <span class="k">void</span> <span class="nf">ConfigureServices</span><span class="p">(</span><span class="n">IServiceCollection</span> <span class="n">services</span><span class="p">)</span>
 <span class="p">{</span>
@@ -289,7 +298,7 @@ window.onload = wrap_img;
 </span><span class="p">}</span><span class="w">
 </span></code></pre></div></div>
 
-<p>Run the API project and navigate to <code class="highlighter-rouge">/api/customer</code> and you should get the response back. You could <a href="https://docs.microsoft.com/en-us/azure/azure-monitor/app/asp-net-core">add Application Insights</a> for monitoring by right clicking on the API project and Add -&gt; Application Insights Telemetry. This would enable the logs to flow into application insights without any additional code changes.</p>
+<p>Run the API project and navigate to <code class="language-plaintext highlighter-rouge">/api/customer</code> and you should get the response back. You could <a href="https://docs.microsoft.com/en-us/azure/azure-monitor/app/asp-net-core">add Application Insights</a> for monitoring by right clicking on the API project and Add -&gt; Application Insights Telemetry. This would enable the logs to flow into application insights without any additional code changes.</p>
 
 <p>It is time to migrate any test cases for this use case. The approach for test case migration will be similar. Once migrated ensure all the test cases pass and the output from the legacy system and the modernized application match each other.</p>
 

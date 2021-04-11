@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="twitter:card" content="summary_large_image" /><!-- Begin Jekyll SEO tag v2.6.1 -->
 <title>Skype for Business bot using UCWA | F5 - Squashing Bugs</title>
-<meta name="generator" content="Jekyll v4.0.0" />
+<meta name="generator" content="Jekyll v4.1.1" />
 <meta property="og:title" content="Skype for Business bot using UCWA" />
 <meta name="author" content="Ankit Sinha" />
 <meta property="og:locale" content="en_US" />
@@ -17,20 +17,29 @@
 <meta property="og:type" content="article" />
 <meta property="article:published_time" content="2017-02-26T00:00:00-06:00" />
 <script type="application/ld+json">
-{"author":{"@type":"Person","name":"Ankit Sinha"},"description":"Chatbot for Skype for business online using UCWA","@type":"BlogPosting","url":"https://ankitbko.github.io/blog/2017/02/Sykpe-For-Business-Bot-Using-UCWA/","headline":"Skype for Business bot using UCWA","dateModified":"2017-02-26T00:00:00-06:00","datePublished":"2017-02-26T00:00:00-06:00","mainEntityOfPage":{"@type":"WebPage","@id":"https://ankitbko.github.io/blog/2017/02/Sykpe-For-Business-Bot-Using-UCWA/"},"@context":"https://schema.org"}</script>
+{"url":"https://ankitbko.github.io/blog/2017/02/Sykpe-For-Business-Bot-Using-UCWA/","@type":"BlogPosting","headline":"Skype for Business bot using UCWA","dateModified":"2017-02-26T00:00:00-06:00","datePublished":"2017-02-26T00:00:00-06:00","mainEntityOfPage":{"@type":"WebPage","@id":"https://ankitbko.github.io/blog/2017/02/Sykpe-For-Business-Bot-Using-UCWA/"},"author":{"@type":"Person","name":"Ankit Sinha"},"description":"Chatbot for Skype for business online using UCWA","@context":"https://schema.org"}</script>
 <!-- End Jekyll SEO tag -->
 <link rel="stylesheet" href="/blog/assets/css/style.css"><link type="application/atom+xml" rel="alternate" href="https://ankitbko.github.io/blog/feed.xml" title="F5 - Squashing Bugs" /><!-- the google_analytics_id gets auto inserted from the config file -->
 
 
 
-<script>(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)})(window,document,'script','//www.google-analytics.com/analytics.js','ga');ga('create','UA-75679348-1','auto');ga('require','displayfeatures');ga('send','pageview');</script>
+<!-- Global site tag (gtag.js) - Google Analytics -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=UA-75679348-1"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
 
-<link rel="shortcut icon" type="image/x-icon" href="/blog/images/favicon.ico"><link href="https://unpkg.com/@primer/css/dist/primer.css" rel="stylesheet" />
-<link rel="stylesheet" href="//use.fontawesome.com/releases/v5.0.7/css/all.css">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.11.1/dist/katex.min.css" integrity="sha384-zB1R0rpPzHqg7Kpt0Aljp8JPLqbXI3bhnPWROx27a9N0Ll6ZP/+DiW/UqRcLbRjq" crossorigin="anonymous">
-    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML"> </script>
-    <script src="https://cdn.jsdelivr.net/npm/katex@0.11.1/dist/katex.min.js" integrity="sha384-y23I5Q6l+B6vatafAwxRu/0oK/79VlbSz7Q9aiSZUvyWYIYsd+qj+o24G5ZU2zJz" crossorigin="anonymous"></script>
-    <script src="https://cdn.jsdelivr.net/npm/katex@0.11.1/dist/contrib/auto-render.min.js" integrity="sha384-kWPLUVMOks5AQFrykwIup5lo0m3iMkkHrD0uJ4H5cjeGihAutqP0yW0J6dpFiVkI" crossorigin="anonymous"></script>
+  gtag('config', 'UA-75679348-1');
+</script>
+
+
+<link rel="shortcut icon" type="image/x-icon" href="/blog/images/favicon.ico"><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/Primer/15.2.0/primer.css" integrity="sha512-xTz2ys4coGAOz8vuV1NcQBkgVmKhsSEtjbqyMJbBHRplFuvKIUo6xhLHpAyPt9mfR6twHJgn9OgVLuqOvjeBhg==" crossorigin="anonymous" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.14.0/css/all.min.css" integrity="sha512-1PKOgIY59xJ8Co8+NE6FZ+LOAZKjy+KY8iq0G4B3CyeY6wYHN3yt9PW0XpSriVlkMXe40PTKnXrLnZ9+fkDaog==" crossorigin="anonymous" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.12.0/katex.min.css" integrity="sha512-h7nl+xz8wgDlNM4NqKEM4F1NkIRS17M9+uJwIGwuo8vGqIl4BhuCKdxjWEINm+xyrUjNCnK5dCrhM0sj+wTIXw==" crossorigin="anonymous" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.12.0/katex.min.js" integrity="sha512-/CMIhXiDA3m2c9kzRyd97MTb3MC6OVnx4TElQ7fkkoRghwDf6gi41gaT1PwF270W6+J60uTmwgeRpNpJdRV6sg==" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.12.0/contrib/auto-render.min.js" integrity="sha512-Do7uJAaHZm5OLrIv/yN4w0iG1dbu01kzdMNnFfu/mAqgUk6Nniv2JYHcwH+cNwjqgLcqcuBBk+JRvprLVI8azg==" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js" integrity="sha512-0doc9hKxR3PYwso42RD1p5ySZpzzuDiOwMrdCEh2WdJZCjcmFKc/wEnL+z8fBQrnHoiNWbo+3fiGkOYXBdQp4A==" crossorigin="anonymous"></script>
     <script>
     document.addEventListener("DOMContentLoaded", function() {
         renderMathInElement( document.body, {
@@ -159,15 +168,15 @@ window.onload = wrap_img;
 
 <p>Once you have these things ready, the next step is to create an <em>application</em> in Azure Active Directory. I recommend you follow Tam Huynh’s excellent <a href="https://github.com/tamhinsf/ucwa-sfbo-console/blob/master/README.md">guide</a>.</p>
 
-<p>Once you have the app in azure AD properly setup, keep <code class="highlighter-rouge">TenantID</code>, app’s <code class="highlighter-rouge">ClientID</code> and app’s <code class="highlighter-rouge">RedirectURI</code> handy as we would need them in the code.</p>
+<p>Once you have the app in azure AD properly setup, keep <code class="language-plaintext highlighter-rouge">TenantID</code>, app’s <code class="language-plaintext highlighter-rouge">ClientID</code> and app’s <code class="language-plaintext highlighter-rouge">RedirectURI</code> handy as we would need them in the code.</p>
 
 <h3 id="understanding-the-solution-structure">Understanding the solution structure</h3>
 
 <p>The code itself is just a <em>Console Application</em>. The solution contains 4 folders:</p>
 
 <ul>
-  <li>The <strong>Bot</strong> folder contains the <code class="highlighter-rouge">Dialog</code> class and an implementation of <code class="highlighter-rouge">IBotToUser</code>. All these classes are related to Bot Framework. I have used <code class="highlighter-rouge">EchoDialog</code> from the bot framework sample which echoes back the initial message with a count.</li>
-  <li><strong>UcwaSfbo</strong> folder mostly contains classes as it is from Tam Huynh’s sample except for <code class="highlighter-rouge">UcwaReciveMessage.cs</code> and <code class="highlighter-rouge">UcwaSendMessage.cs</code>. As name suggests, these two classes are used to receive and send messages to SFB.</li>
+  <li>The <strong>Bot</strong> folder contains the <code class="language-plaintext highlighter-rouge">Dialog</code> class and an implementation of <code class="language-plaintext highlighter-rouge">IBotToUser</code>. All these classes are related to Bot Framework. I have used <code class="language-plaintext highlighter-rouge">EchoDialog</code> from the bot framework sample which echoes back the initial message with a count.</li>
+  <li><strong>UcwaSfbo</strong> folder mostly contains classes as it is from Tam Huynh’s sample except for <code class="language-plaintext highlighter-rouge">UcwaReciveMessage.cs</code> and <code class="language-plaintext highlighter-rouge">UcwaSendMessage.cs</code>. As name suggests, these two classes are used to receive and send messages to SFB.</li>
   <li><strong>Utilities.cs</strong> contains some some convenience methods.</li>
   <li><strong>Data</strong> folder contains auto generated classes that represents UCWA JSON responses.</li>
 </ul>
@@ -176,20 +185,20 @@ window.onload = wrap_img;
 
 <h4 id="code-smell">Code Smell</h4>
 
-<p><strong>Data</strong> folder is a mess. All these classes were auto-generated based on responses from UCWA APIs. Therefore there are lot of duplicate classes. I tried to clean up some of it but couldn’t get time to see it through. <code class="highlighter-rouge">UcwaReciveMessage.cs</code> and <code class="highlighter-rouge">UcwaSendMessage.cs</code> are also not very well written. It was hastily written as a first attempt to get a PoC on UCWA. Once you get the understanding of what is happening, I would suggest you rewrite them for your own applications.</p>
+<p><strong>Data</strong> folder is a mess. All these classes were auto-generated based on responses from UCWA APIs. Therefore there are lot of duplicate classes. I tried to clean up some of it but couldn’t get time to see it through. <code class="language-plaintext highlighter-rouge">UcwaReciveMessage.cs</code> and <code class="language-plaintext highlighter-rouge">UcwaSendMessage.cs</code> are also not very well written. It was hastily written as a first attempt to get a PoC on UCWA. Once you get the understanding of what is happening, I would suggest you rewrite them for your own applications.</p>
 
 <h3 id="setting-up-the-code">Setting up the code</h3>
-<p>Open <code class="highlighter-rouge">Program.cs</code> and you would see some <code class="highlighter-rouge">static strings</code>. Replace the values of <code class="highlighter-rouge">tenantId</code>, <code class="highlighter-rouge">clientId</code> and <code class="highlighter-rouge">redirectUri</code> to what you copied before. <code class="highlighter-rouge">hardcodedUsername</code> and <code class="highlighter-rouge">hardcodedPassword</code> are credentials for the user that you would want the bot to sign in as. If you don’t want to hardcode the credentials, that is fine too as we will see later. <code class="highlighter-rouge">destinationAddress</code> is not used so you could leave it as it is.</p>
+<p>Open <code class="language-plaintext highlighter-rouge">Program.cs</code> and you would see some <code class="language-plaintext highlighter-rouge">static strings</code>. Replace the values of <code class="language-plaintext highlighter-rouge">tenantId</code>, <code class="language-plaintext highlighter-rouge">clientId</code> and <code class="language-plaintext highlighter-rouge">redirectUri</code> to what you copied before. <code class="language-plaintext highlighter-rouge">hardcodedUsername</code> and <code class="language-plaintext highlighter-rouge">hardcodedPassword</code> are credentials for the user that you would want the bot to sign in as. If you don’t want to hardcode the credentials, that is fine too as we will see later. <code class="language-plaintext highlighter-rouge">destinationAddress</code> is not used so you could leave it as it is.</p>
 
-<p>Go to <code class="highlighter-rouge">App.config</code> and enter a valid <code class="highlighter-rouge">MicrosoftAppId</code> and <code class="highlighter-rouge">MicrosoftAppPassword</code> for an existing registration of bot in bot framework portal. It is required as we would be using Bot State Service to store the conversation state.</p>
+<p>Go to <code class="language-plaintext highlighter-rouge">App.config</code> and enter a valid <code class="language-plaintext highlighter-rouge">MicrosoftAppId</code> and <code class="language-plaintext highlighter-rouge">MicrosoftAppPassword</code> for an existing registration of bot in bot framework portal. It is required as we would be using Bot State Service to store the conversation state.</p>
 
-<p>Once done run the sample and you would be greeted by a console message to choose a login style. <strong>If you are running the project for first time after creating the AD app, choose <code class="highlighter-rouge">dialog</code> option.</strong> This is needed as you would be asked to provide some consent, which requires a web page so <code class="highlighter-rouge">console</code> login doesn’t work. This only needs to be done once. Next time you could just use <code class="highlighter-rouge">console</code> option and bot would sign in using hardcoded credentials which we defined before. If you don’t want to hardcode, your only choice to proceed is through <code class="highlighter-rouge">dialog</code> option.</p>
+<p>Once done run the sample and you would be greeted by a console message to choose a login style. <strong>If you are running the project for first time after creating the AD app, choose <code class="language-plaintext highlighter-rouge">dialog</code> option.</strong> This is needed as you would be asked to provide some consent, which requires a web page so <code class="language-plaintext highlighter-rouge">console</code> login doesn’t work. This only needs to be done once. Next time you could just use <code class="language-plaintext highlighter-rouge">console</code> option and bot would sign in using hardcoded credentials which we defined before. If you don’t want to hardcode, your only choice to proceed is through <code class="language-plaintext highlighter-rouge">dialog</code> option.</p>
 
 <p>If the program started successfully you would see json responses in the console. Login to Skype for Business as the other user and send the message to the bot. The bot should echo back what you typed. Great!! Our bot is working as expected.</p>
 
 <h3 id="under-the-hood">Under the hood</h3>
 
-<p>Once the bot signs in using the credentials provided, it polls the UCWA for incoming messages. As mentioned before, you need to send series of requests to UCWA in specific order for this to work. All this is handled in <code class="highlighter-rouge">UcwaReciveMessage.cs</code> class. When you send a message to the bot, the message is actually received in <code class="highlighter-rouge">GetIM_Step03_Events</code> method. Once I get the message I create the <code class="highlighter-rouge">Activity</code> object with minimum information required.</p>
+<p>Once the bot signs in using the credentials provided, it polls the UCWA for incoming messages. As mentioned before, you need to send series of requests to UCWA in specific order for this to work. All this is handled in <code class="language-plaintext highlighter-rouge">UcwaReciveMessage.cs</code> class. When you send a message to the bot, the message is actually received in <code class="language-plaintext highlighter-rouge">GetIM_Step03_Events</code> method. Once I get the message I create the <code class="language-plaintext highlighter-rouge">Activity</code> object with minimum information required.</p>
 
 <div class="language-csharp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kt">string</span> <span class="n">SendMessageUrl</span> <span class="p">=</span> <span class="n">item1</span><span class="p">.</span><span class="n">_embedded</span><span class="p">.</span><span class="n">message</span><span class="p">.</span><span class="n">_links</span><span class="p">.</span><span class="n">messaging</span><span class="p">.</span><span class="n">href</span><span class="p">;</span>
 <span class="kt">var</span> <span class="n">conversationId</span> <span class="p">=</span> <span class="n">item</span><span class="p">.</span><span class="n">href</span><span class="p">.</span><span class="nf">Split</span><span class="p">(</span><span class="sc">'/'</span><span class="p">).</span><span class="nf">Last</span><span class="p">();</span>
@@ -208,9 +217,9 @@ window.onload = wrap_img;
 <span class="n">activity</span><span class="p">.</span><span class="n">Text</span> <span class="p">=</span> <span class="n">message</span><span class="p">;</span>
 </code></pre></div></div>
 
-<p>The <code class="highlighter-rouge">conversationId</code> and <code class="highlighter-rouge">fromId</code> are extracted from the JSON response. These are required as the conversation state are stored using these key. <code class="highlighter-rouge">SendMessageUrl</code> is required to reply to user. We store it in the <code class="highlighter-rouge">ChannelData</code> property of <code class="highlighter-rouge">Activity</code>.</p>
+<p>The <code class="language-plaintext highlighter-rouge">conversationId</code> and <code class="language-plaintext highlighter-rouge">fromId</code> are extracted from the JSON response. These are required as the conversation state are stored using these key. <code class="language-plaintext highlighter-rouge">SendMessageUrl</code> is required to reply to user. We store it in the <code class="language-plaintext highlighter-rouge">ChannelData</code> property of <code class="language-plaintext highlighter-rouge">Activity</code>.</p>
 
-<p>Once <code class="highlighter-rouge">activity</code> object is properly initialized, we jump start the bot and pass the <code class="highlighter-rouge">activity</code> object as the incoming message. Instead of starting the bot here, or if you have an existing bot, you could use <a href="https://docs.botframework.com/en-us/restapi/directline3/">Direct Line API</a> to send the message to the bot.</p>
+<p>Once <code class="language-plaintext highlighter-rouge">activity</code> object is properly initialized, we jump start the bot and pass the <code class="language-plaintext highlighter-rouge">activity</code> object as the incoming message. Instead of starting the bot here, or if you have an existing bot, you could use <a href="https://docs.botframework.com/en-us/restapi/directline3/">Direct Line API</a> to send the message to the bot.</p>
 
 <div class="language-csharp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">using</span> <span class="p">(</span><span class="kt">var</span> <span class="n">scope</span> <span class="p">=</span> <span class="n">Microsoft</span><span class="p">.</span><span class="n">Bot</span><span class="p">.</span><span class="n">Builder</span><span class="p">.</span><span class="n">Dialogs</span><span class="p">.</span><span class="n">Conversation</span>
     <span class="p">.</span><span class="n">Container</span><span class="p">.</span><span class="nf">BeginLifetimeScope</span><span class="p">(</span><span class="n">DialogModule</span><span class="p">.</span><span class="n">LifetimeScopeTag</span><span class="p">,</span>
@@ -225,7 +234,7 @@ window.onload = wrap_img;
 <span class="p">}</span>
 </code></pre></div></div>
 
-<p>In the <code class="highlighter-rouge">Configure</code> method I register my custom implementation of <code class="highlighter-rouge">IBotToUser</code>.</p>
+<p>In the <code class="language-plaintext highlighter-rouge">Configure</code> method I register my custom implementation of <code class="language-plaintext highlighter-rouge">IBotToUser</code>.</p>
 
 <div class="language-csharp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">private</span> <span class="k">static</span> <span class="k">void</span> <span class="nf">Configure</span><span class="p">(</span><span class="n">ContainerBuilder</span> <span class="n">builder</span><span class="p">)</span>
 <span class="p">{</span>
@@ -235,7 +244,7 @@ window.onload = wrap_img;
 <span class="p">}</span>
 </code></pre></div></div>
 
-<p><code class="highlighter-rouge">BotToUserLync</code> reads the <code class="highlighter-rouge">ChannelData</code> property of the <code class="highlighter-rouge">Activity</code> and calls <code class="highlighter-rouge">SendIM_Step05</code> method of <code class="highlighter-rouge">UcwaSendMessage</code> which sends a request to UCWA to reply to the user.</p>
+<p><code class="language-plaintext highlighter-rouge">BotToUserLync</code> reads the <code class="language-plaintext highlighter-rouge">ChannelData</code> property of the <code class="language-plaintext highlighter-rouge">Activity</code> and calls <code class="language-plaintext highlighter-rouge">SendIM_Step05</code> method of <code class="language-plaintext highlighter-rouge">UcwaSendMessage</code> which sends a request to UCWA to reply to the user.</p>
 
 <h3 id="conclusion">Conclusion</h3>
 

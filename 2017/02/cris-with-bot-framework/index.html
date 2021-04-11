@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="twitter:card" content="summary_large_image" /><!-- Begin Jekyll SEO tag v2.6.1 -->
 <title>Integrating CRIS with Microsoft Bot Framework | F5 - Squashing Bugs</title>
-<meta name="generator" content="Jekyll v4.0.0" />
+<meta name="generator" content="Jekyll v4.1.1" />
 <meta property="og:title" content="Integrating CRIS with Microsoft Bot Framework" />
 <meta name="author" content="Ankit Sinha" />
 <meta property="og:locale" content="en_US" />
@@ -17,20 +17,29 @@
 <meta property="og:type" content="article" />
 <meta property="article:published_time" content="2017-02-24T00:00:00-06:00" />
 <script type="application/ld+json">
-{"author":{"@type":"Person","name":"Ankit Sinha"},"description":"Skype Call your bot by integrating Microsoft Bot Framework with Custom Speech Service (CRIS)","@type":"BlogPosting","url":"https://ankitbko.github.io/blog/2017/02/cris-with-bot-framework/","headline":"Integrating CRIS with Microsoft Bot Framework","dateModified":"2017-02-24T00:00:00-06:00","datePublished":"2017-02-24T00:00:00-06:00","mainEntityOfPage":{"@type":"WebPage","@id":"https://ankitbko.github.io/blog/2017/02/cris-with-bot-framework/"},"@context":"https://schema.org"}</script>
+{"url":"https://ankitbko.github.io/blog/2017/02/cris-with-bot-framework/","@type":"BlogPosting","headline":"Integrating CRIS with Microsoft Bot Framework","dateModified":"2017-02-24T00:00:00-06:00","datePublished":"2017-02-24T00:00:00-06:00","mainEntityOfPage":{"@type":"WebPage","@id":"https://ankitbko.github.io/blog/2017/02/cris-with-bot-framework/"},"author":{"@type":"Person","name":"Ankit Sinha"},"description":"Skype Call your bot by integrating Microsoft Bot Framework with Custom Speech Service (CRIS)","@context":"https://schema.org"}</script>
 <!-- End Jekyll SEO tag -->
 <link rel="stylesheet" href="/blog/assets/css/style.css"><link type="application/atom+xml" rel="alternate" href="https://ankitbko.github.io/blog/feed.xml" title="F5 - Squashing Bugs" /><!-- the google_analytics_id gets auto inserted from the config file -->
 
 
 
-<script>(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)})(window,document,'script','//www.google-analytics.com/analytics.js','ga');ga('create','UA-75679348-1','auto');ga('require','displayfeatures');ga('send','pageview');</script>
+<!-- Global site tag (gtag.js) - Google Analytics -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=UA-75679348-1"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
 
-<link rel="shortcut icon" type="image/x-icon" href="/blog/images/favicon.ico"><link href="https://unpkg.com/@primer/css/dist/primer.css" rel="stylesheet" />
-<link rel="stylesheet" href="//use.fontawesome.com/releases/v5.0.7/css/all.css">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.11.1/dist/katex.min.css" integrity="sha384-zB1R0rpPzHqg7Kpt0Aljp8JPLqbXI3bhnPWROx27a9N0Ll6ZP/+DiW/UqRcLbRjq" crossorigin="anonymous">
-    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML"> </script>
-    <script src="https://cdn.jsdelivr.net/npm/katex@0.11.1/dist/katex.min.js" integrity="sha384-y23I5Q6l+B6vatafAwxRu/0oK/79VlbSz7Q9aiSZUvyWYIYsd+qj+o24G5ZU2zJz" crossorigin="anonymous"></script>
-    <script src="https://cdn.jsdelivr.net/npm/katex@0.11.1/dist/contrib/auto-render.min.js" integrity="sha384-kWPLUVMOks5AQFrykwIup5lo0m3iMkkHrD0uJ4H5cjeGihAutqP0yW0J6dpFiVkI" crossorigin="anonymous"></script>
+  gtag('config', 'UA-75679348-1');
+</script>
+
+
+<link rel="shortcut icon" type="image/x-icon" href="/blog/images/favicon.ico"><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/Primer/15.2.0/primer.css" integrity="sha512-xTz2ys4coGAOz8vuV1NcQBkgVmKhsSEtjbqyMJbBHRplFuvKIUo6xhLHpAyPt9mfR6twHJgn9OgVLuqOvjeBhg==" crossorigin="anonymous" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.14.0/css/all.min.css" integrity="sha512-1PKOgIY59xJ8Co8+NE6FZ+LOAZKjy+KY8iq0G4B3CyeY6wYHN3yt9PW0XpSriVlkMXe40PTKnXrLnZ9+fkDaog==" crossorigin="anonymous" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.12.0/katex.min.css" integrity="sha512-h7nl+xz8wgDlNM4NqKEM4F1NkIRS17M9+uJwIGwuo8vGqIl4BhuCKdxjWEINm+xyrUjNCnK5dCrhM0sj+wTIXw==" crossorigin="anonymous" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.12.0/katex.min.js" integrity="sha512-/CMIhXiDA3m2c9kzRyd97MTb3MC6OVnx4TElQ7fkkoRghwDf6gi41gaT1PwF270W6+J60uTmwgeRpNpJdRV6sg==" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.12.0/contrib/auto-render.min.js" integrity="sha512-Do7uJAaHZm5OLrIv/yN4w0iG1dbu01kzdMNnFfu/mAqgUk6Nniv2JYHcwH+cNwjqgLcqcuBBk+JRvprLVI8azg==" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js" integrity="sha512-0doc9hKxR3PYwso42RD1p5ySZpzzuDiOwMrdCEh2WdJZCjcmFKc/wEnL+z8fBQrnHoiNWbo+3fiGkOYXBdQp4A==" crossorigin="anonymous"></script>
     <script>
     document.addEventListener("DOMContentLoaded", function() {
         renderMathInElement( document.body, {
@@ -191,13 +200,13 @@ window.onload = wrap_img;
 
 <p><img src="/blog/assets/images/posts/cris/deployment.png" alt="Deployment Create" /></p>
 
-<p>Once the deployment is complete, you would be redirected to the Deployment Information page where you would need to copy the Url specified in <code class="highlighter-rouge">WebSocket for ShortPhrase Mode</code>. We would require the Url later in the code.</p>
+<p>Once the deployment is complete, you would be redirected to the Deployment Information page where you would need to copy the Url specified in <code class="language-plaintext highlighter-rouge">WebSocket for ShortPhrase Mode</code>. We would require the Url later in the code.</p>
 
 <p><img src="/blog/assets/images/posts/cris/deployment_complete.png" alt="Deployment Complete" /></p>
 
 <h3 id="integrating-cris-with-bing-speech-sdk">Integrating CRIS with Bing Speech SDK</h3>
 
-<p>We would continue using the Bing Speech client library for STT. But instead of calling to Bing Speech API we would send the speech to our CRIS deployment. We only need to change how our <code class="highlighter-rouge">DataRecognitionClient</code> is created as shown below.</p>
+<p>We would continue using the Bing Speech client library for STT. But instead of calling to Bing Speech API we would send the speech to our CRIS deployment. We only need to change how our <code class="language-plaintext highlighter-rouge">DataRecognitionClient</code> is created as shown below.</p>
 
 <div class="language-csharp highlighter-rouge"><div class="highlight"><pre class="highlight"><code> <span class="k">public</span> <span class="kt">string</span> <span class="n">SubscriptionKey</span> <span class="p">{</span> <span class="k">get</span><span class="p">;</span> <span class="p">}</span> <span class="p">=</span> <span class="s">"CRIS SubscriptionKey"</span><span class="p">;</span>
  <span class="k">public</span> <span class="kt">string</span> <span class="n">CrisUri</span> <span class="p">{</span> <span class="k">get</span><span class="p">;</span> <span class="p">}</span> <span class="p">=</span> <span class="s">"CRIS ShortPhrase Mode URL"</span><span class="p">;</span>
@@ -218,9 +227,9 @@ window.onload = wrap_img;
  <span class="p">}</span>
 </code></pre></div></div>
 
-<p>Paste the deployment URI for Short Phrase which we copied from before in <code class="highlighter-rouge">CrisUri</code> and also enter the CRIS subscription key in <code class="highlighter-rouge">SubscriptionKey</code>. We would continue to use the <code class="highlighter-rouge">ShortPhrase</code> mode as we did before. The only difference now is that the speech is now sent to CRIS instead of Bing Speech API. Leave the <code class="highlighter-rouge">AuthenticationUri</code> as it is as it does not needs to be changed.</p>
+<p>Paste the deployment URI for Short Phrase which we copied from before in <code class="language-plaintext highlighter-rouge">CrisUri</code> and also enter the CRIS subscription key in <code class="language-plaintext highlighter-rouge">SubscriptionKey</code>. We would continue to use the <code class="language-plaintext highlighter-rouge">ShortPhrase</code> mode as we did before. The only difference now is that the speech is now sent to CRIS instead of Bing Speech API. Leave the <code class="language-plaintext highlighter-rouge">AuthenticationUri</code> as it is as it does not needs to be changed.</p>
 
-<p>Apart from this there are no other changes required. You could run the bot as it is and it would work out. Check my <a href="https://ankitbko.github.io/2016/11/skype-call-your-bot/">previous</a> post on how to run and test this bot. Do not forget to a valid LUIS <em>subscription key</em> in <code class="highlighter-rouge">RentLuisDialog</code> and change <em>MicrosoftAppId</em>, <em>MicrosoftAppPassword</em> and <em>CallbackUrl</em> appropriately.</p>
+<p>Apart from this there are no other changes required. You could run the bot as it is and it would work out. Check my <a href="https://ankitbko.github.io/2016/11/skype-call-your-bot/">previous</a> post on how to run and test this bot. Do not forget to a valid LUIS <em>subscription key</em> in <code class="language-plaintext highlighter-rouge">RentLuisDialog</code> and change <em>MicrosoftAppId</em>, <em>MicrosoftAppPassword</em> and <em>CallbackUrl</em> appropriately.</p>
 
 <h3 id="conclusion">Conclusion</h3>
 

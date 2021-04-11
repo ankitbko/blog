@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="twitter:card" content="summary_large_image" /><!-- Begin Jekyll SEO tag v2.6.1 -->
 <title>IdentityServer4 on Docker | F5 - Squashing Bugs</title>
-<meta name="generator" content="Jekyll v4.0.0" />
+<meta name="generator" content="Jekyll v4.1.1" />
 <meta property="og:title" content="IdentityServer4 on Docker" />
 <meta name="author" content="Ankit Sinha" />
 <meta property="og:locale" content="en_US" />
@@ -17,20 +17,29 @@
 <meta property="og:type" content="article" />
 <meta property="article:published_time" content="2016-03-28T00:00:00-05:00" />
 <script type="application/ld+json">
-{"author":{"@type":"Person","name":"Ankit Sinha"},"description":"A tutorial on how to host IdentityServer 4 on Docker","@type":"BlogPosting","url":"https://ankitbko.github.io/blog/2016/03/IdentityServer4-on-Docker/","headline":"IdentityServer4 on Docker","dateModified":"2016-03-28T00:00:00-05:00","datePublished":"2016-03-28T00:00:00-05:00","mainEntityOfPage":{"@type":"WebPage","@id":"https://ankitbko.github.io/blog/2016/03/IdentityServer4-on-Docker/"},"@context":"https://schema.org"}</script>
+{"url":"https://ankitbko.github.io/blog/2016/03/IdentityServer4-on-Docker/","@type":"BlogPosting","headline":"IdentityServer4 on Docker","dateModified":"2016-03-28T00:00:00-05:00","datePublished":"2016-03-28T00:00:00-05:00","mainEntityOfPage":{"@type":"WebPage","@id":"https://ankitbko.github.io/blog/2016/03/IdentityServer4-on-Docker/"},"author":{"@type":"Person","name":"Ankit Sinha"},"description":"A tutorial on how to host IdentityServer 4 on Docker","@context":"https://schema.org"}</script>
 <!-- End Jekyll SEO tag -->
 <link rel="stylesheet" href="/blog/assets/css/style.css"><link type="application/atom+xml" rel="alternate" href="https://ankitbko.github.io/blog/feed.xml" title="F5 - Squashing Bugs" /><!-- the google_analytics_id gets auto inserted from the config file -->
 
 
 
-<script>(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)})(window,document,'script','//www.google-analytics.com/analytics.js','ga');ga('create','UA-75679348-1','auto');ga('require','displayfeatures');ga('send','pageview');</script>
+<!-- Global site tag (gtag.js) - Google Analytics -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=UA-75679348-1"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
 
-<link rel="shortcut icon" type="image/x-icon" href="/blog/images/favicon.ico"><link href="https://unpkg.com/@primer/css/dist/primer.css" rel="stylesheet" />
-<link rel="stylesheet" href="//use.fontawesome.com/releases/v5.0.7/css/all.css">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.11.1/dist/katex.min.css" integrity="sha384-zB1R0rpPzHqg7Kpt0Aljp8JPLqbXI3bhnPWROx27a9N0Ll6ZP/+DiW/UqRcLbRjq" crossorigin="anonymous">
-    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML"> </script>
-    <script src="https://cdn.jsdelivr.net/npm/katex@0.11.1/dist/katex.min.js" integrity="sha384-y23I5Q6l+B6vatafAwxRu/0oK/79VlbSz7Q9aiSZUvyWYIYsd+qj+o24G5ZU2zJz" crossorigin="anonymous"></script>
-    <script src="https://cdn.jsdelivr.net/npm/katex@0.11.1/dist/contrib/auto-render.min.js" integrity="sha384-kWPLUVMOks5AQFrykwIup5lo0m3iMkkHrD0uJ4H5cjeGihAutqP0yW0J6dpFiVkI" crossorigin="anonymous"></script>
+  gtag('config', 'UA-75679348-1');
+</script>
+
+
+<link rel="shortcut icon" type="image/x-icon" href="/blog/images/favicon.ico"><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/Primer/15.2.0/primer.css" integrity="sha512-xTz2ys4coGAOz8vuV1NcQBkgVmKhsSEtjbqyMJbBHRplFuvKIUo6xhLHpAyPt9mfR6twHJgn9OgVLuqOvjeBhg==" crossorigin="anonymous" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.14.0/css/all.min.css" integrity="sha512-1PKOgIY59xJ8Co8+NE6FZ+LOAZKjy+KY8iq0G4B3CyeY6wYHN3yt9PW0XpSriVlkMXe40PTKnXrLnZ9+fkDaog==" crossorigin="anonymous" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.12.0/katex.min.css" integrity="sha512-h7nl+xz8wgDlNM4NqKEM4F1NkIRS17M9+uJwIGwuo8vGqIl4BhuCKdxjWEINm+xyrUjNCnK5dCrhM0sj+wTIXw==" crossorigin="anonymous" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.12.0/katex.min.js" integrity="sha512-/CMIhXiDA3m2c9kzRyd97MTb3MC6OVnx4TElQ7fkkoRghwDf6gi41gaT1PwF270W6+J60uTmwgeRpNpJdRV6sg==" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.12.0/contrib/auto-render.min.js" integrity="sha512-Do7uJAaHZm5OLrIv/yN4w0iG1dbu01kzdMNnFfu/mAqgUk6Nniv2JYHcwH+cNwjqgLcqcuBBk+JRvprLVI8azg==" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js" integrity="sha512-0doc9hKxR3PYwso42RD1p5ySZpzzuDiOwMrdCEh2WdJZCjcmFKc/wEnL+z8fBQrnHoiNWbo+3fiGkOYXBdQp4A==" crossorigin="anonymous"></script>
     <script>
     document.addEventListener("DOMContentLoaded", function() {
         renderMathInElement( document.body, {
@@ -154,18 +163,18 @@ This article was written when ASP.NET Core was in RC1. ASP.NET Core 1.0 was rele
 <p>Lets break down the above command.</p>
 
 <ul>
-  <li><code class="highlighter-rouge">docker-machine</code>: Docker Machine allows us to provision and manage our Dockerized hosts (hosts with Docker Engine on them).</li>
-  <li><code class="highlighter-rouge">create</code>: Create command creates a Linux Virtual Machine and installs docker engine to it.</li>
-  <li><code class="highlighter-rouge">--driver virtualbox</code>: Docker Machine supports multiple virtualization options and environment. We will be using virtualbox which comes installed with docker toolbox. Have a look at <a href="https://docs.docker.com/machine/drivers/">complete list</a> of supported driver for more information.</li>
-  <li><code class="highlighter-rouge">--virtualbox-no-vtx</code>: This is only required if you have Hyper-v installed and have disabled Hyper-v. This command disables checking for other hardware virtualization before VM is started.</li>
-  <li><code class="highlighter-rouge">idsrv-demo</code>: Name of the virtual machine which will be created.</li>
+  <li><code class="language-plaintext highlighter-rouge">docker-machine</code>: Docker Machine allows us to provision and manage our Dockerized hosts (hosts with Docker Engine on them).</li>
+  <li><code class="language-plaintext highlighter-rouge">create</code>: Create command creates a Linux Virtual Machine and installs docker engine to it.</li>
+  <li><code class="language-plaintext highlighter-rouge">--driver virtualbox</code>: Docker Machine supports multiple virtualization options and environment. We will be using virtualbox which comes installed with docker toolbox. Have a look at <a href="https://docs.docker.com/machine/drivers/">complete list</a> of supported driver for more information.</li>
+  <li><code class="language-plaintext highlighter-rouge">--virtualbox-no-vtx</code>: This is only required if you have Hyper-v installed and have disabled Hyper-v. This command disables checking for other hardware virtualization before VM is started.</li>
+  <li><code class="language-plaintext highlighter-rouge">idsrv-demo</code>: Name of the virtual machine which will be created.</li>
 </ul>
 
-<p>Run <code class="highlighter-rouge">docker-machine ls</code> to verify if the VM is created and running. Note the URL of the VM. This URL will be used to access any application in containers hosted on this VM.</p>
+<p>Run <code class="language-plaintext highlighter-rouge">docker-machine ls</code> to verify if the VM is created and running. Note the URL of the VM. This URL will be used to access any application in containers hosted on this VM.</p>
 
 <p><img src="/blog/assets/images/posts/Id4-on-docker/docker-machine-ls.png" alt="docker-machine ls" /></p>
 
-<p>Setup the environment by running <code class="highlighter-rouge">docker-machine env --shell=cmd idsrv-demo</code> and following the instructions at prompt.</p>
+<p>Setup the environment by running <code class="language-plaintext highlighter-rouge">docker-machine env --shell=cmd idsrv-demo</code> and following the instructions at prompt.</p>
 
 <p><img src="/blog/assets/images/posts/Id4-on-docker/docker-machine-env.png" alt="docker-machine env" /></p>
 
@@ -174,21 +183,21 @@ This article was written when ASP.NET Core was in RC1. ASP.NET Core 1.0 was rele
 <p>You will have to change the URLs in your code to point to the new VM URL in the following places:</p>
 
 <ul>
-  <li><code class="highlighter-rouge">IdSrvHost\Configuration\Clients.cs</code>: Change all the URL here to point to the VM. Leave the port to 7017 as we will host our client on the same port.</li>
-  <li><code class="highlighter-rouge">SampleApi\Startup.cs</code>: Change the URL in <code class="highlighter-rouge">app.UseIdentityServerAuthentication</code>. Leave the port as 22530.</li>
-  <li><code class="highlighter-rouge">JavaScript Oidc\wwwroot\index.html</code>: There are two places in this file where URL needs to be changed. Leave the port number as it is in each place.</li>
-  <li><code class="highlighter-rouge">project.json</code> in each project: Change the <code class="highlighter-rouge">web</code> command to pass option to Kestrel to listen to specific URL. This is required as by default the docker container will start the application and listen to <code class="highlighter-rouge">0.0.0.0</code> which is not same as <code class="highlighter-rouge">localhost</code>. Port number here specifies which port needs to be opened in docker container. This is already been done in my sample. In case you are using your own code, do the following changes.
+  <li><code class="language-plaintext highlighter-rouge">IdSrvHost\Configuration\Clients.cs</code>: Change all the URL here to point to the VM. Leave the port to 7017 as we will host our client on the same port.</li>
+  <li><code class="language-plaintext highlighter-rouge">SampleApi\Startup.cs</code>: Change the URL in <code class="language-plaintext highlighter-rouge">app.UseIdentityServerAuthentication</code>. Leave the port as 22530.</li>
+  <li><code class="language-plaintext highlighter-rouge">JavaScript Oidc\wwwroot\index.html</code>: There are two places in this file where URL needs to be changed. Leave the port number as it is in each place.</li>
+  <li><code class="language-plaintext highlighter-rouge">project.json</code> in each project: Change the <code class="language-plaintext highlighter-rouge">web</code> command to pass option to Kestrel to listen to specific URL. This is required as by default the docker container will start the application and listen to <code class="language-plaintext highlighter-rouge">0.0.0.0</code> which is not same as <code class="language-plaintext highlighter-rouge">localhost</code>. Port number here specifies which port needs to be opened in docker container. This is already been done in my sample. In case you are using your own code, do the following changes.
     <ul>
-      <li>IdSrvHost: <code class="highlighter-rouge">"web": "Microsoft.AspNet.Server.Kestrel --server.urls=http://0.0.0.0:22530</code></li>
-      <li>Javascript Oidc: <code class="highlighter-rouge">"web": "Microsoft.AspNet.Server.Kestrel --server.urls=http://0.0.0.0:7017</code></li>
-      <li>SampleApi: <code class="highlighter-rouge">"web": "Microsoft.AspNet.Server.Kestrel --server.urls=http://0.0.0.0:3860</code></li>
+      <li>IdSrvHost: <code class="language-plaintext highlighter-rouge">"web": "Microsoft.AspNet.Server.Kestrel --server.urls=http://0.0.0.0:22530</code></li>
+      <li>Javascript Oidc: <code class="language-plaintext highlighter-rouge">"web": "Microsoft.AspNet.Server.Kestrel --server.urls=http://0.0.0.0:7017</code></li>
+      <li>SampleApi: <code class="language-plaintext highlighter-rouge">"web": "Microsoft.AspNet.Server.Kestrel --server.urls=http://0.0.0.0:3860</code></li>
     </ul>
   </li>
 </ul>
 
 <h4 id="publish-the-projects">Publish the projects</h4>
 
-<p>Go to each project folder and run <code class="highlighter-rouge">dnu publish</code> to publish in your desired folder.</p>
+<p>Go to each project folder and run <code class="language-plaintext highlighter-rouge">dnu publish</code> to publish in your desired folder.</p>
 
 <figure class="highlight"><pre><code class="language-powershell" data-lang="powershell"><span class="nf">dnu</span><span class="w"> </span><span class="nx">publish</span><span class="w"> </span><span class="nt">-o</span><span class="w"> </span><span class="err">&lt;</span><span class="nx">Path</span><span class="w"> </span><span class="nx">to</span><span class="w"> </span><span class="nx">output</span><span class="w"> </span><span class="nx">directory</span><span class="err">&gt;</span></code></pre></figure>
 
@@ -206,17 +215,17 @@ EXPOSE &lt;PORT&gt;
 ENTRYPOINT <span class="o">[</span><span class="s2">"./web"</span><span class="o">]</span></code></pre></figure>
 
 <ul>
-  <li><code class="highlighter-rouge">FROM microsoft/aspnet:1.0.0-rc1-update1-coreclr</code>: Docker creates the container on a base image. Docker runs each following instructions on top of this base image. Here we use aspnet image provided by Microsoft. To learn more visit the <a href="https://hub.docker.com/r/microsoft/aspnet/">docker hub</a>.</li>
-  <li><code class="highlighter-rouge">COPY . /app</code>: Copy the current folder to <code class="highlighter-rouge">/app</code> folder in container.</li>
-  <li><code class="highlighter-rouge">WORKDIR /app/approot</code>: Set the WORKDIR to /app/approot folder. This sets the working directory in container and executes remaining command from this directory.</li>
-  <li><code class="highlighter-rouge">EXPOSE &lt;PORT&gt;</code>: <code class="highlighter-rouge">EXPOSE</code> instruction informs Docker that the container listens on the specified network ports at runtime. <code class="highlighter-rouge">EXPOSE</code> does not make the ports of the container accessible to the host. We will do that later during creating container. Substitute <PORT> for appropriate port as mentioned in project.json above.
+  <li><code class="language-plaintext highlighter-rouge">FROM microsoft/aspnet:1.0.0-rc1-update1-coreclr</code>: Docker creates the container on a base image. Docker runs each following instructions on top of this base image. Here we use aspnet image provided by Microsoft. To learn more visit the <a href="https://hub.docker.com/r/microsoft/aspnet/">docker hub</a>.</li>
+  <li><code class="language-plaintext highlighter-rouge">COPY . /app</code>: Copy the current folder to <code class="language-plaintext highlighter-rouge">/app</code> folder in container.</li>
+  <li><code class="language-plaintext highlighter-rouge">WORKDIR /app/approot</code>: Set the WORKDIR to /app/approot folder. This sets the working directory in container and executes remaining command from this directory.</li>
+  <li><code class="language-plaintext highlighter-rouge">EXPOSE &lt;PORT&gt;</code>: <code class="language-plaintext highlighter-rouge">EXPOSE</code> instruction informs Docker that the container listens on the specified network ports at runtime. <code class="language-plaintext highlighter-rouge">EXPOSE</code> does not make the ports of the container accessible to the host. We will do that later during creating container. Substitute <PORT> for appropriate port as mentioned in project.json above.
 </PORT>    <ul>
       <li>IdSrvHost: 22530</li>
       <li>Javascript Oidc: 7017</li>
       <li>SampleApi: 3860</li>
     </ul>
   </li>
-  <li><code class="highlighter-rouge">ENTRYPOINT ["./web"]</code>: This instruction will execute <code class="highlighter-rouge">web</code> script in current folder. Note that we had changed the working directory to <code class="highlighter-rouge">/app/approot</code>.</li>
+  <li><code class="language-plaintext highlighter-rouge">ENTRYPOINT ["./web"]</code>: This instruction will execute <code class="language-plaintext highlighter-rouge">web</code> script in current folder. Note that we had changed the working directory to <code class="language-plaintext highlighter-rouge">/app/approot</code>.</li>
 </ul>
 
 <h4 id="build-image">Build Image</h4>
@@ -226,14 +235,14 @@ ENTRYPOINT <span class="o">[</span><span class="s2">"./web"</span><span class="o
 <figure class="highlight"><pre><code class="language-powershell" data-lang="powershell"><span class="nf">docker</span><span class="w"> </span><span class="nx">build</span><span class="w"> </span><span class="nt">-t</span><span class="w"> </span><span class="nx">idsrvhost</span><span class="w"> </span><span class="o">.</span></code></pre></figure>
 
 <ul>
-  <li><code class="highlighter-rouge">docker build</code>: Builds a new image from Dockerfile</li>
-  <li><code class="highlighter-rouge">-t idsrvhost</code>: Sets the tag of the image.</li>
-  <li><code class="highlighter-rouge">.</code>: The PATH to build the image from. By default docker searches for Dockerfile in PATH/Dockerfile.</li>
+  <li><code class="language-plaintext highlighter-rouge">docker build</code>: Builds a new image from Dockerfile</li>
+  <li><code class="language-plaintext highlighter-rouge">-t idsrvhost</code>: Sets the tag of the image.</li>
+  <li><code class="language-plaintext highlighter-rouge">.</code>: The PATH to build the image from. By default docker searches for Dockerfile in PATH/Dockerfile.</li>
 </ul>
 
 <p><img src="/blog/assets/images/posts/Id4-on-docker/docker-build.png" alt="docker build" /></p>
 
-<p>Do the same for each of the projects but change the tag name. Run <code class="highlighter-rouge">docker images</code> to view all the generated image.</p>
+<p>Do the same for each of the projects but change the tag name. Run <code class="language-plaintext highlighter-rouge">docker images</code> to view all the generated image.</p>
 
 <p><img src="/blog/assets/images/posts/Id4-on-docker/docker-image.png" alt="docker images" /></p>
 
@@ -246,14 +255,14 @@ ENTRYPOINT <span class="o">[</span><span class="s2">"./web"</span><span class="o
 </span><span class="nf">docker</span><span class="w"> </span><span class="nx">run</span><span class="w"> </span><span class="nt">-d</span><span class="w"> </span><span class="nt">-p</span><span class="w"> </span><span class="nx">3860:3860</span><span class="w"> </span><span class="nt">--name</span><span class="w"> </span><span class="nx">api</span><span class="w"> </span><span class="nx">sampleapi</span></code></pre></figure>
 
 <ul>
-  <li><code class="highlighter-rouge">docker run</code>: Creates and start a new container.</li>
-  <li><code class="highlighter-rouge">-d</code>: Run the container in background.</li>
-  <li><code class="highlighter-rouge">-p &lt;host&gt;:&lt;container&gt;</code>: Map the specified port of host to the port container.</li>
-  <li><code class="highlighter-rouge">--name &lt;ContainerName&gt;</code>: Creates the container with the specified name.</li>
+  <li><code class="language-plaintext highlighter-rouge">docker run</code>: Creates and start a new container.</li>
+  <li><code class="language-plaintext highlighter-rouge">-d</code>: Run the container in background.</li>
+  <li><code class="language-plaintext highlighter-rouge">-p &lt;host&gt;:&lt;container&gt;</code>: Map the specified port of host to the port container.</li>
+  <li><code class="language-plaintext highlighter-rouge">--name &lt;ContainerName&gt;</code>: Creates the container with the specified name.</li>
   <li>The last parameter is the name of the image from which to create the container.</li>
 </ul>
 
-<p>Run <code class="highlighter-rouge">docker ps</code> to view all the created containers.</p>
+<p>Run <code class="language-plaintext highlighter-rouge">docker ps</code> to view all the created containers.</p>
 
 <p><img src="/blog/assets/images/posts/Id4-on-docker/docker-ps.png" alt="docker ps" /></p>
 
@@ -264,7 +273,7 @@ ENTRYPOINT <span class="o">[</span><span class="s2">"./web"</span><span class="o
 <p><img src="/blog/assets/images/posts/Id4-on-docker/client-running.png" alt="client" /></p>
 
 <h3 id="conclusion">Conclusion</h3>
-<p>Docker is great and very easy once you get hang of it. Next step you can try <code class="highlighter-rouge">-v</code> command to mount the source code to container without having to publish the site. This is incredibly helpful during development where you want to avoid hassle of publishing and creating new images every time you make a change.</p>
+<p>Docker is great and very easy once you get hang of it. Next step you can try <code class="language-plaintext highlighter-rouge">-v</code> command to mount the source code to container without having to publish the site. This is incredibly helpful during development where you want to avoid hassle of publishing and creating new images every time you make a change.</p>
 
   </div>
   <div class="PageNavigation">
