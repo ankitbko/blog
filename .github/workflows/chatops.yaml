@@ -122,7 +122,7 @@ jobs:
         if: steps.get_status.outputs.status == 'private'
         uses: docker://fastai/fastpages-jekyll
         with:
-          args: bash -c "jekyll build"
+          args: bash -c "jekyll build --config _config.yml,_config_preview.yml"
 
       - name: deploy to netlify
         if: steps.get_status.outputs.status == 'private'
