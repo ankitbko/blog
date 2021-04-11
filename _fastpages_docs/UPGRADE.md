@@ -13,11 +13,14 @@
 - [Additional Resources](#additional-resources)
 <!-- /TOC -->
 
+
+**For fastpages repos that are older than December 1st, 2020 the only way to upgrade is to create a brand-new fastpages repo and copy your blog post files into it.**  This is because of breaking changes that were made to GitHub Actions around that time.
+
 There are two ways to upgrade fastpages.  One is an automated way that assumes you have made no changes to the HTML of your site. Alternatively, you may [upgrade manually](#manual-upgrade) and determine which changes to accept or reject.  For most people we recommend upgrading fastpages automatically.
 
 ## Automated Upgrade
 
- - This method is appropriate for those who have not customized the HTML of their site.  
+ - This method is appropriate for those who have not customized the HTML of their site.
  - **If you are unsure, try the Automated approach and review which files are changed in the automated PR** to see if this appropriate for you.
 
 ### Step 1: Open An Issue With The Upgrade Template.
@@ -42,13 +45,13 @@ There are two ways to upgrade fastpages.  One is an automated way that assumes y
     It is possible that you might receive an error message instead of this command.  You can follow the instructions in the comment to troubleshoot the issue.  Common reasons for receiving an error are:
 
     - You are up to date, therefore no upgrade is possible.  You will see an error that there is "nothing to commit".
-    - You already have a PR from a prevoius upgrade open that you never merged.
+    - You already have a PR from a previous upgrade open that you never merged.
 
     Please [ask on the forums](https://forums.fast.ai/) if you have encounter another problem that is unclear.
 
 ### Step 4: Review & Merge PR
 
-- Ensure that you read the instructions in the PR carefully.  Furthermore, carefully review which files will be changed to determine if this interferes with any customizations you have mades to your site.  When ready, select `Merge pull request`.  
+- Ensure that you read the instructions in the PR carefully.  Furthermore, carefully review which files will be changed to determine if this interferes with any customizations you have mades to your site.  When ready, select `Merge pull request`.
 - If the PR is making undesired changes to files you can use the manual upgrade approach instead.
 
 ## Manual Upgrade
@@ -59,7 +62,7 @@ Create a new repo with the current `fastpages` template by following the [setup 
 
 ### Advanced
 
-- This method is appropriate for those who made customizations to the HTML of fastpages.  
+- This method is appropriate for those who made customizations to the HTML of fastpages.
 - You must proceed with caution, as new versions of fastpages may not be compatible with your customizations.
 - You can use git to perform the upgrade by [following this approach](https://stackoverflow.com/questions/56577184/github-pull-changes-from-a-template-repository/56577320) instead.  A step-by-step companion to this stack overflow post with screenshots is [written up here](https://github.com/fastai/fastpages/issues/163#issuecomment-593766189).
 - Be careful to not duplicate files, as files in fastpages have been reorganized several times.
