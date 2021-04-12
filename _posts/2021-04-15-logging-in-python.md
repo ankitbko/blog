@@ -31,7 +31,7 @@ def sum(a, b=10):
 ('a', 'b')
 ```
 
-Since functions behave like any other object, you could assign `sum` to another function. Then calling `sum` will call this another function instead of the one that we defined before. The decorators utilizes this behavior by assigning `sum` a new function which takes `sum` as parameter and wraps some additional logic around it thereby *extending* it without modifying the function itself.
+Since functions behave like any other object, you could assign `sum` to another function. Then calling `sum` will call this other function instead of the one that we defined before. The decorators utilizes this behavior by assigning `sum` a new function which takes `sum` as parameter and wraps some additional logic around it thereby *extending* it without modifying the function itself.
 
 
 ```python
@@ -99,7 +99,7 @@ Traceback (most recent call last):
 Exception: Something went wrong
 ```
 
-In addition to setting up the `logger`, we have also used [@functools.wraps](https://docs.python.org/3/library/functools.html#functools.wraps) decorator. The `wraps` decorator updates the `wrapper` function to look like `func`. Our `@log` decorator can now be used on any function to catch every exception from *wrapped* function and log it in consistent manner.
+In addition to setting up the `logger`, we have also used [@functools.wraps](https://docs.python.org/3/library/functools.html#functools.wraps) decorator. The `wraps` decorator updates the `wrapper` function to look like `func`. Our `@log` decorator can now be used on any function to catch every exception from *wrapped* function and log it in a consistent manner.
 
 
 Since `wrapper` function accepts all arguments (`*args and **kwargs`), the `@log` decorator can be extended to capture all the parameters passed to the decorated function. We can do this by just iterating over *args* and *kwargs* and joining them to form string message to log.
@@ -135,7 +135,7 @@ This basic logging decorator looks good and already does what we originally set 
 However in real projects, the `logger` can itself be abstracted away into its own class that initializes a logger based on certain configuration (such as push log to a cloud sink). In this case its useless to log into console by creating our own logger in the `@log` decorator. We need a way to pass an existing `logger` into our decorator at runtime. To do this we can extend the `@log` decorator to accept `logger` as an argument.
 
 
-To mimic this scenario we will start with having a class that returns us creates logger for us. For now we will create the basic logger but you can imagine the class configuring the behavior of the logger as required.
+To mimic this scenario we will start with having a class that creates a creates logger for us. For now we will create the basic logger but you can imagine the class configuring the behavior of the logger as required.
 
 ```python
 class MyLogger:
