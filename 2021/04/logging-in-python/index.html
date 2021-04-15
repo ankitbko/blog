@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="twitter:card" content="summary_large_image" /><!-- Begin Jekyll SEO tag v2.6.1 -->
+<title>A better way to logging in Python | F5 - Squashing Bugs</title>
+<meta name="generator" content="Jekyll v4.1.1" />
+<meta property="og:title" content="A better way to logging in Python" />
+<meta name="author" content="<a href='https://twitter.com/ankitbko', target='_blank'>Ankit Sinha</a>" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="A generic logging decorator for python" />
+<meta property="og:description" content="A generic logging decorator for python" />
+<link rel="canonical" href="https://ankitbko.github.io/blog/2021/04/logging-in-python/" />
+<meta property="og:url" content="https://ankitbko.github.io/blog/2021/04/logging-in-python/" />
+<meta property="og:site_name" content="F5 - Squashing Bugs" />
+<meta property="og:image" content="https://ankitbko.github.io/blog/images/previews/python-logging.jpg" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2021-04-15T00:00:00-05:00" />
+<script type="application/ld+json">
+{"url":"https://ankitbko.github.io/blog/2021/04/logging-in-python/","@type":"BlogPosting","headline":"A better way to logging in Python","dateModified":"2021-04-15T00:00:00-05:00","datePublished":"2021-04-15T00:00:00-05:00","image":"https://ankitbko.github.io/blog/images/previews/python-logging.jpg","mainEntityOfPage":{"@type":"WebPage","@id":"https://ankitbko.github.io/blog/2021/04/logging-in-python/"},"author":{"@type":"Person","name":"<a href='https://twitter.com/ankitbko', target='_blank'>Ankit Sinha</a>"},"description":"A generic logging decorator for python","@context":"https://schema.org"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="stylesheet" href="/blog/assets/css/style.css"><link type="application/atom+xml" rel="alternate" href="https://ankitbko.github.io/blog/feed.xml" title="F5 - Squashing Bugs" /><!-- the google_analytics_id gets auto inserted from the config file -->
+
+
+
+<!-- Global site tag (gtag.js) - Google Analytics -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=UA-75679348-1"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'UA-75679348-1');
+</script>
+
+
+<link rel="shortcut icon" type="image/x-icon" href="/blog/images/favicon.ico"><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/Primer/15.2.0/primer.css" integrity="sha512-xTz2ys4coGAOz8vuV1NcQBkgVmKhsSEtjbqyMJbBHRplFuvKIUo6xhLHpAyPt9mfR6twHJgn9OgVLuqOvjeBhg==" crossorigin="anonymous" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.14.0/css/all.min.css" integrity="sha512-1PKOgIY59xJ8Co8+NE6FZ+LOAZKjy+KY8iq0G4B3CyeY6wYHN3yt9PW0XpSriVlkMXe40PTKnXrLnZ9+fkDaog==" crossorigin="anonymous" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.12.0/katex.min.css" integrity="sha512-h7nl+xz8wgDlNM4NqKEM4F1NkIRS17M9+uJwIGwuo8vGqIl4BhuCKdxjWEINm+xyrUjNCnK5dCrhM0sj+wTIXw==" crossorigin="anonymous" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.12.0/katex.min.js" integrity="sha512-/CMIhXiDA3m2c9kzRyd97MTb3MC6OVnx4TElQ7fkkoRghwDf6gi41gaT1PwF270W6+J60uTmwgeRpNpJdRV6sg==" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.12.0/contrib/auto-render.min.js" integrity="sha512-Do7uJAaHZm5OLrIv/yN4w0iG1dbu01kzdMNnFfu/mAqgUk6Nniv2JYHcwH+cNwjqgLcqcuBBk+JRvprLVI8azg==" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js" integrity="sha512-0doc9hKxR3PYwso42RD1p5ySZpzzuDiOwMrdCEh2WdJZCjcmFKc/wEnL+z8fBQrnHoiNWbo+3fiGkOYXBdQp4A==" crossorigin="anonymous"></script>
+    <script>
+    document.addEventListener("DOMContentLoaded", function() {
+        renderMathInElement( document.body, {
+        delimiters: [
+            {left: "$$", right: "$$", display: true},
+            {left: "[%", right: "%]", display: true},
+            {left: "$", right: "$", display: false}
+        ]}
+        );
+    });
+    </script>
+
+
+<script>
+function wrap_img(fn) {
+    if (document.attachEvent ? document.readyState === "complete" : document.readyState !== "loading") {
+        var elements = document.querySelectorAll(".post img");
+        Array.prototype.forEach.call(elements, function(el, i) {
+            if (el.getAttribute("title") && (el.className != "emoji")) {
+                const caption = document.createElement('figcaption');
+                var node = document.createTextNode(el.getAttribute("title"));
+                caption.appendChild(node);
+                const wrapper = document.createElement('figure');
+                wrapper.className = 'image';
+                el.parentNode.insertBefore(wrapper, el);
+                el.parentNode.removeChild(el);
+                wrapper.appendChild(el);
+                wrapper.appendChild(caption);
+            }
+        });
+    } else { document.addEventListener('DOMContentLoaded', fn); }
+}
+window.onload = wrap_img;
+</script>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function(){
+    // add link icon to anchor tags
+    var elem = document.querySelectorAll(".anchor-link")
+    elem.forEach(e => (e.innerHTML = '<i class="fas fa-link fa-xs"></i>'));
+    });
+</script>
+</head>
+<body><header class="site-header">
+
+  <div class="wrapper"><a class="site-title" rel="author" href="/blog/">F5 - Squashing Bugs</a><nav class="site-nav">
+        <input type="checkbox" id="nav-trigger" class="nav-trigger" />
+        <label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewBox="0 0 18 15" width="18px" height="15px">
+              <path d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.032C17.335,0,18,0.665,18,1.484L18,1.484z M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.032C17.335,6.031,18,6.696,18,7.516L18,7.516z M18,13.516C18,14.335,17.335,15,16.516,15H1.484 C0.665,15,0,14.335,0,13.516l0,0c0-0.82,0.665-1.483,1.484-1.483h15.032C17.335,12.031,18,12.695,18,13.516L18,13.516z"/>
+            </svg>
+          </span>
+        </label>
+
+        <div class="trigger"><a class="page-link" href="/blog/about/">About Me</a><a class="page-link" href="/blog/search/">Search</a><a class="page-link" href="/blog/categories/">Tags</a></div>
+      </nav></div>
+</header>
+<main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title p-name" itemprop="name headline">A better way to logging in Python</h1><p class="page-description">A generic logging decorator for python</p><p class="post-meta post-meta-title"><time class="dt-published" datetime="2021-04-15T00:00:00-05:00" itemprop="datePublished">
+        Apr 15, 2021
+      </time>• 
+          <span itemprop="author" itemscope itemtype="http://schema.org/Person">
+            <span class="p-author h-card" itemprop="name"><a href='https://twitter.com/ankitbko', target='_blank'>Ankit Sinha</a></span></span>
+       • <span class="read-time" title="Estimated read time">
+    
+    
+      10 min read
+    
+</span></p>
+
+    
+      <p class="category-tags"><i class="fas fa-tags category-tags-icon"></i></i> 
+      
+        <a class="category-tags-link" href="/blog/categories/#python">python</a>
+        &nbsp;
+      
+        <a class="category-tags-link" href="/blog/categories/#decorators">decorators</a>
+        
+      
+      </p>
+    
+
+    
+  </header>
+
+  <div class="post-content e-content" itemprop="articleBody">
+    <p>Any production application will likely have some guidelines regarding how and what needs to be logged in your application. More often these guidelines stem from common industry patterns such as “log all exceptions”. However implementing these guidelines are left to individual developers and leads to same set of logging statements repeated throughout the codebase. For instance to log all exceptions you would have a logging statement in every <code class="language-plaintext highlighter-rouge">except</code> block that captures exception and logs it under <code class="language-plaintext highlighter-rouge">ERROR</code> level. But the logging statement for same scenario may differ between developers due to their individual style of development. Overtime this leads to fragmented and inconsistent logging in the application. Moreover developers can make mistake and miss having logging statement at necessary places.</p>
+
+<p>One approach to alleviate this problem is by utilizing Python’s decorator feature. This article will give a brief overview of decorators and demonstrate how to create a decorator to abstract these common logging statements. You can read more about decorators and variety of ways they can be utilized in this excellent <a href="https://realpython.com/primer-on-python-decorators/">Primer on Python Decorators</a>.</p>
+
+<h2 id="what-are-decorators">What are decorators</h2>
+
+<p>A decorator is a function that takes another function and extends it’s behavior without explicitly modifying it. These are also known as <a href="https://en.wikipedia.org/wiki/Higher-order_function">higher-order functions</a>.</p>
+
+<p>Python’s functions are <a href="https://en.wikipedia.org/wiki/First-class_citizen">first-class citizens</a>. This means functions can passed as argument or can be subject of assignment. So if you have a function <code class="language-plaintext highlighter-rouge">def sum(a, b=10)</code>, you can use it as any other object and drill down into its properties.</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">def</span> <span class="nf">sum</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="o">=</span><span class="mi">10</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">a</span><span class="o">+</span><span class="n">b</span>
+</code></pre></div></div>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">&gt;&gt;&gt;</span> <span class="nb">sum</span>
+<span class="o">&lt;</span><span class="n">function</span> <span class="nb">sum</span> <span class="n">at</span> <span class="mh">0x7f35e9dde310</span><span class="o">&gt;</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="nb">sum</span><span class="p">.</span><span class="n">__code__</span><span class="p">.</span><span class="n">co_varnames</span>  <span class="c1"># Names of local variables
+</span><span class="p">(</span><span class="s">'a'</span><span class="p">,</span> <span class="s">'b'</span><span class="p">)</span>
+</code></pre></div></div>
+
+<p>Since functions behave like an object, you could assign <code class="language-plaintext highlighter-rouge">sum</code> to another function. Then calling <code class="language-plaintext highlighter-rouge">sum</code> will call this other function instead of the one that we defined before. The decorators utilizes this behavior by assigning <code class="language-plaintext highlighter-rouge">sum</code> a new function which takes <code class="language-plaintext highlighter-rouge">sum</code> as parameter and wraps some additional logic around it thereby <em>extending</em> it without modifying the function itself.</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">def</span> <span class="nf">my_decorator</span><span class="p">(</span><span class="n">func</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">wrapper</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="c1"># do something before `sum`
+</span>        <span class="n">result</span> <span class="o">=</span> <span class="n">func</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="c1"># do something after `sum`
+</span>        <span class="k">return</span> <span class="n">result</span>
+    <span class="k">return</span> <span class="n">wrapper</span>
+
+<span class="nb">sum</span> <span class="o">=</span> <span class="n">my_decorator</span><span class="p">(</span><span class="nb">sum</span><span class="p">)</span>
+</code></pre></div></div>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">&gt;&gt;&gt;</span> <span class="nb">sum</span>
+<span class="o">&lt;</span><span class="n">function</span> <span class="n">my_decorator</span><span class="p">.</span><span class="o">&lt;</span><span class="nb">locals</span><span class="o">&gt;</span><span class="p">.</span><span class="n">wrapper</span> <span class="n">at</span> <span class="mh">0x7f9c0359b0d0</span><span class="o">&gt;</span>
+</code></pre></div></div>
+
+<p>This pattern is so common that Python has a syntactic sugar for decorating a function. So instead of <code class="language-plaintext highlighter-rouge">sum = my_decorator(sum)</code> we can use <code class="language-plaintext highlighter-rouge">@</code> symbol on top of <code class="language-plaintext highlighter-rouge">sum</code> method like this -</p>
+
+<div class="language-py highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">@</span><span class="n">my_decorator</span> <span class="c1"># Equivalent to `sum = my_decorator(sum)` after the method
+</span><span class="k">def</span> <span class="nf">sum</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="o">=</span><span class="mi">10</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">a</span><span class="o">+</span><span class="n">b</span>
+</code></pre></div></div>
+
+<h2 id="logging-decorator">Logging Decorator</h2>
+
+<p>We are going to create a decorator that handles two common logging scenarios - logging exceptions as <em>ERROR</em> and logging method arguments as <em>DEBUG</em> logs.</p>
+
+<p>Lets start by capturing the exceptions and log it using python <code class="language-plaintext highlighter-rouge">logging</code> library.</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kn">import</span> <span class="nn">functools</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+
+<span class="n">logging</span><span class="p">.</span><span class="n">basicConfig</span><span class="p">(</span><span class="n">level</span> <span class="o">=</span> <span class="n">logging</span><span class="p">.</span><span class="n">DEBUG</span><span class="p">)</span>
+<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="p">.</span><span class="n">getLogger</span><span class="p">()</span>
+
+<span class="k">def</span> <span class="nf">log</span><span class="p">(</span><span class="n">func</span><span class="p">):</span>
+    <span class="o">@</span><span class="n">functools</span><span class="p">.</span><span class="n">wraps</span><span class="p">(</span><span class="n">func</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">wrapper</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">result</span> <span class="o">=</span> <span class="n">func</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">result</span>
+        <span class="k">except</span> <span class="nb">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="n">logger</span><span class="p">.</span><span class="n">exception</span><span class="p">(</span><span class="s">f"Exception raised in </span><span class="si">{</span><span class="n">func</span><span class="p">.</span><span class="n">__name__</span><span class="si">}</span><span class="s">. exception: </span><span class="si">{</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">)</span><span class="si">}</span><span class="s">"</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="n">e</span>
+    <span class="k">return</span> <span class="n">wrapper</span>
+
+<span class="o">@</span><span class="n">log</span>
+<span class="k">def</span> <span class="nf">foo</span><span class="p">():</span>
+    <span class="k">raise</span> <span class="nb">Exception</span><span class="p">(</span><span class="s">"Something went wrong"</span><span class="p">)</span>
+</code></pre></div></div>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>ERROR:root:Exception raised <span class="k">in </span>foo. exception: Something went wrong
+Traceback <span class="o">(</span>most recent call last<span class="o">)</span>:
+  File <span class="s2">"&lt;REDACTED&gt;/foo.py"</span>, line 15, <span class="k">in </span>wrapper
+    result <span class="o">=</span> func<span class="o">(</span><span class="k">*</span>args, <span class="k">**</span>kwargs<span class="o">)</span>
+  File <span class="s2">"&lt;REDACTED&gt;/foo.py"</span>, line 28, <span class="k">in </span>foo
+    raise Exception<span class="o">(</span><span class="s2">"Something went wrong"</span><span class="o">)</span>
+Exception: Something went wrong
+</code></pre></div></div>
+
+<p>In addition to setting up the <code class="language-plaintext highlighter-rouge">logger</code>, we have also used <a href="https://docs.python.org/3/library/functools.html#functools.wraps">@functools.wraps</a> decorator. The <code class="language-plaintext highlighter-rouge">wraps</code> decorator updates the <code class="language-plaintext highlighter-rouge">wrapper</code> function to look like <code class="language-plaintext highlighter-rouge">func</code>. Our <code class="language-plaintext highlighter-rouge">@log</code> decorator can now be used on any function to catch every exception from <em>wrapped</em> function and log it in a consistent manner.</p>
+
+<p>Since <code class="language-plaintext highlighter-rouge">wrapper</code> function accepts all arguments (<code class="language-plaintext highlighter-rouge">*args and **kwargs</code>), the <code class="language-plaintext highlighter-rouge">@log</code> decorator can be extended to capture all the parameters passed to the decorated function. We can do this by just iterating over <em>args</em> and <em>kwargs</em> and joining them to form string message to log.</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">def</span> <span class="nf">log</span><span class="p">(</span><span class="n">func</span><span class="p">):</span>
+    <span class="o">@</span><span class="n">functools</span><span class="p">.</span><span class="n">wraps</span><span class="p">(</span><span class="n">func</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">wrapper</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="n">args_repr</span> <span class="o">=</span> <span class="p">[</span><span class="nb">repr</span><span class="p">(</span><span class="n">a</span><span class="p">)</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">args</span><span class="p">]</span>
+        <span class="n">kwargs_repr</span> <span class="o">=</span> <span class="p">[</span><span class="s">f"</span><span class="si">{</span><span class="n">k</span><span class="si">}</span><span class="s">=</span><span class="si">{</span><span class="n">v</span><span class="err">!</span><span class="n">r</span><span class="si">}</span><span class="s">"</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">.</span><span class="n">items</span><span class="p">()]</span>
+        <span class="n">signature</span> <span class="o">=</span> <span class="s">", "</span><span class="p">.</span><span class="n">join</span><span class="p">(</span><span class="n">args_repr</span> <span class="o">+</span> <span class="n">kwargs_repr</span><span class="p">)</span>
+        <span class="n">logger</span><span class="p">.</span><span class="n">debug</span><span class="p">(</span><span class="s">f"function </span><span class="si">{</span><span class="n">func</span><span class="p">.</span><span class="n">__name__</span><span class="si">}</span><span class="s"> called with args </span><span class="si">{</span><span class="n">signature</span><span class="si">}</span><span class="s">"</span><span class="p">)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">result</span> <span class="o">=</span> <span class="n">func</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">result</span>
+        <span class="k">except</span> <span class="nb">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="n">logger</span><span class="p">.</span><span class="n">exception</span><span class="p">(</span><span class="s">f"Exception raised in </span><span class="si">{</span><span class="n">func</span><span class="p">.</span><span class="n">__name__</span><span class="si">}</span><span class="s">. exception: </span><span class="si">{</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">)</span><span class="si">}</span><span class="s">"</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="n">e</span>
+    <span class="k">return</span> <span class="n">wrapper</span>
+</code></pre></div></div>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">&gt;&gt;&gt;</span> <span class="nb">sum</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="n">b</span><span class="o">=</span><span class="mi">20</span><span class="p">)</span>
+<span class="n">DEBUG</span><span class="p">:</span><span class="n">root</span><span class="p">:</span><span class="n">function</span> <span class="nb">sum</span> <span class="n">called</span> <span class="k">with</span> <span class="n">args</span> <span class="mi">10</span><span class="p">,</span> <span class="n">b</span><span class="o">=</span><span class="mi">20</span>
+<span class="mi">30</span>
+</code></pre></div></div>
+
+<p>We log the parameters in <em>DEBUG</em> level as we don’t want our logs cluttered with all functions arguments. Debug logging can be toggled on our systems as and when necessary. <strong>Keep in mind that this will write all argument values into log including any PII data or secrets</strong>.</p>
+
+<p>This basic logging decorator looks good and already does what we originally set out to achieve. As long as a method is decorated with <code class="language-plaintext highlighter-rouge">@log</code> decorator we will log any exception raised within it and all arguments passed to it.</p>
+
+<p>However in a real project, the <code class="language-plaintext highlighter-rouge">logger</code> can itself be abstracted away into its own class that initializes a logger based on certain configuration (such as push log to a cloud sink). In this case its useless to log into console by creating our own logger in the <code class="language-plaintext highlighter-rouge">@log</code> decorator. We need a way to pass an existing <code class="language-plaintext highlighter-rouge">logger</code> into our decorator at runtime. To do this we can extend the <code class="language-plaintext highlighter-rouge">@log</code> decorator to accept <code class="language-plaintext highlighter-rouge">logger</code> as an argument.</p>
+
+<p>To mimic this scenario we will start with having a class that creates a creates logger for us. For now we will create the basic logger but you can imagine the class configuring the behavior of the logger as required.</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">class</span> <span class="nc">MyLogger</span><span class="p">:</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">logging</span><span class="p">.</span><span class="n">basicConfig</span><span class="p">(</span><span class="n">level</span><span class="o">=</span><span class="n">logging</span><span class="p">.</span><span class="n">DEBUG</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">get_logger</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">logging</span><span class="p">.</span><span class="n">getLogger</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+</code></pre></div></div>
+
+<p>Since at the time of writing the decorator we do not know whether the underlying function will be passing us <code class="language-plaintext highlighter-rouge">MyLogger</code> or <code class="language-plaintext highlighter-rouge">logging.logger</code> or no logger at all, our generic decorator will have be able to handle all of them.</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Union</span>
+
+<span class="k">def</span> <span class="nf">get_default_logger</span><span class="p">():</span>
+    <span class="k">return</span> <span class="n">MyLogger</span><span class="p">().</span><span class="n">get_logger</span><span class="p">()</span>
+
+<span class="k">def</span> <span class="nf">log</span><span class="p">(</span><span class="n">_func</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">my_logger</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">MyLogger</span><span class="p">,</span> <span class="n">logging</span><span class="p">.</span><span class="n">Logger</span><span class="p">]</span> <span class="o">=</span> <span class="bp">None</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">decorator_log</span><span class="p">(</span><span class="n">func</span><span class="p">):</span>
+        <span class="o">@</span><span class="n">functools</span><span class="p">.</span><span class="n">wraps</span><span class="p">(</span><span class="n">func</span><span class="p">)</span>
+        <span class="k">def</span> <span class="nf">wrapper</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">my_logger</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+                <span class="n">logger</span> <span class="o">=</span> <span class="n">get_default_logger</span><span class="p">()</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">my_logger</span><span class="p">,</span> <span class="n">MyLogger</span><span class="p">):</span>
+                    <span class="n">logger</span> <span class="o">=</span> <span class="n">my_logger</span><span class="p">.</span><span class="n">get_logger</span><span class="p">(</span><span class="n">func</span><span class="p">.</span><span class="n">__name__</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">logger</span> <span class="o">=</span> <span class="n">my_logger</span>
+            <span class="n">args_repr</span> <span class="o">=</span> <span class="p">[</span><span class="nb">repr</span><span class="p">(</span><span class="n">a</span><span class="p">)</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">args</span><span class="p">]</span>
+            <span class="n">kwargs_repr</span> <span class="o">=</span> <span class="p">[</span><span class="s">f"</span><span class="si">{</span><span class="n">k</span><span class="si">}</span><span class="s">=</span><span class="si">{</span><span class="n">v</span><span class="err">!</span><span class="n">r</span><span class="si">}</span><span class="s">"</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">.</span><span class="n">items</span><span class="p">()]</span>
+            <span class="n">signature</span> <span class="o">=</span> <span class="s">", "</span><span class="p">.</span><span class="n">join</span><span class="p">(</span><span class="n">args_repr</span> <span class="o">+</span> <span class="n">kwargs_repr</span><span class="p">)</span>
+            <span class="n">logger</span><span class="p">.</span><span class="n">debug</span><span class="p">(</span><span class="s">f"function </span><span class="si">{</span><span class="n">func</span><span class="p">.</span><span class="n">__name__</span><span class="si">}</span><span class="s"> called with args </span><span class="si">{</span><span class="n">signature</span><span class="si">}</span><span class="s">"</span><span class="p">)</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">result</span> <span class="o">=</span> <span class="n">func</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+                <span class="k">return</span> <span class="n">result</span>
+            <span class="k">except</span> <span class="nb">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                <span class="n">logger</span><span class="p">.</span><span class="n">exception</span><span class="p">(</span><span class="s">f"Exception raised in </span><span class="si">{</span><span class="n">func</span><span class="p">.</span><span class="n">__name__</span><span class="si">}</span><span class="s">. exception: </span><span class="si">{</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">)</span><span class="si">}</span><span class="s">"</span><span class="p">)</span>
+                <span class="k">raise</span> <span class="n">e</span>
+        <span class="k">return</span> <span class="n">wrapper</span>
+
+    <span class="k">if</span> <span class="n">_func</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">decorator_log</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">decorator_log</span><span class="p">(</span><span class="n">_func</span><span class="p">)</span>
+</code></pre></div></div>
+
+<p>The above code looks quite scary but let me summarize it. The <code class="language-plaintext highlighter-rouge">@log</code> decorator now handles three different scenarios -</p>
+
+<ul>
+  <li>
+    <p><strong>No logger is passed</strong>: This is same scenario what we have been doing up until before this. The decorator is simply used as <code class="language-plaintext highlighter-rouge">@log</code> statement on top of the function. In this case the decorator gets a logger by calling <code class="language-plaintext highlighter-rouge">get_default_logger</code> method and uses it for rest of the method.</p>
+  </li>
+  <li>
+    <p><strong><code class="language-plaintext highlighter-rouge">MyLogger</code> is passed</strong>: Our <code class="language-plaintext highlighter-rouge">@log</code> decorator can now accept instance of <code class="language-plaintext highlighter-rouge">MyLogger</code> as an argument. It can then call <code class="language-plaintext highlighter-rouge">MyLogger.get_logger</code> method to create a nested logger and use it rest of the way.</p>
+  </li>
+</ul>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">@</span><span class="n">log</span><span class="p">(</span><span class="n">my_logger</span><span class="o">=</span><span class="n">MyLogger</span><span class="p">())</span>
+<span class="k">def</span> <span class="nf">sum</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="o">=</span><span class="mi">10</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">a</span> <span class="o">+</span> <span class="n">b</span>
+</code></pre></div></div>
+
+<ul>
+  <li><strong><code class="language-plaintext highlighter-rouge">logging.logger</code> is passed</strong>: In this third scenario we can pass the logger itself instead of passing <code class="language-plaintext highlighter-rouge">MyLogger</code> class.</li>
+</ul>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">lg</span> <span class="o">=</span> <span class="n">MyLogger</span><span class="p">().</span><span class="n">get_logger</span><span class="p">()</span>
+
+<span class="o">@</span><span class="n">log</span><span class="p">(</span><span class="n">my_logger</span><span class="o">=</span><span class="n">lg</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">sum</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="o">=</span><span class="mi">10</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">a</span> <span class="o">+</span> <span class="n">b</span>
+</code></pre></div></div>
+
+<p>We are still not done. Even in current form our log decorator is restricted. One limitation is that we <em>must</em> have <code class="language-plaintext highlighter-rouge">logger</code> or <code class="language-plaintext highlighter-rouge">MyLogger</code> available <em>before</em> the method we want to decorate. In other words the reference to logger <em>must</em> exist before the method itself exists. This may work in cases where the target function is part of a class and the class <code class="language-plaintext highlighter-rouge">__init__</code> method can instantiate the logger, but it won’t work with functions outside the context of class. In many real world applications we wont have each module or function creating their own logger. Instead we may want to pass the logger to the function itself. The <code class="language-plaintext highlighter-rouge">logger</code> or <code class="language-plaintext highlighter-rouge">MyLogger</code> will be dependency injected into downstream methods. In other words a function may have logger passed to it in its parameter.</p>
+
+<p>But if the function is part of a class then the <code class="language-plaintext highlighter-rouge">logger</code> will be injected into class itself and not into every method of the class. In this case we would want to use the logger available to our class instead.</p>
+
+<p>So our objective is to capture the <code class="language-plaintext highlighter-rouge">logger</code> passed as the argument <em>to the decorated</em> function <strong>or</strong> passed to the <em>class constructor of our decorated function</em>, and use it to log <em>from the decorator</em> itself. By doing this our decorator can be completely decoupled from the logger itself and will utilize whatever logger is available to the underlying method at runtime.</p>
+
+<p>To do this we will iterate over the <code class="language-plaintext highlighter-rouge">args</code> and <code class="language-plaintext highlighter-rouge">kwargs</code> argument and check if we get <code class="language-plaintext highlighter-rouge">logger</code> in any of them. To check if the function is part of the class, we can check if first argument of <code class="language-plaintext highlighter-rouge">args</code> has attribute <code class="language-plaintext highlighter-rouge">__dict__</code>. If the first argument has attribute <code class="language-plaintext highlighter-rouge">__dict__</code> we will iterate over the <code class="language-plaintext highlighter-rouge">__dict__.values()</code> and check if one of these values is our logger. Finally if nothing works we will default to <code class="language-plaintext highlighter-rouge">get_default_logger</code> method.</p>
+
+<div class="language-py highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">def</span> <span class="nf">log</span><span class="p">(</span><span class="n">_func</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">my_logger</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">MyLogger</span><span class="p">,</span> <span class="n">logging</span><span class="p">.</span><span class="n">Logger</span><span class="p">]</span> <span class="o">=</span> <span class="bp">None</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">decorator_log</span><span class="p">(</span><span class="n">func</span><span class="p">):</span>
+        <span class="o">@</span><span class="n">functools</span><span class="p">.</span><span class="n">wraps</span><span class="p">(</span><span class="n">func</span><span class="p">)</span>
+        <span class="k">def</span> <span class="nf">wrapper</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+            <span class="n">logger</span> <span class="o">=</span> <span class="n">get_default_logger</span><span class="p">()</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">my_logger</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+                    <span class="n">first_args</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="nb">iter</span><span class="p">(</span><span class="n">args</span><span class="p">),</span> <span class="bp">None</span><span class="p">)</span>  <span class="c1"># capture first arg to check for `self`
+</span>                    <span class="n">logger_params</span> <span class="o">=</span> <span class="p">[</span>  <span class="c1"># does kwargs have any logger
+</span>                        <span class="n">x</span>
+                        <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">.</span><span class="n">values</span><span class="p">()</span>
+                        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">logging</span><span class="p">.</span><span class="n">Logger</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">MyLogger</span><span class="p">)</span>
+                    <span class="p">]</span> <span class="o">+</span> <span class="p">[</span>  <span class="c1"># # does args have any logger
+</span>                        <span class="n">x</span>
+                        <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">args</span>
+                        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">logging</span><span class="p">.</span><span class="n">Logger</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">MyLogger</span><span class="p">)</span>
+                    <span class="p">]</span>
+                    <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">first_args</span><span class="p">,</span> <span class="s">"__dict__"</span><span class="p">):</span>  <span class="c1"># is first argument `self`
+</span>                        <span class="n">logger_params</span> <span class="o">=</span> <span class="n">logger_params</span> <span class="o">+</span> <span class="p">[</span>
+                            <span class="n">x</span>
+                            <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">first_args</span><span class="p">.</span><span class="n">__dict__</span><span class="p">.</span><span class="n">values</span><span class="p">()</span>  <span class="c1"># does class (dict) members have any logger
+</span>                            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">logging</span><span class="p">.</span><span class="n">Logger</span><span class="p">)</span>
+                            <span class="ow">or</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">MyLogger</span><span class="p">)</span>
+                        <span class="p">]</span>
+                    <span class="n">h_logger</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="nb">iter</span><span class="p">(</span><span class="n">logger_params</span><span class="p">),</span> <span class="n">MyLogger</span><span class="p">())</span>  <span class="c1"># get the next/first/default logger
+</span>                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">h_logger</span> <span class="o">=</span> <span class="n">my_logger</span>  <span class="c1"># logger is passed explicitly to the decorator
+</span>
+                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">h_logger</span><span class="p">,</span> <span class="n">MyLogger</span><span class="p">):</span>
+                    <span class="n">logger</span> <span class="o">=</span> <span class="n">h_logger</span><span class="p">.</span><span class="n">get_logger</span><span class="p">(</span><span class="n">func</span><span class="p">.</span><span class="n">__name__</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">logger</span> <span class="o">=</span> <span class="n">h_logger</span>
+
+                <span class="n">args_repr</span> <span class="o">=</span> <span class="p">[</span><span class="nb">repr</span><span class="p">(</span><span class="n">a</span><span class="p">)</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">args</span><span class="p">]</span>
+                <span class="n">kwargs_repr</span> <span class="o">=</span> <span class="p">[</span><span class="s">f"</span><span class="si">{</span><span class="n">k</span><span class="si">}</span><span class="s">=</span><span class="si">{</span><span class="n">v</span><span class="err">!</span><span class="n">r</span><span class="si">}</span><span class="s">"</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">.</span><span class="n">items</span><span class="p">()]</span>
+                <span class="n">signature</span> <span class="o">=</span> <span class="s">", "</span><span class="p">.</span><span class="n">join</span><span class="p">(</span><span class="n">args_repr</span> <span class="o">+</span> <span class="n">kwargs_repr</span><span class="p">)</span>
+                <span class="n">logger</span><span class="p">.</span><span class="n">debug</span><span class="p">(</span><span class="s">f"function </span><span class="si">{</span><span class="n">func</span><span class="p">.</span><span class="n">__name__</span><span class="si">}</span><span class="s"> called with args </span><span class="si">{</span><span class="n">signature</span><span class="si">}</span><span class="s">"</span><span class="p">)</span>
+            <span class="k">except</span> <span class="nb">Exception</span><span class="p">:</span>
+                <span class="k">pass</span>
+
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">result</span> <span class="o">=</span> <span class="n">func</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+                <span class="k">return</span> <span class="n">result</span>
+            <span class="k">except</span> <span class="nb">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                <span class="n">logger</span><span class="p">.</span><span class="n">exception</span><span class="p">(</span><span class="s">f"Exception raised in </span><span class="si">{</span><span class="n">func</span><span class="p">.</span><span class="n">__name__</span><span class="si">}</span><span class="s">. exception: </span><span class="si">{</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">)</span><span class="si">}</span><span class="s">"</span><span class="p">)</span>
+                <span class="k">raise</span> <span class="n">e</span>
+        <span class="k">return</span> <span class="n">wrapper</span>
+
+    <span class="k">if</span> <span class="n">_func</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">decorator_log</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">decorator_log</span><span class="p">(</span><span class="n">_func</span><span class="p">)</span>
+</code></pre></div></div>
+
+<p>The above decorator is generic enough to work for 2 more scenarios in addition to 3 scenarios we discussed before -</p>
+
+<ul>
+  <li>Either <code class="language-plaintext highlighter-rouge">logger</code> or <code class="language-plaintext highlighter-rouge">MyLogger</code> is passed to the decorated method</li>
+</ul>
+
+<div class="language-py highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">@</span><span class="n">log</span>
+<span class="k">def</span> <span class="nf">foo</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">logger</span><span class="p">):</span>
+    <span class="k">pass</span>
+
+<span class="o">@</span><span class="n">log</span>
+<span class="k">def</span> <span class="nf">bar</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">logger</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span> <span class="c1"># Named parameter
+</span>    <span class="k">pass</span>
+
+<span class="n">foo</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">20</span><span class="p">,</span> <span class="n">MyLogger</span><span class="p">())</span>  <span class="c1"># OR foo(10, 20, MyLogger().get_logger())
+</span><span class="n">bar</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="n">b</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span> <span class="n">logger</span><span class="o">=</span><span class="n">MyLogger</span><span class="p">())</span>  <span class="c1"># OR bar(10, b=20, logger=MyLogger().get_logger())
+</span></code></pre></div></div>
+
+<ul>
+  <li>Either <code class="language-plaintext highlighter-rouge">logger</code> or <code class="language-plaintext highlighter-rouge">MyLogger</code> is passed to class <code class="language-plaintext highlighter-rouge">__init__</code> method hosting the decorated function</li>
+</ul>
+
+<div class="language-py highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">class</span> <span class="nc">Foo</span><span class="p">:</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">logger</span><span class="p">):</span>
+        <span class="bp">self</span><span class="p">.</span><span class="n">lg</span> <span class="o">=</span> <span class="n">logger</span>
+
+    <span class="o">@</span><span class="n">log</span>
+    <span class="k">def</span> <span class="nf">sum</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="o">=</span><span class="mi">10</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">a</span> <span class="o">+</span> <span class="n">b</span>
+
+<span class="n">Foo</span><span class="p">(</span><span class="n">MyLogger</span><span class="p">()).</span><span class="nb">sum</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="n">b</span><span class="o">=</span><span class="mi">20</span><span class="p">)</span>  <span class="c1"># OR Foo(MyLogger().get_logger()).sum(10, b=20)
+</span></code></pre></div></div>
+
+<p>One additional thing we have done is to wrap all the code <em>before</em> calling the decorated function <code class="language-plaintext highlighter-rouge">func</code> in a <code class="language-plaintext highlighter-rouge">try - except</code> block. We don’t want the execution to fail due to problems in logging even before the target function is called. In no case our logging logic should cause failure in the system.</p>
+
+<h1 id="conclusion">Conclusion</h1>
+
+<p>The above decorator is a good starting point and can be extended or simplified according to the requirements. It reduces the chance of missing out on exception logging and standardizes the error messages across the application.</p>
+
+<p>Reach out to me in the comments below for any questions that you may have.</p>
+
+  </div>
+  <div class="PageNavigation">
+  
+  <div class="prevDiv">
+    <a class="prev" href="/blog/2021/01/azdo-pr-vscode-extension/">&laquo; Azure Devops Pull Request Extension for VS Code</a>
+  </div>
+  
+  
+</div>
+<!-- from https://github.com/utterance/utterances -->
+<script src="https://utteranc.es/client.js"
+        repo="ankitbko/blog"
+        issue-term="title"
+        label="blogpost-comment"
+        theme="github-light"
+        crossorigin="anonymous"
+        async>
+</script><a class="u-url" href="/blog/2021/04/logging-in-python/" hidden></a>
+</article>
+      </div>
+    </main><footer class="site-footer h-card">
+  <data class="u-url" href="/blog/"></data>
+
+  <div class="wrapper">
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col">
+        <p class="feed-subscribe">
+          <a href="/blog/feed.xml">
+            <svg class="svg-icon orange">
+              <use xlink:href="/blog/assets/minima-social-icons.svg#rss"></use>
+            </svg><span>Subscribe</span>
+          </a>
+        </p>
+        <ul class="contact-list">
+          <li class="p-name">Ankit Sinha</li>
+          
+        </ul>
+      </div>
+      <div class="footer-col">
+        <p>A technology blog focusing on random stuff</p>
+      </div>
+    </div>
+
+    <div class="social-links"><ul class="social-media-list"><li><a rel="me" href="https://github.com/ankitbko" title="ankitbko"><svg class="svg-icon grey"><use xlink:href="/blog/assets/minima-social-icons.svg#github"></use></svg></a></li><li><a rel="me" href="https://twitter.com/ankitbko" title="ankitbko"><svg class="svg-icon grey"><use xlink:href="/blog/assets/minima-social-icons.svg#twitter"></use></svg></a></li></ul>
+</div>
+
+  </div>
+
+</footer>
+</body>
+
+</html>
