@@ -15,9 +15,9 @@ One approach to alleviate this problem is by utilizing Python's decorator featur
 
 ## What are decorators
 
-A decorator is a function that takes another function and extends the it's behavior without explicitly modifying it. These are also known as [higher-order functions](https://en.wikipedia.org/wiki/Higher-order_function).
+A decorator is a function that takes another function and extends it's behavior without explicitly modifying it. These are also known as [higher-order functions](https://en.wikipedia.org/wiki/Higher-order_function).
 
-Python's functions are [first-class citizens](https://en.wikipedia.org/wiki/First-class_citizen). This means functions can passed as argument or can be subject of assignment. So if you have a function called `sums(a, b=10)`, you can use it as any other objects and drill down into its properties.
+Python's functions are [first-class citizens](https://en.wikipedia.org/wiki/First-class_citizen). This means functions can passed as argument or can be subject of assignment. So if you have a function `def sum(a, b=10)`, you can use it as any other object and drill down into its properties.
 
 ```python
 def sum(a, b=10):
@@ -31,7 +31,7 @@ def sum(a, b=10):
 ('a', 'b')
 ```
 
-Since functions behave like any other object, you could assign `sum` to another function. Then calling `sum` will call this other function instead of the one that we defined before. The decorators utilizes this behavior by assigning `sum` a new function which takes `sum` as parameter and wraps some additional logic around it thereby *extending* it without modifying the function itself.
+Since functions behave like an object, you could assign `sum` to another function. Then calling `sum` will call this other function instead of the one that we defined before. The decorators utilizes this behavior by assigning `sum` a new function which takes `sum` as parameter and wraps some additional logic around it thereby *extending* it without modifying the function itself.
 
 
 ```python
@@ -64,7 +64,7 @@ def sum(a, b=10):
 
 We are going to create a decorator that handles two common logging scenarios - logging exceptions as *ERROR* and logging method arguments as *DEBUG* logs.
 
-Lets start by capturing the exceptions and logging it using python `logging` library.
+Lets start by capturing the exceptions and log it using python `logging` library.
 
 ```python
 import functools
@@ -129,10 +129,10 @@ DEBUG:root:function sum called with args 10, b=20
 
 We log the parameters in *DEBUG* level as we don't want our logs cluttered with all functions arguments. Debug logging can be toggled on our systems as and when necessary. **Keep in mind that this will write all argument values into log including any PII data or secrets**.
 
-This basic logging decorator looks good and already does what we originally set out to achieve. As long as a method is decorated with `@log` decorator we will capture any exception raised within it and all arguments passed to it.
+This basic logging decorator looks good and already does what we originally set out to achieve. As long as a method is decorated with `@log` decorator we will log any exception raised within it and all arguments passed to it.
 
 
-However in real projects, the `logger` can itself be abstracted away into its own class that initializes a logger based on certain configuration (such as push log to a cloud sink). In this case its useless to log into console by creating our own logger in the `@log` decorator. We need a way to pass an existing `logger` into our decorator at runtime. To do this we can extend the `@log` decorator to accept `logger` as an argument.
+However in a real project, the `logger` can itself be abstracted away into its own class that initializes a logger based on certain configuration (such as push log to a cloud sink). In this case its useless to log into console by creating our own logger in the `@log` decorator. We need a way to pass an existing `logger` into our decorator at runtime. To do this we can extend the `@log` decorator to accept `logger` as an argument.
 
 
 To mimic this scenario we will start with having a class that creates a creates logger for us. For now we will create the basic logger but you can imagine the class configuring the behavior of the logger as required.
@@ -185,9 +185,9 @@ def log(_func=None, *, my_logger: Union[MyLogger, logging.Logger] = None):
 
 The above code looks quite scary but let me summarize it. The `@log` decorator now handles three different scenarios -
 
-- No logger is passed: This is same scenario what we have been doing up until before this. The decorator is simply used as `@log` statement on top of the function. In this case the decorator gets a logger by calling `get_default_logger` method and uses it for rest of the method.
+- **No logger is passed**: This is same scenario what we have been doing up until before this. The decorator is simply used as `@log` statement on top of the function. In this case the decorator gets a logger by calling `get_default_logger` method and uses it for rest of the method.
 
-- `MyLogger` is passed: Our `@log` decorator can now accept instance of `MyLogger` as an argument. It can then call `MyLogger.get_logger` method to create a nested logger and use it rest of the way.
+- **`MyLogger` is passed**: Our `@log` decorator can now accept instance of `MyLogger` as an argument. It can then call `MyLogger.get_logger` method to create a nested logger and use it rest of the way.
 
 ```python
 @log(my_logger=MyLogger())
@@ -195,7 +195,7 @@ def sum(a, b=10):
     return a + b
 ```
 
-- `logging.logger` is passed: In this third scenario we can pass the logger itself instead of passing `MyLogger` class.
+- **`logging.logger` is passed**: In this third scenario we can pass the logger itself instead of passing `MyLogger` class.
 
 ```python
 lg = MyLogger().get_logger()
@@ -213,7 +213,7 @@ But if the function is part of a class then the `logger` will be injected into c
 So our objective is to capture the `logger` passed as the argument *to the decorated* function **or** passed to the *class constructor of our decorated function*, and use it to log *from the decorator* itself. By doing this our decorator can be completely decoupled from the logger itself and will utilize whatever logger is available to the underlying method at runtime.
 
 
- To do this we will iterate over the `args` and `kwargs` argument and check if we get `logger` in any of them. To check if the function is part of the class, we can check if first argument of `args` has attribute `__dict__`. If the first argument has attribute `__dict__` we will iterate over the `__dict__.values()` and check if one of these values is our logger or not. Finally if nothing works we will default to `get_default_logger` method.
+ To do this we will iterate over the `args` and `kwargs` argument and check if we get `logger` in any of them. To check if the function is part of the class, we can check if first argument of `args` has attribute `__dict__`. If the first argument has attribute `__dict__` we will iterate over the `__dict__.values()` and check if one of these values is our logger. Finally if nothing works we will default to `get_default_logger` method.
 
 ```py
 def log(_func=None, *, my_logger: Union[MyLogger, logging.Logger] = None):
@@ -302,6 +302,11 @@ Foo(MyLogger()).sum(10, b=20)  # OR Foo(MyLogger().get_logger()).sum(10, b=20)
 ```
 
 One additional thing we have done is to wrap all the code *before* calling the decorated function `func` in a `try - except` block. We don't want the execution to fail due to problems in logging even before the target function is called. In no case our logging logic should cause failure in the system.
+
+
+# Conclusion
+
+The above decorator is a good starting point and can be extended or simplified according to the requirements. It reduces the chance of missing out on exception logging and standardizes the error messages across the application.
 
 
 Reach out to me in the comments below for any questions that you may have.
