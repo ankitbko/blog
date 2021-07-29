@@ -222,4 +222,4 @@ Process is essential to deliver any sufficiently big product. A small system can
 
 
 # Conclusion
-The idea of the article is to make it a reference point when designing softwares. The goals section discussed a lot of possibilities and what should be the focus of a system. However this is no way exhaustive discussion on the subject. A more in depth discussion is present in Butler's paper with great many chapters on each oppositions. I hope you enjoyed reading this. If you have any questions, please feel free to comment below.
+The idea of the article is to make it a reference point when designing softwares. The goals section discussed a lot of possibilities and what should be the focus of a system and is quite dense with information. Even then this is in no way exhaustive discussion on the subject. Butler has gone even more in depth discussing each of these aspects and I strongly recommend reading his paper. I hope you enjoyed reading this. If you have any questions, please feel free to comment below.
