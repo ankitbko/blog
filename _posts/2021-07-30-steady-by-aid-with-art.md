@@ -198,13 +198,13 @@ This is the most important idea for designing software. When the system gets too
 A system usually has lots of modules. To make management of modules easier and to identify how a change in module will propagate across, group related modules in *layers*. A layer is single unit that a team can ship and client can understand. The layers are stacked on each other to form hierarchy. A lower layer is not allowed to call methods in a higher layer.
 
 ```
-|------------------|
-|     Clients      |
-|------------------|
-|Peers| YOU | Peers|
-|------------------|
-|       Host       |
-|------------------|
+|---------------------|
+|       Clients       |
+|---------------------|
+| Peers | YOU | Peers |
+|---------------------|
+|         Host        |
+|---------------------|
 ```
 
 Layers is good for decoupling, but it comes with cost for each level of abstraction. If the performance is key goal, then its prudent to measure it. There are two ways to reduce it: make it inter-layer communication cheaper or bypass some layers.
