@@ -41,7 +41,7 @@ Goals are general properties that system should have, not the problems it tries 
 ## Simple
 Simple is arguably the most important goal but it gets forgotten all the time. Simplicity is the key to successful software design. Simple systems are easy to understand, easy to extend, and easy to maintain.
 
-> Tip: Figure out how to solve one really tricky sticky problem and then leave the rest of the system straightforward and boring. I call this the “rocket science” pattern. —Terry Crowley
+{% include tip.html content="Figure out how to solve one really tricky sticky problem and then leave the rest of the system straightforward and boring. I call this the “rocket science” pattern. —Terry Crowley" %}
 
 - Design your system around a small number of *key* modules with simple specs and predictably good performance. This leaves rest of the code easy to change.
 - *Key* modules will grow over time, get optimized and new features get added building a solid foundation.
@@ -63,11 +63,11 @@ Timely system is the one that ships soon enough to meet your time-to-market need
 ## Efficient
 Efficiency is about doing things fast and cheaply. It is tricky to write an efficient program, so don't do it unless you really need the performance.
 
-> Tip: The rule for optimization is - first design, then code, then measure and finally (if ever) optimize. In other words, don't optimize until you know you need to.
+{% include tip.html content="The rule for optimization is - first design, then code, then measure and finally (if ever) optimize. In other words, don't optimize until you know you need to."  %}
 
 *Premature Optimization* is a common trap many people fall into. Your goal should never be to create *most optimized system* (a universal goal). First make your code correct, understand the need, then optimize. It's often good idea to keep unoptimized code around as oracle to test the optimized code against.
 
-> Important: The resources you are trying to use efficiently are **computing**, **storage** and **communication**. The dimensions are **time** and **space**. For *time* the parameters are **bandwidth** (or throughput) and **latency** (or response time). Latency is the time to do the work plus time spent waiting for the resource. For *space* the parameters are **memory** and **bandwidth**.
+{% include important.html content="The resources you are trying to use efficiently are **computing**, **storage** and **communication**. The dimensions are **time** and **space**. For *time* the parameters are **bandwidth** (or throughput) and **latency** (or response time). Latency is the time to do the work plus time spent waiting for the resource. For *space* the parameters are **memory** and **bandwidth**" %}
 
 To evaluate a design idea -
 - Work out *roughly* how much latency, bandwidth and storage it consumes to deliver performance you need.
