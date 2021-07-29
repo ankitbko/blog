@@ -4,13 +4,24 @@ title: STEADY by AID with ART
 comments: true
 categories: [design, software design]
 description: Goals and Techniques for Software Design
-image: images/previews/python-logging.jpg
+image: images/previews/steady-by-aid.jpg
 author: <a href='https://twitter.com/ankitbko', target='_blank'>Ankit Sinha</a>
 ---
 
 > This post is heavily inspired by [Hints and Principles for Computer System Design by Butler Lampson](https://www.microsoft.com/en-us/research/publication/hints-and-principles-for-computer-system-design-3/) and is derived from my notes when reading the paper. My goal of this article was to condense information in Butler's paper into short actionable article that can be referenced when designing software. I strongly recommend reading the original paper.
 
-Designing software is hard. It is not only a matter of writing code, but it is also a matter of managing complexity. There usually isn't a *"best"* way to design a system. Designing a system is a balance between the following (not exhaustive list):
+Designing software is hard. It is not only a matter of writing code, but it is also a matter of managing complexity. Designing a system is very different from designing an algorithm. The requirements are complicated, unclear and always changing. The measure of success is not clear. There usually isn't a *"best"* way to design a system.
+
+So what does the title of the article mean?
+- Goals - **STEADY** - **S**imple, **T**imely, **E**fficient, **A**daptable, **D**ependable, **Y**ummy.
+- Techniques - by **AID** - **A**pproximate, **I**ncremental, **D**ivide and Conquer.
+- Process - with **ART** - **A**rchitecture, **A**utomate, **R**eview, **T**echinques, **T**est.
+
+In this article we explore these ideas focusing mostly on *goals*. But before we get started we need to understand a bit about tradeoffs and oppositions.
+
+# Tradeoffs and Oppositions
+
+Designing a system is a balance between the following (not exhaustive list):
 - **Complexity:** The system should be simple enough to be understood by a wide variety of people.
 - **Flexibility:** The system should be flexible enough to be extended to meet the needs of the future.
 - **Robustness:** The system should be robust enough to handle the failure of its components.
@@ -20,20 +31,12 @@ Designing software is hard. It is not only a matter of writing code, but it is a
 - **Maintainability:** The system should be maintainable enough to be extended to meet the needs of the future.
 - **Reliability:** The system should be reliable enough to be used by a wide variety of users.
 
-So what does the title of the article mean?
-- Goals - **STEADY** - **S**imple, **T**imely, **E**fficient, **A**daptable, **D**ependable, **Y**ummy.
-- Techniques - by **AID** - **A**pproximate, **I**ncremental, **D**ivide and Conquer.
-- Process - with **ART** - **A**rchitecture, **A**utomate, **R**eview, **T**echinques, **T**est.
-
-
-
-# Tradeoffs and Oppositions
 Software design is an art of managing tradeoffs. In ideal world we could achieve all the above criteria. Unfortunately real systems are constrained by many factors which results in us making decisions on what is important. Some of these choices can even affect other choices indirectly. For example can we keep a system simple or should we make it more rich. Do we want to fetch all data from database (increase memory and I/O bandwidth) or paginate data (increased number of I/O calls). Some of these tradeoffs are talked later in the article. The *goals* described below will act as guide on making choices on tradeoffs.
 
-Butler expresses this idea as form of *oppositions*. Oppositions are *extremes* between choices. These are not opposite but the endpoints of a range of possibilities. Imagine these oppositions as a continuous scale (like 1 to 10), and when designing make choice where your system will fall in this scale. Some of the examples of oppositions are `simple <-> rich`, `general <-> specialized`, `perfect <-> adequate`, etc. I recommend reading the paper to get better understanding of what oppositions are.
-
+Butler expresses this idea as form of *oppositions*. Oppositions are *extremes* between choices. These are not opposite but the endpoints of a range of possibilities. Imagine these oppositions as a continuous scale (like 1 to 10), and when designing make choice where your system will fall in this scale. Some of the examples of oppositions are `simple <-> rich`, `general <-> specialized`, `perfect <-> adequate`, `time <-> space`, etc. I will not discuss the oppositions in great length in this article so I recommend reading the paper to get better understanding of what oppositions are. But keep in mind the idea about oppositions being a scale of extreme possibilities.
 
 # Goals
+Goals are general properties that system should have, not the problems it tries to solve.
 
 ## Simple
 Simple is arguably the most important goal but it gets forgotten all the time. Simplicity is the key to successful software design. Simple systems are easy to understand, easy to extend, and easy to maintain.
@@ -219,3 +222,7 @@ Process is essential to deliver any sufficiently big product. A small system can
 - **Automation**: Automate everything, from code analysis, to build, test, deploy.
 - **Review**: Review both the design and the code. Often I see design decisions happen within subset of people (leads and architect) in isolation with the entire team. This leads to confusion, loss of information and lack of growth in the team. Even if design is done by single person, always [review design](https://github.com/microsoft/code-with-engineering-playbook/blob/main/docs/design/design-reviews/README.md) decisions with entire team. The team must be invested as much as the person who created the design.
 - **Testing**: Unit test, component test, integration test, stress test, chaos test, end to end test, BCDR test. Test the system. Test the code. Test the architecture. Test the automation.
+
+
+# Conclusion
+The idea of the article is to make it a reference point when designing softwares. The goals section discussed a lot of possibilities and what should be the focus of a system. However this is no way exhaustive discussion on the subject. A more in depth discussion is present in Butler's paper with great many chapters on each oppositions. I hope you enjoyed reading this. If you have any questions, please feel free to comment below.
