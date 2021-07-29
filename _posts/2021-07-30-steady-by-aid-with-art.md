@@ -27,9 +27,9 @@ Designing a system is a balance between the following (not exhaustive list):
 - **Robustness:** The system should be robust enough to handle the failure of its components.
 - **Portability:** The system should be portable enough to be used in a variety of environments.
 - **Scalability:** The system should be scalable enough to be used in a large number of concurrent users.
-- **Availability:** The system should be available enough to be used by a wide variety of users.
-- **Maintainability:** The system should be maintainable enough to be extended to meet the needs of the future.
-- **Reliability:** The system should be reliable enough to be used by a wide variety of users.
+- **Availability:** The system should output result even after partial failure.
+- **Maintainability:** The system should be easy to maintain.
+- **Reliability:** The system should output correct result and doesn't loose data in spite of partial failure.
 
 Software design is an art of managing tradeoffs. In ideal world we could achieve all the above criteria. Unfortunately real systems are constrained by many factors which results in us making decisions on what is important. Some of these choices can even affect other choices indirectly. For example can we keep a system simple or should we make it more rich. Do we want to fetch all data from database (increase memory and I/O bandwidth) or paginate data (increased number of I/O calls). Some of these tradeoffs are talked later in the article. The *goals* described below will act as guide on making choices on tradeoffs.
 
