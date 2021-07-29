@@ -95,9 +95,6 @@ In other words there are 2 ways to bring independent shards together:
 
 Map-Reduce operations are great example that combine both sharding and streaming. The combining phase of map-reduce illustrates that concurrency requires communication which is becomes the bottleneck.
 
-TODO Should I put about types of concurrency? P46
-
-
 ### Fast path and bottlenecks
 Fast path - do common case fast and leave the rare cases to be slow. It may be difficult to identify fast path if the code has lot of rare cases. In this case profile the code to identify fast paths and restructure the code to make it obvious and easy to maintain. The ties down well with identifying *key* modules. Segregate the fast path from rare cases and isolate it from rest of the code. This will make it easier to optimize, test and maintain. The fast path should be the normal case for the application. Handle the worst case separately because requirements for the two are different.
 
