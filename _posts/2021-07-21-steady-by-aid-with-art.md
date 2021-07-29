@@ -67,7 +67,7 @@ Efficiency is about doing things fast and cheaply. It is tricky to write an effi
 
 *Premature Optimization* is a common trap many people fall into. Your goal should never be to create *most optimized system* (a universal goal). First make your code correct, understand the need, then optimize. It's often good idea to keep unoptimized code around as oracle to test the optimized code against.
 
-{% include important.html content="The resources you are trying to use efficiently are **computing**, **storage** and **communication**. The dimensions are **time** and **space**. For *time* the parameters are **bandwidth** (or throughput) and **latency** (or response time). Latency is the time to do the work plus time spent waiting for the resource. For *space* the parameters are **memory** and **bandwidth**" %}
+{% include important.html content="The resources you are trying to use efficiently are <strong>computing</strong>, <strong>storage</strong> and <strong>communication</strong>. The dimensions are <strong>time</strong> and <strong>space</strong>. For <em>time</em> the parameters are <strong>bandwidth</strong> (or throughput) and <strong>latency</strong> (or response time). Latency is the time to do the work plus time spent waiting for the resource. For <em>space</em> the parameters are <strong>memory</strong> and <strong>bandwidth</strong>" %}
 
 To evaluate a design idea -
 - Work out *roughly* how much latency, bandwidth and storage it consumes to deliver performance you need.
