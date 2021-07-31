@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="twitter:card" content="summary_large_image" /><!-- Begin Jekyll SEO tag v2.6.1 -->
+<title>STEADY by AID with ART | F5 - Squashing Bugs</title>
+<meta name="generator" content="Jekyll v4.1.1" />
+<meta property="og:title" content="STEADY by AID with ART" />
+<meta name="author" content="<a href='https://twitter.com/ankitbko', target='_blank'>Ankit Sinha</a>" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="Goals and Techniques for Software Design" />
+<meta property="og:description" content="Goals and Techniques for Software Design" />
+<link rel="canonical" href="https://ankitbko.github.io/blog/2021/07/steady-by-aid-with-art/" />
+<meta property="og:url" content="https://ankitbko.github.io/blog/2021/07/steady-by-aid-with-art/" />
+<meta property="og:site_name" content="F5 - Squashing Bugs" />
+<meta property="og:image" content="https://ankitbko.github.io/blog/images/previews/steady-by-aid.jpg" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2021-07-30T00:00:00-05:00" />
+<script type="application/ld+json">
+{"url":"https://ankitbko.github.io/blog/2021/07/steady-by-aid-with-art/","@type":"BlogPosting","headline":"STEADY by AID with ART","dateModified":"2021-07-30T00:00:00-05:00","datePublished":"2021-07-30T00:00:00-05:00","image":"https://ankitbko.github.io/blog/images/previews/steady-by-aid.jpg","mainEntityOfPage":{"@type":"WebPage","@id":"https://ankitbko.github.io/blog/2021/07/steady-by-aid-with-art/"},"author":{"@type":"Person","name":"<a href='https://twitter.com/ankitbko', target='_blank'>Ankit Sinha</a>"},"description":"Goals and Techniques for Software Design","@context":"https://schema.org"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="stylesheet" href="/blog/assets/css/style.css"><link type="application/atom+xml" rel="alternate" href="https://ankitbko.github.io/blog/feed.xml" title="F5 - Squashing Bugs" /><!-- the google_analytics_id gets auto inserted from the config file -->
+
+
+
+<!-- Global site tag (gtag.js) - Google Analytics -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=UA-75679348-1"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'UA-75679348-1');
+</script>
+
+
+<link rel="shortcut icon" type="image/x-icon" href="/blog/images/favicon.ico"><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/Primer/15.2.0/primer.css" integrity="sha512-xTz2ys4coGAOz8vuV1NcQBkgVmKhsSEtjbqyMJbBHRplFuvKIUo6xhLHpAyPt9mfR6twHJgn9OgVLuqOvjeBhg==" crossorigin="anonymous" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.14.0/css/all.min.css" integrity="sha512-1PKOgIY59xJ8Co8+NE6FZ+LOAZKjy+KY8iq0G4B3CyeY6wYHN3yt9PW0XpSriVlkMXe40PTKnXrLnZ9+fkDaog==" crossorigin="anonymous" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.12.0/katex.min.css" integrity="sha512-h7nl+xz8wgDlNM4NqKEM4F1NkIRS17M9+uJwIGwuo8vGqIl4BhuCKdxjWEINm+xyrUjNCnK5dCrhM0sj+wTIXw==" crossorigin="anonymous" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.12.0/katex.min.js" integrity="sha512-/CMIhXiDA3m2c9kzRyd97MTb3MC6OVnx4TElQ7fkkoRghwDf6gi41gaT1PwF270W6+J60uTmwgeRpNpJdRV6sg==" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.12.0/contrib/auto-render.min.js" integrity="sha512-Do7uJAaHZm5OLrIv/yN4w0iG1dbu01kzdMNnFfu/mAqgUk6Nniv2JYHcwH+cNwjqgLcqcuBBk+JRvprLVI8azg==" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js" integrity="sha512-0doc9hKxR3PYwso42RD1p5ySZpzzuDiOwMrdCEh2WdJZCjcmFKc/wEnL+z8fBQrnHoiNWbo+3fiGkOYXBdQp4A==" crossorigin="anonymous"></script>
+    <script>
+    document.addEventListener("DOMContentLoaded", function() {
+        renderMathInElement( document.body, {
+        delimiters: [
+            {left: "$$", right: "$$", display: true},
+            {left: "[%", right: "%]", display: true},
+            {left: "$", right: "$", display: false}
+        ]}
+        );
+    });
+    </script>
+
+
+<script>
+function wrap_img(fn) {
+    if (document.attachEvent ? document.readyState === "complete" : document.readyState !== "loading") {
+        var elements = document.querySelectorAll(".post img");
+        Array.prototype.forEach.call(elements, function(el, i) {
+            if (el.getAttribute("title") && (el.className != "emoji")) {
+                const caption = document.createElement('figcaption');
+                var node = document.createTextNode(el.getAttribute("title"));
+                caption.appendChild(node);
+                const wrapper = document.createElement('figure');
+                wrapper.className = 'image';
+                el.parentNode.insertBefore(wrapper, el);
+                el.parentNode.removeChild(el);
+                wrapper.appendChild(el);
+                wrapper.appendChild(caption);
+            }
+        });
+    } else { document.addEventListener('DOMContentLoaded', fn); }
+}
+window.onload = wrap_img;
+</script>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function(){
+    // add link icon to anchor tags
+    var elem = document.querySelectorAll(".anchor-link")
+    elem.forEach(e => (e.innerHTML = '<i class="fas fa-link fa-xs"></i>'));
+    });
+</script>
+</head>
+<body><header class="site-header">
+
+  <div class="wrapper"><a class="site-title" rel="author" href="/blog/">F5 - Squashing Bugs</a><nav class="site-nav">
+        <input type="checkbox" id="nav-trigger" class="nav-trigger" />
+        <label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewBox="0 0 18 15" width="18px" height="15px">
+              <path d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.032C17.335,0,18,0.665,18,1.484L18,1.484z M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.032C17.335,6.031,18,6.696,18,7.516L18,7.516z M18,13.516C18,14.335,17.335,15,16.516,15H1.484 C0.665,15,0,14.335,0,13.516l0,0c0-0.82,0.665-1.483,1.484-1.483h15.032C17.335,12.031,18,12.695,18,13.516L18,13.516z"/>
+            </svg>
+          </span>
+        </label>
+
+        <div class="trigger"><a class="page-link" href="/blog/about/">About Me</a><a class="page-link" href="/blog/search/">Search</a><a class="page-link" href="/blog/categories/">Tags</a></div>
+      </nav></div>
+</header>
+<main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title p-name" itemprop="name headline">STEADY by AID with ART</h1><p class="page-description">Goals and Techniques for Software Design</p><p class="post-meta post-meta-title"><time class="dt-published" datetime="2021-07-30T00:00:00-05:00" itemprop="datePublished">
+        Jul 30, 2021
+      </time>• 
+          <span itemprop="author" itemscope itemtype="http://schema.org/Person">
+            <span class="p-author h-card" itemprop="name"><a href='https://twitter.com/ankitbko', target='_blank'>Ankit Sinha</a></span></span>
+       • <span class="read-time" title="Estimated read time">
+    
+    
+      25 min read
+    
+</span></p>
+
+    
+      <p class="category-tags"><i class="fas fa-tags category-tags-icon"></i></i> 
+      
+        <a class="category-tags-link" href="/blog/categories/#design">design</a>
+        &nbsp;
+      
+        <a class="category-tags-link" href="/blog/categories/#software design">software design</a>
+        &nbsp;
+      
+        <a class="category-tags-link" href="/blog/categories/#principles">principles</a>
+        &nbsp;
+      
+        <a class="category-tags-link" href="/blog/categories/#architecture">architecture</a>
+        
+      
+      </p>
+    
+
+    
+  </header>
+
+  <div class="post-content e-content" itemprop="articleBody">
+    <blockquote>
+  <p>This post is heavily inspired by <a href="https://www.microsoft.com/en-us/research/publication/hints-and-principles-for-computer-system-design-3/">Hints and Principles for Computer System Design by Butler Lampson</a> and is derived from my notes when reading the paper. My goal of this article was to condense information in Butler’s paper into short actionable article that can be referenced when designing software. I strongly recommend reading the original paper.</p>
+</blockquote>
+
+<p>Designing software is hard. It is not only a matter of writing code, but it is also a matter of managing complexity. Designing a system is very different from designing an algorithm. The requirements are complicated, unclear and always changing. The measure of success is not clear. There usually isn’t a <em>“best”</em> way to design a system.</p>
+
+<p>So what does the title of the article mean?</p>
+<ul>
+  <li>Goals - <strong>STEADY</strong> - <strong>S</strong>imple, <strong>T</strong>imely, <strong>E</strong>fficient, <strong>A</strong>daptable, <strong>D</strong>ependable, <strong>Y</strong>ummy.</li>
+  <li>Techniques - by <strong>AID</strong> - <strong>A</strong>pproximate, <strong>I</strong>ncremental, <strong>D</strong>ivide and Conquer.</li>
+  <li>Process - with <strong>ART</strong> - <strong>A</strong>rchitecture, <strong>A</strong>utomate, <strong>R</strong>eview, <strong>T</strong>echinques, <strong>T</strong>est.</li>
+</ul>
+
+<p>In this article we explore these ideas focusing mostly on <em>goals</em>. But before we get started we need to understand a bit about tradeoffs and oppositions.</p>
+
+<h1 id="tradeoffs-and-oppositions">Tradeoffs and Oppositions</h1>
+
+<p>Designing a system is a balance between the following (not exhaustive list):</p>
+<ul>
+  <li><strong>Complexity:</strong> The system should be simple enough to be understood by a wide variety of people.</li>
+  <li><strong>Flexibility:</strong> The system should be flexible enough to be extended to meet the needs of the future.</li>
+  <li><strong>Robustness:</strong> The system should be robust enough to handle the failure of its components.</li>
+  <li><strong>Portability:</strong> The system should be portable enough to be used in a variety of environments.</li>
+  <li><strong>Scalability:</strong> The system should be scalable enough to be used in a large number of concurrent users.</li>
+  <li><strong>Availability:</strong> The system should output result even after partial failure.</li>
+  <li><strong>Maintainability:</strong> The system should be easy to maintain.</li>
+  <li><strong>Reliability:</strong> The system should output correct result and doesn’t loose data in spite of partial failure.</li>
+</ul>
+
+<p>Software design is an art of managing tradeoffs. In ideal world we could achieve all the above criteria. Unfortunately real systems are constrained by many factors which results in us making decisions on what is important. Some of these choices can even affect other choices indirectly. For example can we keep a system simple or should we make it more rich. Do we want to fetch all data from database (increase memory and I/O bandwidth) or paginate data (increased number of I/O calls). Some of these tradeoffs are talked later in the article. The <em>goals</em> described below will act as guide on making choices on tradeoffs.</p>
+
+<p>Butler expresses this idea as form of <em>oppositions</em>. Oppositions are <em>extremes</em> between choices. These are not opposite but the endpoints of a range of possibilities. Imagine these oppositions as a continuous scale (like 1 to 10), and when designing make choice where your system will fall in this scale. Some of the examples of oppositions are <code class="language-plaintext highlighter-rouge">simple &lt;-&gt; rich</code>, <code class="language-plaintext highlighter-rouge">general &lt;-&gt; specialized</code>, <code class="language-plaintext highlighter-rouge">perfect &lt;-&gt; adequate</code>, <code class="language-plaintext highlighter-rouge">time &lt;-&gt; space</code>, etc. I will not discuss the oppositions in great length in this article so I recommend reading the paper to get better understanding of what oppositions are. But keep in mind the idea about oppositions being a scale of extreme possibilities.</p>
+
+<h1 id="goals">Goals</h1>
+<p>Goals are general properties that system should have, not the problems it tries to solve.</p>
+
+<h2 id="simple">Simple</h2>
+<p>Simple is arguably the most important goal but it gets forgotten all the time. Simplicity is the key to successful software design. Simple systems are easy to understand, easy to extend, and easy to maintain.</p>
+
+<div class="flash flash-success">
+    <svg class="octicon octicon-checklist" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path fill-rule="evenodd" d="M2.5 1.75a.25.25 0 01.25-.25h8.5a.25.25 0 01.25.25v7.736a.75.75 0 101.5 0V1.75A1.75 1.75 0 0011.25 0h-8.5A1.75 1.75 0 001 1.75v11.5c0 .966.784 1.75 1.75 1.75h3.17a.75.75 0 000-1.5H2.75a.25.25 0 01-.25-.25V1.75zM4.75 4a.75.75 0 000 1.5h4.5a.75.75 0 000-1.5h-4.5zM4 7.75A.75.75 0 014.75 7h2a.75.75 0 010 1.5h-2A.75.75 0 014 7.75zm11.774 3.537a.75.75 0 00-1.048-1.074L10.7 14.145 9.281 12.72a.75.75 0 00-1.062 1.058l1.943 1.95a.75.75 0 001.055.008l4.557-4.45z"></path></svg>
+    <strong>Tip: </strong>Figure out how to solve one really tricky sticky problem and then leave the rest of the system straightforward and boring. I call this the “rocket science” pattern. —Terry Crowley
+</div>
+
+<ul>
+  <li>Design your system around a small number of <em>key</em> modules with simple specs and predictably good performance. This leaves rest of the code easy to change.</li>
+  <li><em>Key</em> modules will grow over time, get optimized and new features get added building a solid foundation.</li>
+  <li>Make <em>key</em> module <strong>fast</strong> rather than <strong>general</strong> or <strong>powerful</strong>. This is a tradeoff between generalization and specialization. Slow and powerful module forces client to pay for power that it doesn’t want or need.</li>
+  <li>Beware of <em>universal goals</em> such as “create powerful storage” or “create a fast server”. These do not provide enough value and add lot of generality and complexity.</li>
+  <li><strong>Brute Force</strong>: Computers have become faster - take advantage of it. Often times its not needed to implement a complex solution just to avoid (taboo)brute force solution. But there are many successful solutions that employ brute force. One common example is <em>polling</em> instead of notification, its simple and efficient if you can tolerate enough latency.</li>
+  <li><strong>Reduction</strong>: Solve a problem by reducing it to a problem that is easier to solve. This is fundamental to successful design. Although beware of reducing problem to an already solved problem which is not <em>simpler</em> but more complex. Using a fraction of power of a powerful module is often a good engineering. But it can be wasteful of resource, which is not always bad, but its easy to loose track of how much resource is being wasted.</li>
+  <li>Code is read more number of times than it is written. Keep the code simple to read and understand.</li>
+</ul>
+
+<h2 id="timely">Timely</h2>
+<p>Timely system is the one that ships soon enough to meet your time-to-market need. You may have a great idea compared to current boring technology but if you take 3-5 years to ship it, the old one improves enough that its no longer worthwhile to switch. So being fast to market is very important goal. And this means making choices to give up features and dependability. This is a tradeoff.</p>
+
+<ul>
+  <li>If you keep your solution <em>simple</em>, you increase your odds of meeting <em>timely</em> goal.</li>
+  <li>If design is extensible, you can add features later. However adding dependability is harder.</li>
+  <li>Most often it is ok for system to fail to deliver expected or timely result. User’s may notice that result they are seeing is incomplete or wrong, but this doesn’t matter as long as it doesn’t happen too often. Perhaps the biggest example of this is <em>the web</em>. It is successful because it doesn’t have to work <em>always</em>. The model is that user will try again or come back tomorrow.</li>
+</ul>
+
+<h2 id="efficient">Efficient</h2>
+<p>Efficiency is about doing things fast and cheaply. It is tricky to write an efficient program, so don’t do it unless you really need the performance.</p>
+
+<div class="flash flash-success">
+    <svg class="octicon octicon-checklist octicon octicon-checklist" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path fill-rule="evenodd" d="M2.5 1.75a.25.25 0 01.25-.25h8.5a.25.25 0 01.25.25v7.736a.75.75 0 101.5 0V1.75A1.75 1.75 0 0011.25 0h-8.5A1.75 1.75 0 001 1.75v11.5c0 .966.784 1.75 1.75 1.75h3.17a.75.75 0 000-1.5H2.75a.25.25 0 01-.25-.25V1.75zM4.75 4a.75.75 0 000 1.5h4.5a.75.75 0 000-1.5h-4.5zM4 7.75A.75.75 0 014.75 7h2a.75.75 0 010 1.5h-2A.75.75 0 014 7.75zm11.774 3.537a.75.75 0 00-1.048-1.074L10.7 14.145 9.281 12.72a.75.75 0 00-1.062 1.058l1.943 1.95a.75.75 0 001.055.008l4.557-4.45z"></path></svg>
+    <strong>Tip: </strong>The rule for optimization is - first design, then code, then measure and finally (if ever) optimize. In other words, don't optimize until you know you need to.
+</div>
+
+<p><em>Premature Optimization</em> is a common trap many people fall into. Your goal should never be to create <em>most optimized system</em> (an universal goal). First make your code correct, understand the need, then optimize. It’s often good idea to keep unoptimized code around as oracle to test the optimized code against.</p>
+
+<div class="flash flash-warn">
+    <svg class="octicon octicon-zap" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path fill-rule="evenodd" d="M10.561 1.5a.016.016 0 00-.01.004L3.286 8.571A.25.25 0 003.462 9H6.75a.75.75 0 01.694 1.034l-1.713 4.188 6.982-6.793A.25.25 0 0012.538 7H9.25a.75.75 0 01-.683-1.06l2.008-4.418.003-.006a.02.02 0 00-.004-.009.02.02 0 00-.006-.006L10.56 1.5zM9.504.43a1.516 1.516 0 012.437 1.713L10.415 5.5h2.123c1.57 0 2.346 1.909 1.22 3.004l-7.34 7.142a1.25 1.25 0 01-.871.354h-.302a1.25 1.25 0 01-1.157-1.723L5.633 10.5H3.462c-1.57 0-2.346-1.909-1.22-3.004L9.503.429z"></path></svg>
+    <strong>Important: </strong>The resources you are trying to use efficiently are <strong>computing</strong>, <strong>storage</strong> and <strong>communication</strong>. The dimensions are <strong>time</strong> and <strong>space</strong>. For <em>time</em> the parameters are <strong>bandwidth</strong> (or throughput) and <strong>latency</strong> (or response time). Latency is the time to do the work plus time spent waiting for the resource. For <em>space</em> the parameters are <strong>memory</strong> and <strong>bandwidth</strong>
+</div>
+
+<p>To evaluate a design idea -</p>
+<ul>
+  <li>Work out <em>roughly</em> how much latency, bandwidth and storage it consumes to deliver performance you need.</li>
+  <li>Make an optimistic assumption if the resources can be afforded after potential optimization.</li>
+</ul>
+
+<p>If not, the idea not good enough. But if it can then perform more detailed analysis of possible <em>bottleneck</em>s and find out how sensitive <em>cost</em> is to the parameters of the platform and workload. The <em>cost</em> here does not refer to monetary price, but to effort, complexity, resource utilization, etc invested in order to achieve the goal.</p>
+
+<p>When performance of module is bad or unpredictable, you have incurred a <em>performance debt</em>. The debt can be</p>
+<ul>
+  <li>Unknown: when it hasn’t been measured.</li>
+  <li>Bad: when it is worse than what is needed.</li>
+  <li>Fragile: its sufficient now but you don’t have any process to keep it that way.</li>
+</ul>
+
+<h3 id="concurrency">Concurrency</h3>
+<p>This is one way to reduce <em>latency</em>. The other is <em>fast path</em>. The requirement to create concurrent program is to divide the work in independent parts. Using concurrency we trade more resources (bandwidth) for less latency. There are two main problems with concurrency-</p>
+<ul>
+  <li>It’s hard to reason and debug concurrent computation that make arbitrary code change.</li>
+  <li>To run fast, data must be either immutable or local.</li>
+</ul>
+
+<p><strong>Sharding</strong> aka partitioning is one of the easiest way to achieve concurrency. Break the state into <em>n</em> pieces (shards) that change <em>independently</em> and process each shard in parallel. Often there is a <em>combining function</em> for results from several shard. Shards can either be flat by hashing the key or hierarchial if there is natural groupings or subsets of keys such as DNS names. Hierarchy is good for change notifications (notify all subset of keys) but not good for load balancing since there may be hot spots on the hierarchy.</p>
+
+<p>In other words there are 2 ways to bring independent shards together:</p>
+<ul>
+  <li>Combining Function that combines the independent outputs or synchronizes state.</li>
+  <li>Naming the shards and indexing them or by naming as a hierarchy. If the shards already exist, put them into a single name space by making a new root with all of them as children. Example - <em>mounting</em> in file system, domain names, etc.</li>
+</ul>
+
+<p><strong>Streaming</strong> is another kind of concurrency. Divide the work for a single item in ‘k’ sequential steps, put one step on each processor and pass the items along the chain. This generalizes to <em>dataflow</em> where the work flows through a directed acyclic graph (DAG). The number of distinct processing steps defines the limit of concurrency.</p>
+
+<p>Map-Reduce operations are great example that combine both sharding and streaming. The combining phase of map-reduce illustrates that concurrency requires communication which becomes the bottleneck.</p>
+
+<p>There are five different types of concurrency:</p>
+<ul>
+  <li><strong>Very Easy</strong>: Pure sharding or streaming where actions are <em>independent</em> and states are not shared during concurrent operations.</li>
+  <li><strong>Easy</strong>: The complex action can be made <em>atomic</em> by grouping actions into sets that don’t <em>commute</em> (commute is described in ABC’s of Efficiency section below) and then have a <em>lock</em> to protect each set. The rules for this kind of concurrency -
+    <ul>
+      <li>Before running an action, a thread must acquire the lock.</li>
+      <li>Two locks on different threads conflict if their actions don’t commute (like reading and writing to same variable).</li>
+      <li>In this case a thread needs to wait to acquire the lock if another thread holds a conflicting lock.</li>
+    </ul>
+  </li>
+  <li><strong>Hard</strong>: Anything that isn’t serializable. These are difficult to implement without a formal proof.</li>
+  <li><strong>Eventual</strong>: All updates commute. The result is available <em>eventually</em> as long as all actions execute irrespective of order. The application should be designed to handle stale data until the final state is available. Read will see arbitrary subset of updates at any given point in time. A <em>sync</em> mechanism ensures that all further reads sees all updates that precedes start of <em>sync</em>. The two ways to achieve this -
+    <ul>
+      <li>Make updates commute. To make two writes to the same variable <em>commute</em>, timestamp them and let last write win. When write arrives apply it only if it’s timestamp is later. Delete should leave a timestamped tombstone.</li>
+      <li>Arrange the nodes in data structure (such as graph, ring) so the updates are broadcasted to all nodes.</li>
+    </ul>
+  </li>
+  <li><strong>Nuisance</strong>: Actions can run concurrently but produce wrong results, but a higher level mechanism keeps this from happening.</li>
+</ul>
+
+<h3 id="fast-path-and-bottlenecks">Fast path and bottlenecks</h3>
+<p>Fast path - do common case fast and leave the rare cases to be slow. It may be difficult to identify fast path if the code has lot of rare cases. When this happens, profile the code to identify fast paths and restructure the code to make it obvious and easy to maintain. The ties down well with identifying <em>key</em> modules. Segregate the fast path from rare cases and isolate it from rest of the code. This will make it easier to optimize, test and maintain. The fast path should be the normal case for the application. Handle the worst case separately because requirements for the two are different.</p>
+
+<p><em>Bottlenecks</em> are opposite of fast path. It is the part of the system that consumes most resources (time). The key for optimizing is to look for bottlenecks first. Most of the time optimizing anything else wastes time and adds complexity. Once bottlenecks are identified, design the code to use it as little as possible, measure and control how it’s used. Rest of the code becomes your fast path where most of the traffic flows through.</p>
+
+<h3 id="locality">Locality</h3>
+<p>Communication is expensive. So keep the data close to the computation. A cache lets you trade locality and bandwidth for latency. Less code working on less data closer in space and time.</p>
+<ul>
+  <li>Keep the parts that run <em>concurrently</em> as independent as possible to minimize communication.</li>
+  <li>Make the data smaller so there is <em>less</em> to communicate and easier to make it local. For example instead of working on full dataset, work on <em>summary</em> of the dataset. Or rearrange the dataset such that what is accessed a lot is small and compressed.</li>
+</ul>
+
+<p>Another way is to process data in <em>stream</em>. Instead of pulling all the dataset at once, divide data into small parts and stream it to be processed. Identify data that is accessed frequently and cache it.</p>
+
+<p>If moving data to computation has high cost, doing reverse can be a good idea. Database do the same by processing query or stored procedure closer to data. The opposition (and so a choice) always exist either to move data closer to computation or to move computation closer to data.</p>
+
+<h3 id="abcs-of-efficiency">ABC’s of Efficiency</h3>
+<ul>
+  <li><strong>Algorithms</strong>: Its usually best to stick with simple algorithms: like hash table for looking up key, B-tree for finding all keys in range, etc. If the problem you have is hard, look for a widely-used library. Understand the asymptotic complexity of the algorithm. Remember - <em>fancy algorithms are slow when N is small, and N is usually small - Rob Pike</em>.</li>
+  <li><strong>Approximate</strong>: If finding a <em>good enough</em> approximation is fine, then use it. Often you can approximate the program’s behavior rather than its data. For example <em>Eventual Consistency</em> lets application work on stale data. A <em>hint</em> is information that bypasses an expensive computation if it’s correct, its cheap to check that its correct and there is a (expensive) <em>backup</em> path that will work if its wrong. An example is routing hints tells how to forward a packet. The backup is rerouting.</li>
+  <li><strong>Batch</strong>: When the overhead of processing a list of items is lower than sum of overhead of processing each item, batching items will make things faster. Batching trades off latency (for earlier elements in the batch) for increased bandwidth. <em>Index</em> is an example of batching where we pay big cost upfront so that queries later is faster. Another reason to batch could be to gather and defer the work until the machine is idle (buffering). Opposite of batching is <strong>fragmentation</strong>, breaking up big chunk of work into smaller pieces. This is good for load-balancing work and distributing work across multiple machines.</li>
+  <li><strong>Cache</strong>: Caching is to remember the result of function evaluation (<em>f(x)</em>), indexed by the function (<em>f</em>) and its arguments (<em>x</em>).  Most references will <em>hit</em> in the cache if there is enough <em>locality</em> and it’s bigger than <em>working set</em> of frequently referenced location, otherwise cache will <em>thrash</em>. A cache <em>hit</em> is the fast path. Cache are of two types -
+    <ul>
+      <li><em>Historical caching</em>: Saving result that was obtained because the program needed it. It is good idea to cache frequently accesses result to increase <em>locality</em>.</li>
+      <li><em>Predictive caching</em>: Guessing what result will be needed in future and precomputing and saving the result. Materialized view in database is an example of this.</li>
+    </ul>
+  </li>
+  <li><strong>Concurrency</strong>: We discussed concurrency above.</li>
+  <li><strong>Commute</strong>: Two actions <code class="language-plaintext highlighter-rouge">a</code> and <code class="language-plaintext highlighter-rouge">b</code> commute if <code class="language-plaintext highlighter-rouge">a</code> and <code class="language-plaintext highlighter-rouge">b</code> are <em>independent</em> and <code class="language-plaintext highlighter-rouge">a</code> and <code class="language-plaintext highlighter-rouge">b</code> are <em>commutative</em>. Meaning they can be executed in any order. Actions that commutes can be made to run concurrently. If the actions needs to be executed in a particular order, then they <em>don’t commute</em>.</li>
+</ul>
+
+<h2 id="adaptable">Adaptable</h2>
+<p>Making system extensible to accommodate new workloads is a key goal of software engineering. Any system is bound to change and there can be various reasons for change -</p>
+<ul>
+  <li>New business requirements: A successful business will change to adapt as per customer’s need and the system needs to be able to adapt.</li>
+  <li>Change in usage pattern: It is very likely the behavior of end user will change over time.</li>
+  <li>Changes in external dependencies: Any external dependencies such as services, frameworks, libraries, even host platform will change. New interfaces, versions, deprecations, change in performance is bound to happen.</li>
+  <li>Changes in scale: From 100 users to 100 million or from storing text to storing videos. The change can be temporary in form of burst load then the system needs to be <strong>elastic</strong> not just scalable.</li>
+</ul>
+
+<p>The key to adapting to functional changes are -</p>
+<ul>
+  <li><strong>Modularity</strong>: The only known way to build a large system is to reinforce abstraction with <strong>Divide and Conquer</strong> i.e. break the system down to independent abstractions called modules. The interface of module serves two purposes -
+    <ul>
+      <li>It simplifies the client’s life by hiding the complexity of module.</li>
+      <li>It decouples client from the module so both can evolve independently.</li>
+    </ul>
+  </li>
+  <li><strong>Extension points</strong>: <em>Extensibility</em> is a special form of modularity. It is a way to add new functionality to the system. Follow <em>Open-Close</em> principle.</li>
+  <li><strong>Isolate moving (frequently changing) part</strong> of the system from rest of the system. This will <em>decouple</em> the volatile parts of application with rest of the system. An extra layer of abstraction or indirection over volatile parts is often a good idea. You trade a bit of performance and complexity for ease of maintenance and extensibility.</li>
+</ul>
+
+<p>The key to adapting to scaling are -</p>
+<ul>
+  <li><strong>Modularity</strong>: Modularize algorithm so its easy to change to one that scales better.</li>
+  <li><strong>Automation</strong>: Automate everything, from infrastructure to deployment, from fault tolerance to operations.</li>
+  <li><strong>Concurrency</strong> by sharding. Different shards are independent if they don’t share state (exception if state is immutable) or resource. All communication is asynchronous.</li>
+</ul>
+
+<h2 id="dependable">Dependable</h2>
+<p>A system’s dependability is measured in three dimensions -</p>
+<ul>
+  <li><strong>Reliable</strong>: Gives right answer in spite of partial failures and doesn’t lose data.</li>
+  <li><strong>Available</strong>: It delivers result even in case of partial failures.</li>
+  <li><strong>Secure</strong>: Its reliable and available in spite of malicious actors.</li>
+</ul>
+
+<h3 id="redundancy">Redundancy</h3>
+<p>The idea of redundancy is to have no <em>single point of failure</em>. Finding all single points of failure is hard. No single point of failure means a <em>distributed system</em>, which is inherently concurrent and can absorb partial failures (some part can fail but whole system keeps working). But redundancy is the key to manage <em>reliability</em> and <em>availability</em>. Redundancy can be either in time or space.</p>
+<ul>
+  <li>Redundancy in <em>time</em> is retry or redo: doing same thing again. The challenge here is to detect need for retry, recover from partial state changes, make original input available again and avoid confusion if more than one try succeeds.</li>
+  <li>Redundancy in <em>space</em> is replication: doing same thing in several places. The challenge is to give all places same input and making computation deterministic so all outputs agrees.</li>
+</ul>
+
+<p>But redundancy in itself is not sufficient, we also need <em>repair</em>. This is crucial if the redundant copies fail and system is no longer fault tolerant. Repair is also important if the retry cost is significantly higher than single try, so as to avoid paying this extra cost over long period of time.</p>
+
+<h3 id="retry">Retry</h3>
+<ul>
+  <li>If the failure of a function is detectable, and after it fails there is good chance it will succeed the second time, then <em>retry</em> is the redundancy that will work.</li>
+  <li>Retry is form of <em>slow path</em>. First try is the fast path of the system.</li>
+  <li>If the retry that succeeds yields the same state as single try, then this is <em>idempotence</em>.</li>
+  <li>To make arbitrary actions such as state increment (x = x + 1) idempotent, make it <em>testable</em> by assigning the action a unique ID, storing ID of completed action and discarding any redundant retries. Discarding duplicate message at receiver is also called <em>at-most-once</em> messaging.</li>
+  <li>If message and IDs are persistent it’s called a <em>message queue</em> with <em>exactly-once</em> processing.</li>
+  <li>Use <em>exponential backoff</em> to avoid overloading system with retries.</li>
+</ul>
+
+<h3 id="replication">Replication</h3>
+<p>Replication is another form of redundancy by making copies of data or the actions that lead to data transformation (state changes). Two extremes of replication are -</p>
+<ul>
+  <li><em>Simplest</em>: Create several copies of data. The challenge here is that updating all copies is not atomic operation, so in case of failure its tricky to maintain data consistency.</li>
+  <li><em>Powerful</em>: A log that records sequence of operations that produced the current state. This is similar to event sourcing. With some sort of checkpoint, the current state can be reconstructed by redoing the operations.</li>
+</ul>
+
+<h4 id="replicated-state-machine">Replicated State Machine</h4>
+<p>Replicated State Machine (RSM) is a system that has multiple copies of the same state machine. RSM is the strongest variation of the <em>powerful</em> extreme of replication discussed above. The replicas of the host run same code, start at same initial state and if same <em>sequence</em> of deterministic commands are provided, they will reach same state. In case of mismatch the replicas can vote if there are at least three copies running. Things to keep in mind -</p>
+<ul>
+  <li>Commands must be <em>deterministic</em>.</li>
+  <li><em>Sequence</em> of commands are important. Each replica should see the same sequence. A distributed system consensus algorithm such as <a href="https://people.cs.rutgers.edu/~pxk/417/notes/paxos.html">Paxos</a> or <a href="https://raft.github.io/">Raft</a> can be used to achieve this.</li>
+  <li><em>Reads</em> must go through RSM as well. But since this is expensive. To avoid this cost, one replica can take a time-limited lock called <em>lease</em> on part of state that prevents anyone else to change the state. The drawback here is that the leaseholder can become a bottleneck.</li>
+  <li>A common way to do replication using RSM is <em>primary-secondary</em>. One replica is primary, selected by RSM, and it leases the whole state so that it can do fast reads and batch writes. The secondaries replicates all the writes through RSM and maintain the latest state in case primary fails.</li>
+  <li>A variation of the above is <em>chain replication</em>. Arrange set of replicas in a chain, read happens at tail and writes propagates down the chain starting at head, but acknowledged only by tail. This ensures that each replica has seen every write that it’s successor has seen.</li>
+</ul>
+
+<h2 id="yummy">Yummy</h2>
+<p>A system is much easier to sell if it’s <em>yummy</em>, that is, if the customers are enthusiastic about it. If it’s a customer product, being yummy certainly helps. For enterprise product, power takes on precedence.</p>
+
+<p>Two important things makes up a good user interface (UI) -</p>
+<ul>
+  <li>The <em>user model</em> of the system: user should be able to think what system is doing makes sense.</li>
+  <li><em>Completeness</em> and <em>coherence</em>: user should clearly see how to get their whole job done not just part of it.</li>
+</ul>
+
+<p>It is good idea to separate the internal state of the system from details of the UI. Model View Controller (MVC) is a good pattern for separating the two. Another popular one is MVVM (Model View ViewModel).</p>
+
+<h1 id="techniques">Techniques</h1>
+<h2 id="approximate">Approximate</h2>
+<p>There are two types of softwares - precise and approximate, with contrasting goal. This is an opposition. Precise software has a specification and the software must satisfy the specs. Some softwares needs to be precise, such as controlling rocket, nuclear engine, airplane, IP protocol etc. Approximate software whereas have loose spec. As long as it is “good enough” the system works. For example, retail shopping, social media, etc. Approximate softwares are neither better or worse than precise, they are different, designed to meet different goals. There is no benefit of designing a social media platform with same precision as rocket engine control system. The user of social media don’t need this precision. However if system is wrongly classified as approximate, the customer won’t be satisfied by it.</p>
+
+<h2 id="divide-and-conquer">Divide and Conquer</h2>
+<p>This is the most important idea for designing software. When the system gets too complicated for one person’s head, divide and conquer is the only technique to maintain control. Break down the system into sub systems, break down the subsystems into modules. If the module is still too complex, break it down into sub modules where each sub module has clear defined responsibility, if it still doesn’t help break it down into further abstractions. The name of the game is to break down complexity till it no longer feels complex. A spec of the module is called its interface. A module’s boundary does not just decouple its code from the client, it can decouple the execution and resource consumption as well. Thinking of module as independent system makes it easy to reason about the cost of the system as whole.</p>
+
+<p>A system usually has lots of modules. To make management of modules easier and to identify how a change in module will propagate across, group related modules in <em>layers</em>. A layer is single unit that a team can ship and client can understand. The layers are stacked on each other to form hierarchy. A lower layer is not allowed to call methods in a higher layer.</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>|---------------------|
+|       Clients       |
+|---------------------|
+| Peers | YOU | Peers |
+|---------------------|
+|         Host        |
+|---------------------|
+</code></pre></div></div>
+
+<p>Layers is good for decoupling, but it comes with cost for each level of abstraction. If the performance is key goal, then its prudent to measure it. There are two ways to reduce it: make it inter-layer communication cheaper or bypass some layers.</p>
+
+<h2 id="incremental">Incremental</h2>
+<p>Take <em>baby steps</em> and <em>useful steps</em>. Incremental is another form of divide and conquer. Smaller steps is easier to understand, less disruptive and easier to get right. Focus on creating building blocks with good foundation.</p>
+
+<h1 id="process">Process</h1>
+<p>Process is essential to deliver any sufficiently big product. A small system can be built by a single developer with entire architecture in his/her head. A bigger system however requires a team to work together to achieve the goals and the process lays down the framework on how to achieve teamwork. However no amount of process will help if the goals are badly conceived.</p>
+
+<ul>
+  <li><strong>Architecture</strong>: Design and document the the architecture of the system. Everyone in the team should have same understanding of the design and documentation helps in driving this. Any architecture decisions should be documented as <a href="https://github.com/microsoft/code-with-engineering-playbook/blob/main/docs/design/design-reviews/decision-log/README.md">Architecture Decision Records</a>(ADR)</li>
+  <li><strong>Automation</strong>: Automate everything, from code analysis, to build, test, deploy.</li>
+  <li><strong>Review</strong>: Review both the design and the code. Often I see design decisions happen within subset of people (leads and architect) in isolation with the entire team. This leads to confusion, loss of information and lack of growth in the team. Even if design is done by single person, always <a href="https://github.com/microsoft/code-with-engineering-playbook/blob/main/docs/design/design-reviews/README.md">review design</a> decisions with entire team. The team must be invested as much as the person who created the design.</li>
+  <li><strong>Testing</strong>: Unit test, component test, integration test, stress test, chaos test, end to end test, BCDR test. Test the system. Test the code. Test the architecture. Test the automation.</li>
+</ul>
+
+<h1 id="conclusion">Conclusion</h1>
+<p>The idea of the article is to make it a reference point when designing softwares. The goals section discussed a lot of possibilities and what should be the focus of a system and is quite dense with information. Even then this is in no way exhaustive discussion on the subject and Butler has gone even more in depth discussing each of these aspects so I strongly recommend reading his paper. I hope you enjoyed reading this. If you have any questions, please feel free to comment below.</p>
+
+  </div>
+  <div class="PageNavigation">
+  
+  <div class="prevDiv">
+    <a class="prev" href="/blog/2021/04/logging-in-python/">&laquo; A better way to logging in Python</a>
+  </div>
+  
+  
+</div>
+<!-- from https://github.com/utterance/utterances -->
+<script src="https://utteranc.es/client.js"
+        repo="ankitbko/blog"
+        issue-term="title"
+        label="blogpost-comment"
+        theme="github-light"
+        crossorigin="anonymous"
+        async>
+</script><a class="u-url" href="/blog/2021/07/steady-by-aid-with-art/" hidden></a>
+</article>
+      </div>
+    </main><footer class="site-footer h-card">
+  <data class="u-url" href="/blog/"></data>
+
+  <div class="wrapper">
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col">
+        <p class="feed-subscribe">
+          <a href="/blog/feed.xml">
+            <svg class="svg-icon orange">
+              <use xlink:href="/blog/assets/minima-social-icons.svg#rss"></use>
+            </svg><span>Subscribe</span>
+          </a>
+        </p>
+        <ul class="contact-list">
+          <li class="p-name">Ankit Sinha</li>
+          
+        </ul>
+      </div>
+      <div class="footer-col">
+        <p>A technology blog focusing on random stuff</p>
+      </div>
+    </div>
+
+    <div class="social-links"><ul class="social-media-list"><li><a rel="me" href="https://github.com/ankitbko" title="ankitbko"><svg class="svg-icon grey"><use xlink:href="/blog/assets/minima-social-icons.svg#github"></use></svg></a></li><li><a rel="me" href="https://twitter.com/ankitbko" title="ankitbko"><svg class="svg-icon grey"><use xlink:href="/blog/assets/minima-social-icons.svg#twitter"></use></svg></a></li></ul>
+</div>
+
+  </div>
+
+</footer>
+</body>
+
+</html>
