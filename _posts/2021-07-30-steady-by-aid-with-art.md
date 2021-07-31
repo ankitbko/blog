@@ -2,7 +2,7 @@
 layout: post
 title: STEADY by AID with ART
 comments: true
-categories: [design, software design]
+categories: [design, software design, principles, architecture]
 description: Goals and Techniques for Software Design
 image: images/previews/steady-by-aid.jpg
 author: <a href='https://twitter.com/ankitbko', target='_blank'>Ankit Sinha</a>
