@@ -42,7 +42,7 @@ The sample provided is an implementation of the above design. The [FrameProvider
 
 ### Running the sample
 
-#### Prerequisite
+#### **Prerequisite**
 
 To execute the sample, the developer machine must have either -
 
@@ -53,7 +53,7 @@ OR
 
 * [Python 3.9](https://www.python.org/downloads/release/python-390/)
 
-#### Steps
+#### **Steps**
 
 1. Clone the repository.
 1. Prepare environment.
@@ -69,7 +69,7 @@ The first challenge is to enable simultaneous execution of `Frame Provider` and 
 
 In Python this can be achieved by using the [threading](https://docs.python.org/3/library/threading.html) or [multiprocessing](https://docs.python.org/3/library/multiprocessing.html).
 
-#### Threading
+#### **Threading**
 
 The *threading* folder contains implementation of this using threading module. 
 
@@ -95,7 +95,7 @@ To relate this to our sample, the `FrameProcessor` performs a long running task 
 
 > The FPS may vary between systems. If the system has better CPU, the model will execute significantly faster. In that case the video sluggishness in UI may not be as apparent. If that happens try looping the `infer(item.frame)` call in `FrameProcessor._process` to simulate more CPU intensive task.
 
-#### Multiprocessing
+#### **Multiprocessing**
 
 Python's Multiprocessing is another way of executing multiple tasks simultaneously. The *multiprocessing* folder contains implementation of the solution using multiple processes.
 
