@@ -3,7 +3,7 @@ layout: post
 title: Measuring latency of Websocket Messages
 comments: true
 categories: [websocket, python, performance, latency]
-description: Measuring latency of Websocket Messages
+description: Pattern for measuring websocket messages latency
 image: images/previews/websocket_latency.png
 source_code: https://github.com/ankitbko/websocket-latency
 author: <a href='https://twitter.com/ankitbko', target='_blank'>Ankit Sinha</a>, <a href='https://github.com/prabdeb', target='_blank'>Prabal Deb</a>
