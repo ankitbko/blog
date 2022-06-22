@@ -2,7 +2,7 @@
 layout: post
 title: Optimizing network footprint using MessagePack
 comments: true
-categories: [websocket, python, performance, latency]
+categories: [websocket, python, performance, latency, complexity, messagepack, base64, json]
 description: Measure space and time improvement when using MessagePack instead of JSON to send image over websocket.
 image: images/previews/messagepack.png
 source_code: https://github.com/ankitbko/messagepack-websocket
