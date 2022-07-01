@@ -1,6 +1,6 @@
 ---
 layout: post
-title: Patterns for Vision on the Edge - Part 2 - Handle Multiple Consumers
+title: Patterns for Vision on the Edge - Part 2 - Handling Multiple Consumers
 comments: true
 categories: [AI, ML, vision on edge, python, multiprocessing, threading, GIL, back-pressure, reactivex, rxpy]
 description: Challenges in implementing Vision based solution using Python on Edge.
