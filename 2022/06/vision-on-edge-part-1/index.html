@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="twitter:card" content="summary_large_image" /><!-- Begin Jekyll SEO tag v2.6.1 -->
+<title>Patterns for Vision on the Edge - Part 1 - Concurrent processing | F5 - Squashing Bugs</title>
+<meta name="generator" content="Jekyll v4.1.1" />
+<meta property="og:title" content="Patterns for Vision on the Edge - Part 1 - Concurrent processing" />
+<meta name="author" content="<a href='https://twitter.com/ankitbko', target='_blank'>Ankit Sinha</a>, <a href='https://github.com/prabdeb', target='_blank'>Prabal Deb</a>" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="Challenges in implementing Vision based solution using Python on Edge." />
+<meta property="og:description" content="Challenges in implementing Vision based solution using Python on Edge." />
+<link rel="canonical" href="https://ankitbko.github.io/blog/2022/06/vision-on-edge-part-1/" />
+<meta property="og:url" content="https://ankitbko.github.io/blog/2022/06/vision-on-edge-part-1/" />
+<meta property="og:site_name" content="F5 - Squashing Bugs" />
+<meta property="og:image" content="https://ankitbko.github.io/blog/images/previews/vision-on-edge-1.png" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2022-06-29T00:00:00-05:00" />
+<script type="application/ld+json">
+{"url":"https://ankitbko.github.io/blog/2022/06/vision-on-edge-part-1/","@type":"BlogPosting","headline":"Patterns for Vision on the Edge - Part 1 - Concurrent processing","dateModified":"2022-06-29T00:00:00-05:00","datePublished":"2022-06-29T00:00:00-05:00","mainEntityOfPage":{"@type":"WebPage","@id":"https://ankitbko.github.io/blog/2022/06/vision-on-edge-part-1/"},"image":"https://ankitbko.github.io/blog/images/previews/vision-on-edge-1.png","author":{"@type":"Person","name":"<a href='https://twitter.com/ankitbko', target='_blank'>Ankit Sinha</a>, <a href='https://github.com/prabdeb', target='_blank'>Prabal Deb</a>"},"description":"Challenges in implementing Vision based solution using Python on Edge.","@context":"https://schema.org"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="stylesheet" href="/blog/assets/css/style.css"><link type="application/atom+xml" rel="alternate" href="https://ankitbko.github.io/blog/feed.xml" title="F5 - Squashing Bugs" /><!-- the google_analytics_id gets auto inserted from the config file -->
+
+
+
+<!-- Global site tag (gtag.js) - Google Analytics -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=UA-75679348-1"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'UA-75679348-1');
+</script>
+
+
+<link rel="shortcut icon" type="image/x-icon" href="/blog/images/favicon.ico"><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/Primer/15.2.0/primer.css" integrity="sha512-xTz2ys4coGAOz8vuV1NcQBkgVmKhsSEtjbqyMJbBHRplFuvKIUo6xhLHpAyPt9mfR6twHJgn9OgVLuqOvjeBhg==" crossorigin="anonymous" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.14.0/css/all.min.css" integrity="sha512-1PKOgIY59xJ8Co8+NE6FZ+LOAZKjy+KY8iq0G4B3CyeY6wYHN3yt9PW0XpSriVlkMXe40PTKnXrLnZ9+fkDaog==" crossorigin="anonymous" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.12.0/katex.min.css" integrity="sha512-h7nl+xz8wgDlNM4NqKEM4F1NkIRS17M9+uJwIGwuo8vGqIl4BhuCKdxjWEINm+xyrUjNCnK5dCrhM0sj+wTIXw==" crossorigin="anonymous" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.12.0/katex.min.js" integrity="sha512-/CMIhXiDA3m2c9kzRyd97MTb3MC6OVnx4TElQ7fkkoRghwDf6gi41gaT1PwF270W6+J60uTmwgeRpNpJdRV6sg==" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.12.0/contrib/auto-render.min.js" integrity="sha512-Do7uJAaHZm5OLrIv/yN4w0iG1dbu01kzdMNnFfu/mAqgUk6Nniv2JYHcwH+cNwjqgLcqcuBBk+JRvprLVI8azg==" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js" integrity="sha512-0doc9hKxR3PYwso42RD1p5ySZpzzuDiOwMrdCEh2WdJZCjcmFKc/wEnL+z8fBQrnHoiNWbo+3fiGkOYXBdQp4A==" crossorigin="anonymous"></script>
+    <script>
+    document.addEventListener("DOMContentLoaded", function() {
+        renderMathInElement( document.body, {
+        delimiters: [
+            {left: "$$", right: "$$", display: true},
+            {left: "[%", right: "%]", display: true},
+            {left: "$", right: "$", display: false}
+        ]}
+        );
+    });
+    </script>
+
+
+<script>
+function wrap_img(fn) {
+    if (document.attachEvent ? document.readyState === "complete" : document.readyState !== "loading") {
+        var elements = document.querySelectorAll(".post img");
+        Array.prototype.forEach.call(elements, function(el, i) {
+            if (el.getAttribute("title") && (el.className != "emoji")) {
+                const caption = document.createElement('figcaption');
+                var node = document.createTextNode(el.getAttribute("title"));
+                caption.appendChild(node);
+                const wrapper = document.createElement('figure');
+                wrapper.className = 'image';
+                el.parentNode.insertBefore(wrapper, el);
+                el.parentNode.removeChild(el);
+                wrapper.appendChild(el);
+                wrapper.appendChild(caption);
+            }
+        });
+    } else { document.addEventListener('DOMContentLoaded', fn); }
+}
+window.onload = wrap_img;
+</script>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function(){
+    // add link icon to anchor tags
+    var elem = document.querySelectorAll(".anchor-link")
+    elem.forEach(e => (e.innerHTML = '<i class="fas fa-link fa-xs"></i>'));
+    });
+</script>
+</head>
+<body><header class="site-header">
+
+  <div class="wrapper"><a class="site-title" rel="author" href="/blog/">F5 - Squashing Bugs</a><nav class="site-nav">
+        <input type="checkbox" id="nav-trigger" class="nav-trigger" />
+        <label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewBox="0 0 18 15" width="18px" height="15px">
+              <path d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.032C17.335,0,18,0.665,18,1.484L18,1.484z M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.032C17.335,6.031,18,6.696,18,7.516L18,7.516z M18,13.516C18,14.335,17.335,15,16.516,15H1.484 C0.665,15,0,14.335,0,13.516l0,0c0-0.82,0.665-1.483,1.484-1.483h15.032C17.335,12.031,18,12.695,18,13.516L18,13.516z"/>
+            </svg>
+          </span>
+        </label>
+
+        <div class="trigger"><a class="page-link" href="/blog/about/">About Me</a><a class="page-link" href="/blog/search/">Search</a><a class="page-link" href="/blog/categories/">Tags</a></div>
+      </nav></div>
+</header>
+<main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title p-name" itemprop="name headline">Patterns for Vision on the Edge - Part 1 - Concurrent processing</h1><p class="page-description">Challenges in implementing Vision based solution using Python on Edge.</p><p class="post-meta post-meta-title"><time class="dt-published" datetime="2022-06-29T00:00:00-05:00" itemprop="datePublished">
+        Jun 29, 2022
+      </time>• 
+          <span itemprop="author" itemscope itemtype="http://schema.org/Person">
+            <span class="p-author h-card" itemprop="name"><a href='https://twitter.com/ankitbko', target='_blank'>Ankit Sinha</a>, <a href='https://github.com/prabdeb', target='_blank'>Prabal Deb</a></span></span>
+       • <span class="read-time" title="Estimated read time">
+    
+    
+      6 min read
+    
+</span></p>
+
+    
+      <p class="category-tags"><i class="fas fa-tags category-tags-icon"></i></i> 
+      
+        <a class="category-tags-link" href="/blog/categories/#AI">AI</a>
+        &nbsp;
+      
+        <a class="category-tags-link" href="/blog/categories/#ML">ML</a>
+        &nbsp;
+      
+        <a class="category-tags-link" href="/blog/categories/#vision on edge">vision on edge</a>
+        &nbsp;
+      
+        <a class="category-tags-link" href="/blog/categories/#python">python</a>
+        &nbsp;
+      
+        <a class="category-tags-link" href="/blog/categories/#multiprocessing">multiprocessing</a>
+        &nbsp;
+      
+        <a class="category-tags-link" href="/blog/categories/#threading">threading</a>
+        &nbsp;
+      
+        <a class="category-tags-link" href="/blog/categories/#GIL">GIL</a>
+        &nbsp;
+      
+        <a class="category-tags-link" href="/blog/categories/#back-pressure">back-pressure</a>
+        
+      
+      </p>
+    
+
+    
+		<div class="d-flex flex-wrap flex-justify-start flex-items-center">
+			<p class="page-description" style="margin-right: .5rem;">Source Code </p>
+			<div class="page-description">
+				<div class="px-2">
+    <a href="https://github.com/ankitbko/vision-on-edge" role="button" target="_blank">
+        <img class="notebook-badge-image" src="/blog/assets/badges/github.svg" alt="View On GitHub">
+    </a>
+</div>
+
+			</div>
+		</div>
+	
+  </header>
+
+  <div class="post-content e-content" itemprop="articleBody">
+    <p>While developing a solution for implementing vision on the edge use case, one of the most common requirement is having the ability to ingest live video feed and process it to derive useful insights (running a ML model on the captured frame, etc.).</p>
+
+<p>One of the key challenges faced during the implementation was with the ability to simultaneously consume a live video feed from the video source, enable a smooth streaming experience for consumer as well as perform realtime analysis of the video frames. As processing of frame can happen at different rate than reading a frame from camera, handling back-pressure between consumer and producer becomes an important requirement.</p>
+
+<p>We can breakdown the problem into three parts:</p>
+
+<ol>
+  <li>Simultaneous reading and processing of frame.</li>
+  <li>Handling back-pressure between frame producer and consumer.</li>
+  <li>Transmitting frames to multiple consumers at different rates - Consumer 1 - To process frame; Consumer 2 - To display in UI.</li>
+</ol>
+
+<p>This article covers the first two parts of the problem described above. The third part of the problem will be covered in Part 2 of the blog series.</p>
+
+<h2 id="design">Design</h2>
+
+<p>A possible design for the vision on edge use case is as follows:</p>
+
+<p><img src="/blog/assets/images/posts/vision-on-edge-1/architecture.png" alt="Architecture" /></p>
+
+<p>The solution contains primarily a video camera and an edge device.</p>
+
+<ol>
+  <li><code class="language-plaintext highlighter-rouge">Frame Provider</code> reads the frame from the video camera at a desired FPS.</li>
+  <li>The <code class="language-plaintext highlighter-rouge">Frame Provider</code> then transmits the frames to <code class="language-plaintext highlighter-rouge">User Interface</code> to display live video feed at a different FPS.</li>
+  <li>At the same time, the <code class="language-plaintext highlighter-rouge">Frame Provider</code> transmits the same frame via <code class="language-plaintext highlighter-rouge">Back Pressure</code> to <code class="language-plaintext highlighter-rouge">Frame Processor</code> to derive useful insights at the rate that <code class="language-plaintext highlighter-rouge">FrameProcessor</code> can handle.</li>
+  <li><code class="language-plaintext highlighter-rouge">Frame Processor</code> then processes the frame and publishes the result to the <code class="language-plaintext highlighter-rouge">User Interface</code>.</li>
+</ol>
+
+<h2 id="object-detection-sample-application">Object detection Sample Application</h2>
+
+<p>The sample provided is an implementation of the above design. The <a href="https://github.com/ankitbko/vision-on-edge/blob/main/common/frame_provider.py">FrameProvider</a> reads the frames from <a href="https://github.com/ankitbko/vision-on-edge/blob/main/common/slow_traffic_small.mp4">video file</a> at 30 FPS and send those to <a href="https://github.com/ankitbko/vision-on-edge/blob/main/common/index.html">User Interface</a> through websocket at 15 FPS and simultaneously puts the frame in a <code class="language-plaintext highlighter-rouge">Queue</code> (this is discussed in detail in subsequent section) at 5 FPS. The <a href="https://github.com/ankitbko/vision-on-edge/blob/main/frame_processor.py">FrameProcessor</a> reads the frame from the queue and performs object detection using <a href="https://pjreddie.com/darknet/yolo/">Tiny YOLO ML Model</a>. The UI displays the video feed and the rate at which it received the frame from the server.</p>
+
+<h3 id="running-the-sample">Running the sample</h3>
+
+<h4 id="prerequisite"><strong>Prerequisite</strong></h4>
+
+<p>To execute the sample, the developer machine must have either -</p>
+
+<ul>
+  <li><a href="https://code.visualstudio.com/">Visual Studio Code</a></li>
+  <li><a href="https://docs.docker.com/engine/install/">Docker</a></li>
+</ul>
+
+<p>OR</p>
+
+<ul>
+  <li><a href="https://www.python.org/downloads/release/python-390/">Python 3.9</a></li>
+</ul>
+
+<h4 id="steps"><strong>Steps</strong></h4>
+
+<ol>
+  <li>Clone the repository.</li>
+  <li>Prepare environment.
+    <ol>
+      <li>If using Docker and Visual Studio Code, open the repository in <a href="https://code.visualstudio.com/docs/remote/containers">Visual Studio Code Remote - Containers</a> following this <a href="https://code.visualstudio.com/docs/remote/containers#_reopen-folder-in-container">guide</a></li>
+      <li>Or in case of using Python, install the <a href="../code/requirements.txt">required packages</a> using <a href="https://pip.pypa.io/en/stable/">pip</a></li>
+    </ol>
+  </li>
+  <li>Run command <code class="language-plaintext highlighter-rouge">python main.py</code> from <em>multiprocessing</em> to start the sample.</li>
+  <li>The video feed will be shown in User Interface, via ULR <a href="http://localhost:7001/">http://localhost:7001/</a>.</li>
+  <li>The time taken by the ML model to process the frame will be shown in the Console.</li>
+</ol>
+
+<h2 id="technical-approaches">Technical Approaches</h2>
+
+<p>The first challenge is to enable simultaneous execution of <code class="language-plaintext highlighter-rouge">Frame Provider</code> and <code class="language-plaintext highlighter-rouge">Frame Processor</code>.</p>
+
+<p>In Python this can be achieved by using the <a href="https://docs.python.org/3/library/threading.html">threading</a> or <a href="https://docs.python.org/3/library/multiprocessing.html">multiprocessing</a>.</p>
+
+<h4 id="threading"><strong>Threading</strong></h4>
+
+<p>The <em>threading</em> folder contains implementation of this using threading module.</p>
+
+<p>Two threads are created, one to execute <code class="language-plaintext highlighter-rouge">FrameProvider</code> and another to execute <code class="language-plaintext highlighter-rouge">FrameProcessor</code>. Python’s Queue is used as communication layer between threads. <code class="language-plaintext highlighter-rouge">FrameProvider</code> captures the frame from video file, writes it to the queue and sends the frame to UI. <code class="language-plaintext highlighter-rouge">FrameProcessor</code> processes the message from queue and performs object detection on each frame. It prints the time it takes to perform inference in the terminal.</p>
+
+<p>We can execute this by running <code class="language-plaintext highlighter-rouge">python main.py</code> from <em>threading</em> folder.</p>
+
+<p><img src="/blog/assets/images/posts/vision-on-edge-1/threading.gif" alt="Threading Result" /></p>
+
+<p>You will notice that video stream is not so smooth as expected. The UI shows it is receiving only 3 to 7 frames per second where as we have configured 15 FPS.</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="bp">self</span><span class="p">.</span><span class="n">frame_rate_camera</span> <span class="o">=</span> <span class="mi">30</span> <span class="c1"># FPS rate to read from camera/file
+</span><span class="bp">self</span><span class="p">.</span><span class="n">frame_rate_ui</span> <span class="o">=</span> <span class="mi">15</span> <span class="c1"># FPS rate of the User Interface
+</span><span class="bp">self</span><span class="p">.</span><span class="n">frame_rate_queue</span> <span class="o">=</span> <span class="mi">5</span>  <span class="c1"># FPS rate to write frame to Queue
+</span></code></pre></div></div>
+
+<p>So what went wrong here? Let’s see how Python GIL (global interpreter lock) is related to this problem. Python GIL, as per definition : <em>The mechanism used by the CPython interpreter to assure that only one thread executes Python bytecode at a time</em></p>
+
+<p>Basically the GIL is a global lock that is used to protect the Python interpreter from being acquired by multiple threads simultaneously. If a thread is being executed, no other threads will be able to acquire GIL and run simultaneously.</p>
+
+<p>To relate this to our sample, the <code class="language-plaintext highlighter-rouge">FrameProcessor</code> performs a long running task of object detection. In my system each inference takes approximately 0.2-0.3 seconds. So while the model is executing, GIL has been acquired by the <code class="language-plaintext highlighter-rouge">FrameProcessor</code> thread. So for this entire duration the <code class="language-plaintext highlighter-rouge">FrameProvider</code> was not able to execute and send frame to UI.</p>
+
+<blockquote>
+  <p>The FPS may vary between systems. If the system has better CPU, the model will execute significantly faster. In that case the video sluggishness in UI may not be as apparent. If that happens try looping the <code class="language-plaintext highlighter-rouge">infer(item.frame)</code> call in <code class="language-plaintext highlighter-rouge">FrameProcessor._process</code> to simulate more CPU intensive task.</p>
+</blockquote>
+
+<h4 id="multiprocessing"><strong>Multiprocessing</strong></h4>
+
+<p>Python’s Multiprocessing is another way of executing multiple tasks simultaneously. The <em>multiprocessing</em> folder contains implementation of the solution using multiple processes.</p>
+
+<p>In this sample, <code class="language-plaintext highlighter-rouge">FrameProvider</code> and <code class="language-plaintext highlighter-rouge">FrameProcessor</code> are executed in two different processes. <a href="https://docs.python.org/3/library/multiprocessing.html#multiprocessing.Queue">Multiprocessing.Queue</a> is used to pass frames between processes.</p>
+
+<p>Execute the application by running <code class="language-plaintext highlighter-rouge">python main.py</code> from <em>multiprocessing</em> folder.</p>
+
+<p><img src="/blog/assets/images/posts/vision-on-edge-1/multiprocessing.gif" alt="Multiprocessing Result" /></p>
+
+<p>You will notice the video feed is much more smoother than the <em>threading</em> example. Also notice the FPS is constant at 15, which is matching our configuration.</p>
+
+<p>Why it worked as expected while using multiprocessing? The scope of GIL is a process. Since multiprocessing create subprocesses by spawning/forking, each process gets its own GIL. Due to this the execution of <code class="language-plaintext highlighter-rouge">FrameProvider</code> is not impacted by model inference running in a different process.</p>
+
+<h3 id="back-pressure-handling">Back-Pressure Handling</h3>
+
+<p>Our second challenge was to handle the back-pressure between <code class="language-plaintext highlighter-rouge">Frame Provider</code> and <code class="language-plaintext highlighter-rouge">Frame Processor</code> processes. First we will see why the back-pressure is getting created.</p>
+
+<p>We know that object detection takes 0.2-0.3 seconds per frame. So even though we are reading 30 frames per second from the source, we cannot perform object detection on all the frames. Therefore we need a way to manage the back-pressure created from <code class="language-plaintext highlighter-rouge">FrameProvider</code>.</p>
+
+<p>We have mentioned about a <code class="language-plaintext highlighter-rouge">Queue</code> that is leveraged for transmitting the frame from <code class="language-plaintext highlighter-rouge">FrameProvider</code> process to <code class="language-plaintext highlighter-rouge">FrameProcessor</code> process. We use <code class="language-plaintext highlighter-rouge">Queue</code> of maximum size of 1 to handle back-pressure. Whenever <code class="language-plaintext highlighter-rouge">FrameProvider</code> is writing to the <code class="language-plaintext highlighter-rouge">Queue</code> it will always overwrite the previous frame. In this way whenever <code class="language-plaintext highlighter-rouge">FrameProcessor</code> is reading the frame from the <code class="language-plaintext highlighter-rouge">Queue</code> it will always get the latest frame.</p>
+
+<h2 id="conclusion">Conclusion</h2>
+
+<p>We have seen how we can leverage python’s multiprocessing bypass GIL to implement a complete computer vision solution. Whenever there is a CPU intensive task and there is need of executing simultaneous task, it is preferable to use multiprocessing instead of threading to avoid issues from GIL.</p>
+
+<p>We will cover how to send frame to multiple consumer simultaneously in next part of this blog series.</p>
+
+<h2 id="references">References</h2>
+
+<ul>
+  <li><a href="https://docs.python.org/3/library/threading.html">Python Threading</a></li>
+  <li><a href="https://docs.python.org/3/glossary.html#term-global-interpreter-lock">Python GIL</a></li>
+  <li><a href="https://docs.python.org/3/library/multiprocessing.html">Python Multiprocessing</a></li>
+</ul>
+
+  </div>
+  <div class="PageNavigation">
+  
+  <div class="prevDiv">
+    <a class="prev" href="/blog/2022/06/messagepack-vs-base64/">&laquo; Optimizing network footprint using MessagePack</a>
+  </div>
+  
+  
+</div>
+<!-- from https://github.com/utterance/utterances -->
+<script src="https://utteranc.es/client.js"
+        repo="ankitbko/blog"
+        issue-term="title"
+        label="blogpost-comment"
+        theme="github-light"
+        crossorigin="anonymous"
+        async>
+</script><a class="u-url" href="/blog/2022/06/vision-on-edge-part-1/" hidden></a>
+</article>
+      </div>
+    </main><footer class="site-footer h-card">
+  <data class="u-url" href="/blog/"></data>
+
+  <div class="wrapper">
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col">
+        <p class="feed-subscribe">
+          <a href="/blog/feed.xml">
+            <svg class="svg-icon orange">
+              <use xlink:href="/blog/assets/minima-social-icons.svg#rss"></use>
+            </svg><span>Subscribe</span>
+          </a>
+        </p>
+        <ul class="contact-list">
+          <li class="p-name">Ankit Sinha</li>
+          
+        </ul>
+      </div>
+      <div class="footer-col">
+        <p>A technology blog focusing on random stuff</p>
+      </div>
+    </div>
+
+    <div class="social-links"><ul class="social-media-list"><li><a rel="me" href="https://github.com/ankitbko" target="_blank" title="ankitbko"><svg class="svg-icon grey"><use xlink:href="/blog/assets/minima-social-icons.svg#github"></use></svg></a></li><li><a rel="me" href="https://twitter.com/ankitbko" target="_blank" title="ankitbko"><svg class="svg-icon grey"><use xlink:href="/blog/assets/minima-social-icons.svg#twitter"></use></svg></a></li></ul>
+</div>
+
+  </div>
+
+</footer>
+</body>
+
+</html>

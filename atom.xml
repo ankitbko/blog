@@ -4,13 +4,154 @@
  <title>F5 - Squashing Bugs</title>
  <link href="https://ankitbko.github.io/atom.xml" rel="self"/>
  <link href="https://ankitbko.github.io/"/>
- <updated>2022-07-01T00:43:49-05:00</updated>
+ <updated>2022-07-01T00:50:44-05:00</updated>
  <id>https://ankitbko.github.io</id>
  <author>
    <name>Ankit Sinha</name>
    <email></email>
  </author>
 
+ 
+ <entry>
+   <title>Patterns for Vision on the Edge - Part 1 - Concurrent processing</title>
+   <link href="https://ankitbko.github.io/blog/2022/06/vision-on-edge-part-1/"/>
+   <updated>2022-06-29T00:00:00-05:00</updated>
+   <id>https://ankitbko.github.io/blog/2022/06/vision-on-edge-part-1</id>
+   <content type="html">&lt;p&gt;While developing a solution for implementing vision on the edge use case, one of the most common requirement is having the ability to ingest live video feed and process it to derive useful insights (running a ML model on the captured frame, etc.).&lt;/p&gt;
+
+&lt;p&gt;One of the key challenges faced during the implementation was with the ability to simultaneously consume a live video feed from the video source, enable a smooth streaming experience for consumer as well as perform realtime analysis of the video frames. As processing of frame can happen at different rate than reading a frame from camera, handling back-pressure between consumer and producer becomes an important requirement.&lt;/p&gt;
+
+&lt;p&gt;We can breakdown the problem into three parts:&lt;/p&gt;
+
+&lt;ol&gt;
+  &lt;li&gt;Simultaneous reading and processing of frame.&lt;/li&gt;
+  &lt;li&gt;Handling back-pressure between frame producer and consumer.&lt;/li&gt;
+  &lt;li&gt;Transmitting frames to multiple consumers at different rates - Consumer 1 - To process frame; Consumer 2 - To display in UI.&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;This article covers the first two parts of the problem described above. The third part of the problem will be covered in Part 2 of the blog series.&lt;/p&gt;
+
+&lt;h2 id=&quot;design&quot;&gt;Design&lt;/h2&gt;
+
+&lt;p&gt;A possible design for the vision on edge use case is as follows:&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/blog/assets/images/posts/vision-on-edge-1/architecture.png&quot; alt=&quot;Architecture&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;The solution contains primarily a video camera and an edge device.&lt;/p&gt;
+
+&lt;ol&gt;
+  &lt;li&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Frame Provider&lt;/code&gt; reads the frame from the video camera at a desired FPS.&lt;/li&gt;
+  &lt;li&gt;The &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Frame Provider&lt;/code&gt; then transmits the frames to &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;User Interface&lt;/code&gt; to display live video feed at a different FPS.&lt;/li&gt;
+  &lt;li&gt;At the same time, the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Frame Provider&lt;/code&gt; transmits the same frame via &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Back Pressure&lt;/code&gt; to &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Frame Processor&lt;/code&gt; to derive useful insights at the rate that &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;FrameProcessor&lt;/code&gt; can handle.&lt;/li&gt;
+  &lt;li&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Frame Processor&lt;/code&gt; then processes the frame and publishes the result to the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;User Interface&lt;/code&gt;.&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;h2 id=&quot;object-detection-sample-application&quot;&gt;Object detection Sample Application&lt;/h2&gt;
+
+&lt;p&gt;The sample provided is an implementation of the above design. The &lt;a href=&quot;https://github.com/ankitbko/vision-on-edge/blob/main/common/frame_provider.py&quot;&gt;FrameProvider&lt;/a&gt; reads the frames from &lt;a href=&quot;https://github.com/ankitbko/vision-on-edge/blob/main/common/slow_traffic_small.mp4&quot;&gt;video file&lt;/a&gt; at 30 FPS and send those to &lt;a href=&quot;https://github.com/ankitbko/vision-on-edge/blob/main/common/index.html&quot;&gt;User Interface&lt;/a&gt; through websocket at 15 FPS and simultaneously puts the frame in a &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Queue&lt;/code&gt; (this is discussed in detail in subsequent section) at 5 FPS. The &lt;a href=&quot;https://github.com/ankitbko/vision-on-edge/blob/main/frame_processor.py&quot;&gt;FrameProcessor&lt;/a&gt; reads the frame from the queue and performs object detection using &lt;a href=&quot;https://pjreddie.com/darknet/yolo/&quot;&gt;Tiny YOLO ML Model&lt;/a&gt;. The UI displays the video feed and the rate at which it received the frame from the server.&lt;/p&gt;
+
+&lt;h3 id=&quot;running-the-sample&quot;&gt;Running the sample&lt;/h3&gt;
+
+&lt;h4 id=&quot;prerequisite&quot;&gt;&lt;strong&gt;Prerequisite&lt;/strong&gt;&lt;/h4&gt;
+
+&lt;p&gt;To execute the sample, the developer machine must have either -&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;&lt;a href=&quot;https://code.visualstudio.com/&quot;&gt;Visual Studio Code&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;https://docs.docker.com/engine/install/&quot;&gt;Docker&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;OR&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;&lt;a href=&quot;https://www.python.org/downloads/release/python-390/&quot;&gt;Python 3.9&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h4 id=&quot;steps&quot;&gt;&lt;strong&gt;Steps&lt;/strong&gt;&lt;/h4&gt;
+
+&lt;ol&gt;
+  &lt;li&gt;Clone the repository.&lt;/li&gt;
+  &lt;li&gt;Prepare environment.
+    &lt;ol&gt;
+      &lt;li&gt;If using Docker and Visual Studio Code, open the repository in &lt;a href=&quot;https://code.visualstudio.com/docs/remote/containers&quot;&gt;Visual Studio Code Remote - Containers&lt;/a&gt; following this &lt;a href=&quot;https://code.visualstudio.com/docs/remote/containers#_reopen-folder-in-container&quot;&gt;guide&lt;/a&gt;&lt;/li&gt;
+      &lt;li&gt;Or in case of using Python, install the &lt;a href=&quot;../code/requirements.txt&quot;&gt;required packages&lt;/a&gt; using &lt;a href=&quot;https://pip.pypa.io/en/stable/&quot;&gt;pip&lt;/a&gt;&lt;/li&gt;
+    &lt;/ol&gt;
+  &lt;/li&gt;
+  &lt;li&gt;Run command &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;python main.py&lt;/code&gt; from &lt;em&gt;multiprocessing&lt;/em&gt; to start the sample.&lt;/li&gt;
+  &lt;li&gt;The video feed will be shown in User Interface, via ULR &lt;a href=&quot;http://localhost:7001/&quot;&gt;http://localhost:7001/&lt;/a&gt;.&lt;/li&gt;
+  &lt;li&gt;The time taken by the ML model to process the frame will be shown in the Console.&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;h2 id=&quot;technical-approaches&quot;&gt;Technical Approaches&lt;/h2&gt;
+
+&lt;p&gt;The first challenge is to enable simultaneous execution of &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Frame Provider&lt;/code&gt; and &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Frame Processor&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;In Python this can be achieved by using the &lt;a href=&quot;https://docs.python.org/3/library/threading.html&quot;&gt;threading&lt;/a&gt; or &lt;a href=&quot;https://docs.python.org/3/library/multiprocessing.html&quot;&gt;multiprocessing&lt;/a&gt;.&lt;/p&gt;
+
+&lt;h4 id=&quot;threading&quot;&gt;&lt;strong&gt;Threading&lt;/strong&gt;&lt;/h4&gt;
+
+&lt;p&gt;The &lt;em&gt;threading&lt;/em&gt; folder contains implementation of this using threading module.&lt;/p&gt;
+
+&lt;p&gt;Two threads are created, one to execute &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;FrameProvider&lt;/code&gt; and another to execute &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;FrameProcessor&lt;/code&gt;. Python’s Queue is used as communication layer between threads. &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;FrameProvider&lt;/code&gt; captures the frame from video file, writes it to the queue and sends the frame to UI. &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;FrameProcessor&lt;/code&gt; processes the message from queue and performs object detection on each frame. It prints the time it takes to perform inference in the terminal.&lt;/p&gt;
+
+&lt;p&gt;We can execute this by running &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;python main.py&lt;/code&gt; from &lt;em&gt;threading&lt;/em&gt; folder.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/blog/assets/images/posts/vision-on-edge-1/threading.gif&quot; alt=&quot;Threading Result&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;You will notice that video stream is not so smooth as expected. The UI shows it is receiving only 3 to 7 frames per second where as we have configured 15 FPS.&lt;/p&gt;
+
+&lt;div class=&quot;language-python highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;bp&quot;&gt;self&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;frame_rate_camera&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;30&lt;/span&gt; &lt;span class=&quot;c1&quot;&gt;# FPS rate to read from camera/file
+&lt;/span&gt;&lt;span class=&quot;bp&quot;&gt;self&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;frame_rate_ui&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;15&lt;/span&gt; &lt;span class=&quot;c1&quot;&gt;# FPS rate of the User Interface
+&lt;/span&gt;&lt;span class=&quot;bp&quot;&gt;self&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;frame_rate_queue&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;5&lt;/span&gt;  &lt;span class=&quot;c1&quot;&gt;# FPS rate to write frame to Queue
+&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;So what went wrong here? Let’s see how Python GIL (global interpreter lock) is related to this problem. Python GIL, as per definition : &lt;em&gt;The mechanism used by the CPython interpreter to assure that only one thread executes Python bytecode at a time&lt;/em&gt;&lt;/p&gt;
+
+&lt;p&gt;Basically the GIL is a global lock that is used to protect the Python interpreter from being acquired by multiple threads simultaneously. If a thread is being executed, no other threads will be able to acquire GIL and run simultaneously.&lt;/p&gt;
+
+&lt;p&gt;To relate this to our sample, the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;FrameProcessor&lt;/code&gt; performs a long running task of object detection. In my system each inference takes approximately 0.2-0.3 seconds. So while the model is executing, GIL has been acquired by the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;FrameProcessor&lt;/code&gt; thread. So for this entire duration the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;FrameProvider&lt;/code&gt; was not able to execute and send frame to UI.&lt;/p&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;The FPS may vary between systems. If the system has better CPU, the model will execute significantly faster. In that case the video sluggishness in UI may not be as apparent. If that happens try looping the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;infer(item.frame)&lt;/code&gt; call in &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;FrameProcessor._process&lt;/code&gt; to simulate more CPU intensive task.&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;h4 id=&quot;multiprocessing&quot;&gt;&lt;strong&gt;Multiprocessing&lt;/strong&gt;&lt;/h4&gt;
+
+&lt;p&gt;Python’s Multiprocessing is another way of executing multiple tasks simultaneously. The &lt;em&gt;multiprocessing&lt;/em&gt; folder contains implementation of the solution using multiple processes.&lt;/p&gt;
+
+&lt;p&gt;In this sample, &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;FrameProvider&lt;/code&gt; and &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;FrameProcessor&lt;/code&gt; are executed in two different processes. &lt;a href=&quot;https://docs.python.org/3/library/multiprocessing.html#multiprocessing.Queue&quot;&gt;Multiprocessing.Queue&lt;/a&gt; is used to pass frames between processes.&lt;/p&gt;
+
+&lt;p&gt;Execute the application by running &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;python main.py&lt;/code&gt; from &lt;em&gt;multiprocessing&lt;/em&gt; folder.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/blog/assets/images/posts/vision-on-edge-1/multiprocessing.gif&quot; alt=&quot;Multiprocessing Result&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;You will notice the video feed is much more smoother than the &lt;em&gt;threading&lt;/em&gt; example. Also notice the FPS is constant at 15, which is matching our configuration.&lt;/p&gt;
+
+&lt;p&gt;Why it worked as expected while using multiprocessing? The scope of GIL is a process. Since multiprocessing create subprocesses by spawning/forking, each process gets its own GIL. Due to this the execution of &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;FrameProvider&lt;/code&gt; is not impacted by model inference running in a different process.&lt;/p&gt;
+
+&lt;h3 id=&quot;back-pressure-handling&quot;&gt;Back-Pressure Handling&lt;/h3&gt;
+
+&lt;p&gt;Our second challenge was to handle the back-pressure between &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Frame Provider&lt;/code&gt; and &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Frame Processor&lt;/code&gt; processes. First we will see why the back-pressure is getting created.&lt;/p&gt;
+
+&lt;p&gt;We know that object detection takes 0.2-0.3 seconds per frame. So even though we are reading 30 frames per second from the source, we cannot perform object detection on all the frames. Therefore we need a way to manage the back-pressure created from &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;FrameProvider&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;We have mentioned about a &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Queue&lt;/code&gt; that is leveraged for transmitting the frame from &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;FrameProvider&lt;/code&gt; process to &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;FrameProcessor&lt;/code&gt; process. We use &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Queue&lt;/code&gt; of maximum size of 1 to handle back-pressure. Whenever &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;FrameProvider&lt;/code&gt; is writing to the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Queue&lt;/code&gt; it will always overwrite the previous frame. In this way whenever &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;FrameProcessor&lt;/code&gt; is reading the frame from the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Queue&lt;/code&gt; it will always get the latest frame.&lt;/p&gt;
+
+&lt;h2 id=&quot;conclusion&quot;&gt;Conclusion&lt;/h2&gt;
+
+&lt;p&gt;We have seen how we can leverage python’s multiprocessing bypass GIL to implement a complete computer vision solution. Whenever there is a CPU intensive task and there is need of executing simultaneous task, it is preferable to use multiprocessing instead of threading to avoid issues from GIL.&lt;/p&gt;
+
+&lt;p&gt;We will cover how to send frame to multiple consumer simultaneously in next part of this blog series.&lt;/p&gt;
+
+&lt;h2 id=&quot;references&quot;&gt;References&lt;/h2&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;&lt;a href=&quot;https://docs.python.org/3/library/threading.html&quot;&gt;Python Threading&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;https://docs.python.org/3/glossary.html#term-global-interpreter-lock&quot;&gt;Python GIL&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;https://docs.python.org/3/library/multiprocessing.html&quot;&gt;Python Multiprocessing&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+</content>
+ </entry>
  
  <entry>
    <title>Optimizing network footprint using MessagePack</title>
