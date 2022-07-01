@@ -4,13 +4,93 @@
  <title>F5 - Squashing Bugs</title>
  <link href="https://ankitbko.github.io/atom.xml" rel="self"/>
  <link href="https://ankitbko.github.io/"/>
- <updated>2022-06-22T03:02:31-05:00</updated>
+ <updated>2022-06-30T23:36:39-05:00</updated>
  <id>https://ankitbko.github.io</id>
  <author>
    <name>Ankit Sinha</name>
    <email></email>
  </author>
 
+ 
+ <entry>
+   <title>Measuring latency of Websocket Messages</title>
+   <link href="https://ankitbko.github.io/blog/2022/06/websocket-latency/"/>
+   <updated>2022-06-22T00:00:00-05:00</updated>
+   <id>https://ankitbko.github.io/blog/2022/06/websocket-latency</id>
+   <content type="html">&lt;p&gt;Have you noticed that the browser does not display time it took for a websocket message to be delivered like it shows for HTTP requests? That is because, in contrast to HTTP protocol which follows &lt;em&gt;request-response&lt;/em&gt; pattern, websocket messages do not have transaction semantics once the initial handshake is done to establish the connection. Once the websocket connection is established, messages are &lt;em&gt;pushed&lt;/em&gt; from server to client (or vice versa). Therefore if browser receives a websocket message, it does not know when the message was sent to calculate the latency.&lt;/p&gt;
+
+&lt;p&gt;Therefore, an obvious approach would be to have sender attach a timestamp to the message while sending so that it can be used to calculate latency. However, the system clocks for both the system could be different which may be skewed or misleading. Hence, sender’s timestamp may not provide sufficient information to calculate latency of message.&lt;/p&gt;
+
+&lt;p&gt;To accurately calculate latency we would need round trip of message between client and server. If the original message is small in size and socket is not throttled, the client can echo the same message back to server. The server can then find the roundtrip latency by calculating the time elapsed between sending of original message and receiving the echo’d message. Dividing this by 2 gives one way latency. However if the message size is big, this approach is not recommended as it puts additional stress on socket connection and on the server. In this case we need one additional message to be sent from server to client.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/blog/assets/images/posts/websocket-latency/ws_sequence.png&quot; alt=&quot;ws sequence diagram&quot; /&gt;&lt;/p&gt;
+
+&lt;ol&gt;
+  &lt;li&gt;Server sends the Message (M) to client whose latency needs to be measured. Server adds &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;server_ts&lt;/code&gt; to the message.&lt;/li&gt;
+  &lt;li&gt;Client sends an acknowledgement message (ACK) to server by echoing &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;server_ts&lt;/code&gt; and attaching its own timestamp in &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;client_ts&lt;/code&gt;.&lt;/li&gt;
+  &lt;li&gt;Server echos the ACK message by attaching another timestamp &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;server_ack_ts&lt;/code&gt;.&lt;/li&gt;
+  &lt;li&gt;Client captures the timestamp &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;client_ack_ts&lt;/code&gt; onces it receives the ACK message.&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;At this stage the client has 4 pieces of information -&lt;/p&gt;
+&lt;ol&gt;
+  &lt;li&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;server_ts&lt;/code&gt;: Timestamp when original message M was sent from server.&lt;/li&gt;
+  &lt;li&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;client_ts&lt;/code&gt;: Timestamp when original message M was received by the client.&lt;/li&gt;
+  &lt;li&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;server_ack_ts&lt;/code&gt;: Timestamp when ACK message was received by the server.&lt;/li&gt;
+  &lt;li&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;client_ack_ts&lt;/code&gt;: Timestamp when ACK response was received by the client.&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;By using these timestamp we can calculate the latency of original message M as follows&lt;/p&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;Latency of M = (server_ack_ts - server_ts) - ((client_ack_ts - client_ts) * 0.5)
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;This works because we are only subtracting server timestamp with server timestamp and client timestamp with client timestamp.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/blog/assets/images/posts/websocket-latency/websocket_latency.gif&quot; alt=&quot;ws_workflow&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;The code provided implements this in a python application that sends an image multiple times from server to client using websocket. This is analogous to streaming a video from server to client. To run the application&lt;/p&gt;
+
+&lt;ol&gt;
+  &lt;li&gt;Install dependencies using &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;pip install -r requirements.txt&lt;/code&gt;.&lt;/li&gt;
+  &lt;li&gt;Run the application by executing &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;python main.py&lt;/code&gt;&lt;/li&gt;
+  &lt;li&gt;Navigate to &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;http://localhost:7001&lt;/code&gt; and open the browser’s console. Click on &lt;em&gt;start&lt;/em&gt; button and the latency for each socket message will be printed in the console.&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;&lt;img src=&quot;/blog/assets/images/posts/websocket-latency/browser_latency.png&quot; alt=&quot;Ws Latency&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;The python implementation to handle &lt;em&gt;ACK&lt;/em&gt; message and attach appropriate timestamp is in &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;latency.py&lt;/code&gt; as a decorator method.&lt;/p&gt;
+
+&lt;div class=&quot;language-py highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;k&quot;&gt;def&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;measure_latency&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;func&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;):&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;def&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;wrapper_measure_latency&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;*&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;args&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;**&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;kwargs&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;):&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;message&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;json&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;loads&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;args&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;])&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;_self&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;args&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;
+        &lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;message&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;type&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;==&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&quot;ack&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;
+            &lt;span class=&quot;k&quot;&gt;print&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;f&quot;Received message: &lt;/span&gt;&lt;span class=&quot;si&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;message&lt;/span&gt;&lt;span class=&quot;si&quot;&gt;}&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+            &lt;span class=&quot;n&quot;&gt;message&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;server_ack_ts&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;str&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;datetime&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;now&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;().&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;timestamp&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;())&lt;/span&gt;
+            &lt;span class=&quot;n&quot;&gt;_self&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;write_message&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;json&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;dumps&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;message&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;))&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;func&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;*&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;args&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;**&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;kwargs&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+        &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt;
+
+    &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;wrapper_measure_latency&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;In &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;index.html&lt;/code&gt; the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;calculate_socket_latency&lt;/code&gt; calculates the latency after all the timestamps are received by the client.&lt;/p&gt;
+
+&lt;div class=&quot;language-js highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;kd&quot;&gt;function&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;calculate_socket_latency&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;data&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;nx&quot;&gt;client_ack_ts&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;performance&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;now&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
+    &lt;span class=&quot;nx&quot;&gt;ack_round_trip_time&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;client_ack_ts&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;data&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;client_ts&lt;/span&gt;
+    &lt;span class=&quot;nx&quot;&gt;ack_one_way&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;ack_round_trip_time&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;/&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;2&lt;/span&gt;
+    &lt;span class=&quot;nx&quot;&gt;vid_round_trip_time&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;data&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;server_ack_ts&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;data&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;server_ts&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;*&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;1000&lt;/span&gt;
+    &lt;span class=&quot;nx&quot;&gt;vid_one_way&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;vid_round_trip_time&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;ack_one_way&lt;/span&gt;
+    &lt;span class=&quot;nx&quot;&gt;console&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;log&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;vid_one_way&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h2 id=&quot;conclusion&quot;&gt;Conclusion&lt;/h2&gt;
+&lt;p&gt;As we can see, calculating websocket message latency is not straightforward. It requires additional messages that needs to be sent which adds to the network load. In case the primary websocket connection is already throttled, a different dedicated websocket connection for measuring latency can be used to send ACK messages with condition that a client connect to same instance of server for both the socket connections to avoid clock skew between servers.&lt;/p&gt;
+</content>
+ </entry>
  
  <entry>
    <title>STEADY by AID with ART</title>
