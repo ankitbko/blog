@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="twitter:card" content="summary_large_image" /><!-- Begin Jekyll SEO tag v2.6.1 -->
+<title>Patterns for Vision on the Edge - Part 2 - Handle Multiple Consumers | F5 - Squashing Bugs</title>
+<meta name="generator" content="Jekyll v4.1.1" />
+<meta property="og:title" content="Patterns for Vision on the Edge - Part 2 - Handle Multiple Consumers" />
+<meta name="author" content="<a href='https://twitter.com/ankitbko', target='_blank'>Ankit Sinha</a>, <a href='https://github.com/prabdeb', target='_blank'>Prabal Deb</a>" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="Challenges in implementing Vision based solution using Python on Edge." />
+<meta property="og:description" content="Challenges in implementing Vision based solution using Python on Edge." />
+<link rel="canonical" href="https://ankitbko.github.io/blog/2022/06/vision-on-edge-part-2/" />
+<meta property="og:url" content="https://ankitbko.github.io/blog/2022/06/vision-on-edge-part-2/" />
+<meta property="og:site_name" content="F5 - Squashing Bugs" />
+<meta property="og:image" content="https://ankitbko.github.io/blog/images/previews/vision-on-edge-2.png" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2022-06-30T00:00:00-05:00" />
+<script type="application/ld+json">
+{"url":"https://ankitbko.github.io/blog/2022/06/vision-on-edge-part-2/","@type":"BlogPosting","headline":"Patterns for Vision on the Edge - Part 2 - Handle Multiple Consumers","dateModified":"2022-06-30T00:00:00-05:00","datePublished":"2022-06-30T00:00:00-05:00","mainEntityOfPage":{"@type":"WebPage","@id":"https://ankitbko.github.io/blog/2022/06/vision-on-edge-part-2/"},"image":"https://ankitbko.github.io/blog/images/previews/vision-on-edge-2.png","author":{"@type":"Person","name":"<a href='https://twitter.com/ankitbko', target='_blank'>Ankit Sinha</a>, <a href='https://github.com/prabdeb', target='_blank'>Prabal Deb</a>"},"description":"Challenges in implementing Vision based solution using Python on Edge.","@context":"https://schema.org"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="stylesheet" href="/blog/assets/css/style.css"><link type="application/atom+xml" rel="alternate" href="https://ankitbko.github.io/blog/feed.xml" title="F5 - Squashing Bugs" /><!-- the google_analytics_id gets auto inserted from the config file -->
+
+
+
+<!-- Global site tag (gtag.js) - Google Analytics -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=UA-75679348-1"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'UA-75679348-1');
+</script>
+
+
+<link rel="shortcut icon" type="image/x-icon" href="/blog/images/favicon.ico"><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/Primer/15.2.0/primer.css" integrity="sha512-xTz2ys4coGAOz8vuV1NcQBkgVmKhsSEtjbqyMJbBHRplFuvKIUo6xhLHpAyPt9mfR6twHJgn9OgVLuqOvjeBhg==" crossorigin="anonymous" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.14.0/css/all.min.css" integrity="sha512-1PKOgIY59xJ8Co8+NE6FZ+LOAZKjy+KY8iq0G4B3CyeY6wYHN3yt9PW0XpSriVlkMXe40PTKnXrLnZ9+fkDaog==" crossorigin="anonymous" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.12.0/katex.min.css" integrity="sha512-h7nl+xz8wgDlNM4NqKEM4F1NkIRS17M9+uJwIGwuo8vGqIl4BhuCKdxjWEINm+xyrUjNCnK5dCrhM0sj+wTIXw==" crossorigin="anonymous" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.12.0/katex.min.js" integrity="sha512-/CMIhXiDA3m2c9kzRyd97MTb3MC6OVnx4TElQ7fkkoRghwDf6gi41gaT1PwF270W6+J60uTmwgeRpNpJdRV6sg==" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.12.0/contrib/auto-render.min.js" integrity="sha512-Do7uJAaHZm5OLrIv/yN4w0iG1dbu01kzdMNnFfu/mAqgUk6Nniv2JYHcwH+cNwjqgLcqcuBBk+JRvprLVI8azg==" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js" integrity="sha512-0doc9hKxR3PYwso42RD1p5ySZpzzuDiOwMrdCEh2WdJZCjcmFKc/wEnL+z8fBQrnHoiNWbo+3fiGkOYXBdQp4A==" crossorigin="anonymous"></script>
+    <script>
+    document.addEventListener("DOMContentLoaded", function() {
+        renderMathInElement( document.body, {
+        delimiters: [
+            {left: "$$", right: "$$", display: true},
+            {left: "[%", right: "%]", display: true},
+            {left: "$", right: "$", display: false}
+        ]}
+        );
+    });
+    </script>
+
+
+<script>
+function wrap_img(fn) {
+    if (document.attachEvent ? document.readyState === "complete" : document.readyState !== "loading") {
+        var elements = document.querySelectorAll(".post img");
+        Array.prototype.forEach.call(elements, function(el, i) {
+            if (el.getAttribute("title") && (el.className != "emoji")) {
+                const caption = document.createElement('figcaption');
+                var node = document.createTextNode(el.getAttribute("title"));
+                caption.appendChild(node);
+                const wrapper = document.createElement('figure');
+                wrapper.className = 'image';
+                el.parentNode.insertBefore(wrapper, el);
+                el.parentNode.removeChild(el);
+                wrapper.appendChild(el);
+                wrapper.appendChild(caption);
+            }
+        });
+    } else { document.addEventListener('DOMContentLoaded', fn); }
+}
+window.onload = wrap_img;
+</script>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function(){
+    // add link icon to anchor tags
+    var elem = document.querySelectorAll(".anchor-link")
+    elem.forEach(e => (e.innerHTML = '<i class="fas fa-link fa-xs"></i>'));
+    });
+</script>
+</head>
+<body><header class="site-header">
+
+  <div class="wrapper"><a class="site-title" rel="author" href="/blog/">F5 - Squashing Bugs</a><nav class="site-nav">
+        <input type="checkbox" id="nav-trigger" class="nav-trigger" />
+        <label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewBox="0 0 18 15" width="18px" height="15px">
+              <path d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.032C17.335,0,18,0.665,18,1.484L18,1.484z M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.032C17.335,6.031,18,6.696,18,7.516L18,7.516z M18,13.516C18,14.335,17.335,15,16.516,15H1.484 C0.665,15,0,14.335,0,13.516l0,0c0-0.82,0.665-1.483,1.484-1.483h15.032C17.335,12.031,18,12.695,18,13.516L18,13.516z"/>
+            </svg>
+          </span>
+        </label>
+
+        <div class="trigger"><a class="page-link" href="/blog/about/">About Me</a><a class="page-link" href="/blog/search/">Search</a><a class="page-link" href="/blog/categories/">Tags</a></div>
+      </nav></div>
+</header>
+<main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title p-name" itemprop="name headline">Patterns for Vision on the Edge - Part 2 - Handle Multiple Consumers</h1><p class="page-description">Challenges in implementing Vision based solution using Python on Edge.</p><p class="post-meta post-meta-title"><time class="dt-published" datetime="2022-06-30T00:00:00-05:00" itemprop="datePublished">
+        Jun 30, 2022
+      </time>• 
+          <span itemprop="author" itemscope itemtype="http://schema.org/Person">
+            <span class="p-author h-card" itemprop="name"><a href='https://twitter.com/ankitbko', target='_blank'>Ankit Sinha</a>, <a href='https://github.com/prabdeb', target='_blank'>Prabal Deb</a></span></span>
+       • <span class="read-time" title="Estimated read time">
+    
+    
+      8 min read
+    
+</span></p>
+
+    
+      <p class="category-tags"><i class="fas fa-tags category-tags-icon"></i></i> 
+      
+        <a class="category-tags-link" href="/blog/categories/#AI">AI</a>
+        &nbsp;
+      
+        <a class="category-tags-link" href="/blog/categories/#ML">ML</a>
+        &nbsp;
+      
+        <a class="category-tags-link" href="/blog/categories/#vision on edge">vision on edge</a>
+        &nbsp;
+      
+        <a class="category-tags-link" href="/blog/categories/#python">python</a>
+        &nbsp;
+      
+        <a class="category-tags-link" href="/blog/categories/#multiprocessing">multiprocessing</a>
+        &nbsp;
+      
+        <a class="category-tags-link" href="/blog/categories/#threading">threading</a>
+        &nbsp;
+      
+        <a class="category-tags-link" href="/blog/categories/#GIL">GIL</a>
+        &nbsp;
+      
+        <a class="category-tags-link" href="/blog/categories/#back-pressure">back-pressure</a>
+        &nbsp;
+      
+        <a class="category-tags-link" href="/blog/categories/#reactivex">reactivex</a>
+        &nbsp;
+      
+        <a class="category-tags-link" href="/blog/categories/#rxpy">rxpy</a>
+        
+      
+      </p>
+    
+
+    
+		<div class="d-flex flex-wrap flex-justify-start flex-items-center">
+			<p class="page-description" style="margin-right: .5rem;">Source Code </p>
+			<div class="page-description">
+				<div class="px-2">
+    <a href="https://github.com/ankitbko/vision-on-edge" role="button" target="_blank">
+        <img class="notebook-badge-image" src="/blog/assets/badges/github.svg" alt="View On GitHub">
+    </a>
+</div>
+
+			</div>
+		</div>
+	
+  </header>
+
+  <div class="post-content e-content" itemprop="articleBody">
+    <p>This post is the second part in a 2 part blog series on Patterns for implementing Vision on Edge. In the <a href="/blog/2022/06/vision-on-edge-part-1/">previous post</a>, we discussed two of the three common challenges faced when creating a Computer Vision based solution using Python on Edge.</p>
+
+<p>In this post we will cover the third challenge i.e. reading the video frames from the source (camera) and distributing them to multiple consumers based on the frame rate supported by the individual consumers.</p>
+
+<p>One of the most common ways to implement such a pattern is using the <a href="https://reactivex.io/">ReactiveX</a>.</p>
+
+<p>ReactiveX is an API for asynchronous programming with observable streams which enables to multiplex stream of data to multiple consumers. Under the hood, ReactX is an implementation of <a href="https://en.wikipedia.org/wiki/Observer_pattern">Observer pattern</a>.</p>
+
+<p>In our sample application, we read frames from camera in FrameProvider process and then we send the frame to two consumers - UI and Queue.</p>
+
+<p>Behind the scenes, ReactiveX is enabling us to read stream of video frames (from source camera), split the stream into two different streams (one per consumer), independently apply sampling on each stream to adhere to different FPS requirement for the consumer, and transmit the frames to different consumers asynchronously.</p>
+
+<p>Now let’s see how is this all implemented.</p>
+
+<h2 id="reactivex-for-python-rxpy">ReactiveX for Python (RxPY)</h2>
+
+<p><em>ReactiveX for Python (RxPY) is a library for composing asynchronous and event-based programs using observable collections and pipable query operators in Python.</em></p>
+
+<p>As the concept of ReactiveX is vast, we will focus on 2 key aspects of this framework referenced in this sample application.</p>
+
+<h3 id="observable">Observable</h3>
+
+<p>An <em>Observable</em> emits items sequentially. Multiple <em>Observers</em> can <em>subscribe</em> to an <em>Observable</em> and react to the items as emitted by <em>Observable</em>. This enables better concurrency and non-blocking operations.</p>
+
+<p>If we relate this concept to our problem, we can have an <em>Observer</em> that reads a frame from camera and emits it. And we can have two different <em>Observers</em> subscribed to it, one for emitting the frame to Queue and another for sending the frame in UI. In practice, we will have many more <em>Observers</em> in the pipeline to transform and modify the frames before we emit them to downstream consumers.</p>
+
+<h3 id="operator">Operator</h3>
+
+<p>There are multiple operators that are used in <code class="language-plaintext highlighter-rouge">ReactiveX</code> to compose the pipeline, where each operator is a function that takes an Observable, transforms the item and yields a new Observable. Let’s look at the following operators that we have used in this sample:</p>
+
+<ul>
+  <li><code class="language-plaintext highlighter-rouge">map</code>: transform the items emitted by an Observable to a new Observable by applying a function to each item.</li>
+  <li><code class="language-plaintext highlighter-rouge">filter</code>: filters the items emitted by an Observable using a predicate.</li>
+  <li><code class="language-plaintext highlighter-rouge">sample</code>: emit the most recent items within periodic time intervals.</li>
+  <li><code class="language-plaintext highlighter-rouge">interval</code>: emits a sequence of items spaced by a specified interval.</li>
+  <li><code class="language-plaintext highlighter-rouge">share</code>: shares the items emitted by an Observable, by converting connectable Observable (that does not begin emitting items) to a ordinary Observable. By applying this operator we can prompt an Observable to begin emitting items</li>
+  <li><code class="language-plaintext highlighter-rouge">do_action</code>: performs an action for each item emitted by an Observable.</li>
+</ul>
+
+<p>We can use these operators to perform several tasks like reading frame from camera, resizing the frame, sending to UI, etc.</p>
+
+<h2 id="implementation">Implementation</h2>
+
+<p>Lets take a look at how we have implemented the above concepts in the application. All the code is present in <code class="language-plaintext highlighter-rouge">frame_provider.py</code>.</p>
+
+<p><img src="/blog/assets/images/posts/vision-on-edge-2/ReactiveX.png" alt="ReactiveX Implementation" /></p>
+
+<h3 id="frame-stream">Frame Stream</h3>
+
+<p>First task is to read the frames from the camera at a defined rate supported by the camera. To do this we make use of <code class="language-plaintext highlighter-rouge">interval</code> operator in <em>RxPY</em> to emit an event at defined interval. We then need to discard the invalid frames and encapsulate it in our own data structure.</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">frame_stream</span> <span class="o">=</span> <span class="n">interval</span><span class="p">(</span><span class="n">frame_rate</span><span class="p">).</span><span class="n">pipe</span><span class="p">(</span>
+    <span class="n">op</span><span class="p">.</span><span class="nb">map</span><span class="p">(</span><span class="k">lambda</span> <span class="n">_</span><span class="p">:</span> <span class="bp">self</span><span class="p">.</span><span class="n">vid</span><span class="p">.</span><span class="n">read</span><span class="p">()),</span>  <span class="c1"># read frame
+</span>    <span class="n">op</span><span class="p">.</span><span class="n">do_action</span><span class="p">(</span><span class="k">lambda</span> <span class="n">result</span><span class="p">:</span> <span class="bp">self</span><span class="p">.</span><span class="n">vid</span><span class="p">.</span><span class="nb">set</span><span class="p">(</span><span class="n">cv2</span><span class="p">.</span><span class="n">CAP_PROP_POS_FRAMES</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="k">if</span> <span class="n">result</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="ow">is</span> <span class="bp">False</span> <span class="k">else</span> <span class="bp">None</span><span class="p">),</span> <span class="c1"># restart video on completion
+</span>    <span class="n">op</span><span class="p">.</span><span class="nb">filter</span><span class="p">(</span>
+        <span class="k">lambda</span> <span class="n">result</span><span class="p">:</span> <span class="n">result</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="ow">is</span> <span class="bp">True</span> <span class="ow">and</span> <span class="n">result</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span>
+    <span class="p">),</span>  <span class="c1"># filter None frames
+</span>    <span class="n">op</span><span class="p">.</span><span class="nb">map</span><span class="p">(</span><span class="k">lambda</span> <span class="n">result</span><span class="p">:</span> <span class="n">result</span><span class="p">[</span><span class="mi">1</span><span class="p">]),</span>  <span class="c1"># get frame
+</span>    <span class="n">op</span><span class="p">.</span><span class="nb">map</span><span class="p">(</span>
+        <span class="k">lambda</span> <span class="n">frame</span><span class="p">:</span> <span class="n">Frame</span><span class="p">(</span>
+            <span class="n">frame</span><span class="o">=</span><span class="n">frame</span><span class="p">,</span>
+            <span class="n">correlation_id</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">uuid</span><span class="p">.</span><span class="n">uuid4</span><span class="p">()),</span>
+        <span class="p">)</span>
+    <span class="p">),</span>  <span class="c1"># create frame object
+</span>    <span class="n">op</span><span class="p">.</span><span class="n">share</span><span class="p">(),</span>  <span class="c1"># share frame stream
+</span><span class="p">)</span>
+</code></pre></div></div>
+
+<p>Let’s take a look at step by step operations</p>
+
+<ol>
+  <li><code class="language-plaintext highlighter-rouge">interval(frame_rate)</code> - emits a sequence an event at a FPS rate for camera.</li>
+  <li><code class="language-plaintext highlighter-rouge">map(lambda _: self.vid.read())</code> - discards the original event and emits the frame after reading it from camera using <code class="language-plaintext highlighter-rouge">vid.read()</code>.</li>
+  <li><code class="language-plaintext highlighter-rouge">do_action(...)</code> - required only if reading from video file instead of camera. Used to restart the video when EOF is reached.</li>
+  <li><code class="language-plaintext highlighter-rouge">filter(lambda result: result[0] is True and result[1] is not None)</code> - filters out the invalid frames.</li>
+  <li><code class="language-plaintext highlighter-rouge">map(...)</code> - create a Frame object, by adding additional information (<code class="language-plaintext highlighter-rouge">correlation_id</code>) to the frame.</li>
+  <li><code class="language-plaintext highlighter-rouge">share</code> - returns an observable sequence that shares a single subscription to the underlying sequence.</li>
+</ol>
+
+<h3 id="ui-stream">UI Stream</h3>
+
+<p>Next we want to subscribe to <em>Frame Stream</em>, sample the frames to match FPS required by UI, resize the frames and transmit it using websocket. The <code class="language-plaintext highlighter-rouge">sample</code> operator changes the frequency of the items being emitted for the downstream operators allowing us to change the FPS rate.</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">frame_stream</span><span class="p">.</span><span class="n">pipe</span><span class="p">(</span>
+    <span class="n">op</span><span class="p">.</span><span class="n">sample</span><span class="p">(</span><span class="n">socket_fps</span><span class="p">),</span>
+    <span class="n">op</span><span class="p">.</span><span class="nb">map</span><span class="p">(</span>
+        <span class="k">lambda</span> <span class="n">frame</span><span class="p">:</span> <span class="n">Frame</span><span class="p">(</span>
+            <span class="n">cv2</span><span class="p">.</span><span class="n">resize</span><span class="p">(</span><span class="n">frame</span><span class="p">.</span><span class="n">frame</span><span class="p">,</span> <span class="n">frame_size</span><span class="p">),</span>
+            <span class="n">frame</span><span class="p">.</span><span class="n">correlation_id</span><span class="p">,</span>
+        <span class="p">)</span>
+    <span class="p">),</span>
+    <span class="n">op</span><span class="p">.</span><span class="nb">map</span><span class="p">(</span>
+        <span class="k">lambda</span> <span class="n">frame</span><span class="p">:</span> <span class="n">Frame</span><span class="p">(</span>
+            <span class="n">frame</span><span class="p">.</span><span class="n">frame</span><span class="p">,</span>
+            <span class="n">frame</span><span class="p">.</span><span class="n">correlation_id</span><span class="p">,</span>
+        <span class="p">)</span>
+    <span class="p">),</span>
+    <span class="n">op</span><span class="p">.</span><span class="nb">map</span><span class="p">(</span><span class="k">lambda</span> <span class="n">frame</span><span class="p">:</span> <span class="bp">self</span><span class="p">.</span><span class="n">_write_to_socket</span><span class="p">(</span><span class="n">frame</span><span class="o">=</span><span class="n">frame</span><span class="p">)),</span>
+<span class="p">)</span>
+</code></pre></div></div>
+
+<p>Let’s take a look at step by step operations, that is being performed primarily on the Observer.</p>
+
+<ol>
+  <li><code class="language-plaintext highlighter-rouge">sample(socket_fps)</code> - that samples the frame stream to send the frame to the UI at a FPS rate required by UI.</li>
+  <li><code class="language-plaintext highlighter-rouge">map(...)</code> - resize the frame to the required size needed for UI.</li>
+  <li><code class="language-plaintext highlighter-rouge">map(lambda frame: self._write_to_socket(frame=frame))</code> - send each frame to the UI.</li>
+</ol>
+
+<h3 id="queue-stream">Queue Stream</h3>
+
+<p>Simultaneously we need to get frames from <em>Frame Stream</em> and send the frame to the Queue for performing frame processing. The <code class="language-plaintext highlighter-rouge">share</code> operator in <em>Frame Stream</em> allows us to share the stream between two different observers where each observer gets copy of same item as emitted from <em>Frame Stream</em>. We perform the same actions as we did with <em>UI Stream</em> but with different FPS rate and resize parameters.</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">frame_stream</span><span class="p">.</span><span class="n">pipe</span><span class="p">(</span>
+    <span class="n">op</span><span class="p">.</span><span class="n">sample</span><span class="p">(</span><span class="n">queue_fps</span><span class="p">),</span>
+    <span class="n">op</span><span class="p">.</span><span class="nb">map</span><span class="p">(</span>
+        <span class="k">lambda</span> <span class="n">frame</span><span class="p">:</span> <span class="n">Frame</span><span class="p">(</span>
+            <span class="n">cv2</span><span class="p">.</span><span class="n">resize</span><span class="p">(</span><span class="n">frame</span><span class="p">.</span><span class="n">frame</span><span class="p">,</span> <span class="n">frame_size</span><span class="p">),</span>
+            <span class="n">frame</span><span class="p">.</span><span class="n">correlation_id</span><span class="p">,</span>
+        <span class="p">)</span>
+    <span class="p">),</span>
+    <span class="n">op</span><span class="p">.</span><span class="nb">map</span><span class="p">(</span><span class="k">lambda</span> <span class="n">frame</span><span class="p">:</span> <span class="bp">self</span><span class="p">.</span><span class="n">_write_to_queue</span><span class="p">(</span><span class="n">frame</span><span class="o">=</span><span class="n">frame</span><span class="p">)),</span>
+<span class="p">)</span>
+</code></pre></div></div>
+
+<p>Let’s take a look at step by step operations, that is being performed primarily on the Observer.</p>
+
+<ol>
+  <li><code class="language-plaintext highlighter-rouge">sample(queue_fps)</code> - samples the frame stream to send the frame to the Queue at a FPS rate required by frame processing.</li>
+  <li><code class="language-plaintext highlighter-rouge">map(...)</code> - resize the frame to the required size needed for frame processing.</li>
+  <li><code class="language-plaintext highlighter-rouge">map(lambda frame: self._write_to_queue(frame=frame))</code> - send each frame to the Queue.</li>
+</ol>
+
+<h3 id="subscribe-to-the-stream">Subscribe to the stream</h3>
+
+<p>Now we have two observables - one from <em>UI Stream</em> and another from <em>Queue Stream</em>. We need to <em>subscribe</em> to the observables to start the pipelines.</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">socket_result_stream</span><span class="p">.</span><span class="n">subscribe</span><span class="p">(</span>
+    <span class="n">on_next</span><span class="o">=</span><span class="k">lambda</span> <span class="n">_</span><span class="p">:</span> <span class="bp">None</span><span class="p">,</span>
+    <span class="n">on_error</span><span class="o">=</span><span class="k">lambda</span> <span class="n">ex</span><span class="p">:</span> <span class="bp">self</span><span class="p">.</span><span class="n">logger</span><span class="p">.</span><span class="n">exception</span><span class="p">(</span><span class="n">ex</span><span class="p">),</span>
+    <span class="n">on_completed</span><span class="o">=</span><span class="k">lambda</span><span class="p">:</span> <span class="bp">self</span><span class="p">.</span><span class="n">logger</span><span class="p">.</span><span class="n">info</span><span class="p">(</span><span class="s">"Completed frame stream"</span><span class="p">),</span>
+<span class="p">)</span>
+<span class="n">queue_result_stream</span><span class="p">.</span><span class="n">subscribe</span><span class="p">(</span>
+    <span class="n">on_next</span><span class="o">=</span><span class="k">lambda</span> <span class="n">_</span><span class="p">:</span> <span class="bp">None</span><span class="p">,</span>
+    <span class="n">on_error</span><span class="o">=</span><span class="k">lambda</span> <span class="n">ex</span><span class="p">:</span> <span class="bp">self</span><span class="p">.</span><span class="n">logger</span><span class="p">.</span><span class="n">exception</span><span class="p">(</span><span class="n">ex</span><span class="p">),</span>
+    <span class="n">on_completed</span><span class="o">=</span><span class="k">lambda</span><span class="p">:</span> <span class="bp">self</span><span class="p">.</span><span class="n">logger</span><span class="p">.</span><span class="n">info</span><span class="p">(</span><span class="s">"Completed frame stream"</span><span class="p">),</span>
+<span class="p">)</span>
+</code></pre></div></div>
+
+<p>Once subscribed, the operators will start receiving the frames from the Observable, which is an asynchronous and non-blocking operation.</p>
+
+<h2 id="unit-test">Unit Test</h2>
+
+<p>Conventional way of testing is not sufficient to test the <em>ReactiveX</em> code. We need to use <a href="(https://rxmarbles.com/)">Marble diagrams</a> to represent the behavior of an Observable and then we can can use it to assert the Observable as expected.</p>
+
+<p>Also for mocking we can use <code class="language-plaintext highlighter-rouge">Hot</code> and <code class="language-plaintext highlighter-rouge">Cold</code> Observables. <em>A “hot” Observable may begin emitting items as soon as it is created, and so any observer who later subscribes to that Observable may start observing the sequence somewhere in the middle. A “cold” Observable, on the other hand, waits until an observer subscribes to it before it begins to emit items, and so such an observer is guaranteed to see the whole sequence from the beginning.</em></p>
+
+<p>Let’s have a look at the following unit test case for function <code class="language-plaintext highlighter-rouge">def _emit_frame_to_queue</code> in <code class="language-plaintext highlighter-rouge">frame_provider.py</code>:</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kn">import</span> <span class="nn">unittest</span>
+<span class="kn">from</span> <span class="nn">unittest.mock</span> <span class="kn">import</span> <span class="n">patch</span>
+<span class="kn">from</span> <span class="nn">rx</span> <span class="kn">import</span> <span class="n">operators</span> <span class="k">as</span> <span class="n">ops</span>
+<span class="kn">from</span> <span class="nn">rx.testing.marbles</span> <span class="kn">import</span> <span class="n">marbles_testing</span>
+<span class="kn">from</span> <span class="nn">frame_provider</span> <span class="kn">import</span> <span class="n">FrameProvider</span><span class="p">,</span> <span class="n">Frame</span>
+
+
+<span class="k">def</span> <span class="nf">print_marbles</span><span class="p">(</span><span class="n">stream</span><span class="p">,</span> <span class="n">ts</span><span class="p">):</span>
+    <span class="n">diagram</span> <span class="o">=</span> <span class="n">stream</span><span class="p">.</span><span class="n">pipe</span><span class="p">(</span><span class="n">ops</span><span class="p">.</span><span class="n">to_marbles</span><span class="p">(</span><span class="n">timespan</span><span class="o">=</span><span class="n">ts</span><span class="p">)).</span><span class="n">run</span><span class="p">()</span>
+    <span class="k">print</span><span class="p">(</span><span class="s">'got        "{}"'</span><span class="p">.</span><span class="nb">format</span><span class="p">(</span><span class="n">diagram</span><span class="p">))</span>
+
+
+<span class="k">class</span> <span class="nc">TestFrameProvider</span><span class="p">(</span><span class="n">unittest</span><span class="p">.</span><span class="n">TestCase</span><span class="p">):</span>
+    <span class="o">@</span><span class="n">patch</span><span class="p">(</span><span class="s">"frame_provider.cv2.resize"</span><span class="p">,</span> <span class="n">side_effect</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">,</span> <span class="n">_</span><span class="p">:</span> <span class="n">x</span><span class="p">)</span>
+    <span class="o">@</span><span class="n">patch</span><span class="p">(</span>
+        <span class="s">"frame_provider.FrameProvider._write_to_queue"</span><span class="p">,</span> <span class="n">side_effect</span><span class="o">=</span><span class="k">lambda</span> <span class="n">frame</span><span class="p">:</span> <span class="bp">True</span>
+    <span class="p">)</span>
+    <span class="k">def</span> <span class="nf">test__emit_frame_to_queue_samples_at_given_rate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+        <span class="n">frame_rate</span> <span class="o">=</span> <span class="mf">1.0</span> <span class="o">/</span> <span class="mf">2.0</span>
+        <span class="n">frame_provider</span> <span class="o">=</span> <span class="n">FrameProvider</span><span class="p">(</span><span class="bp">None</span><span class="p">)</span>
+        <span class="n">ts</span> <span class="o">=</span> <span class="mf">1.0</span> <span class="o">/</span> <span class="mf">10.0</span>
+        <span class="n">mock_frame</span> <span class="o">=</span> <span class="n">Frame</span><span class="p">(</span><span class="bp">None</span><span class="p">,</span> <span class="bp">None</span><span class="p">)</span>
+        <span class="k">with</span> <span class="n">marbles_testing</span><span class="p">(</span><span class="n">timespan</span><span class="o">=</span><span class="n">ts</span><span class="p">)</span> <span class="k">as</span> <span class="p">(</span><span class="n">start</span><span class="p">,</span> <span class="n">cold</span><span class="p">,</span> <span class="n">hot</span><span class="p">,</span> <span class="n">exp</span><span class="p">):</span>
+            <span class="n">e1</span> <span class="o">=</span> <span class="n">cold</span><span class="p">(</span>
+                <span class="s">"-a-b-c---d-e-----|"</span><span class="p">,</span>
+                <span class="p">{</span>
+                    <span class="s">"a"</span><span class="p">:</span> <span class="n">mock_frame</span><span class="p">,</span>
+                    <span class="s">"b"</span><span class="p">:</span> <span class="n">mock_frame</span><span class="p">,</span>
+                    <span class="s">"c"</span><span class="p">:</span> <span class="n">mock_frame</span><span class="p">,</span>
+                    <span class="s">"d"</span><span class="p">:</span> <span class="n">mock_frame</span><span class="p">,</span>
+                    <span class="s">"e"</span><span class="p">:</span> <span class="n">mock_frame</span><span class="p">,</span>
+                <span class="p">},</span>
+            <span class="p">)</span>
+            <span class="n">ex</span> <span class="o">=</span> <span class="n">exp</span><span class="p">(</span>
+                <span class="s">" -----c----d----e----|"</span><span class="p">,</span>
+                <span class="p">{</span>
+                    <span class="s">"c"</span><span class="p">:</span> <span class="bp">True</span><span class="p">,</span>
+                    <span class="s">"d"</span><span class="p">:</span> <span class="bp">True</span><span class="p">,</span>
+                    <span class="s">"e"</span><span class="p">:</span> <span class="bp">True</span><span class="p">,</span>
+                <span class="p">},</span>
+            <span class="p">)</span>
+            <span class="n">expected</span> <span class="o">=</span> <span class="n">ex</span>
+
+            <span class="n">result_stream</span> <span class="o">=</span> <span class="n">frame_provider</span><span class="p">.</span><span class="n">_emit_frame_to_queue</span><span class="p">(</span>
+                <span class="n">e1</span><span class="p">,</span> <span class="n">frame_rate</span><span class="p">,</span> <span class="p">[</span><span class="mi">900</span><span class="p">,</span> <span class="mi">900</span><span class="p">]</span>
+            <span class="p">)</span>
+            <span class="n">print_marbles</span><span class="p">(</span><span class="n">result_stream</span><span class="p">,</span> <span class="n">ts</span><span class="p">)</span>
+
+            <span class="n">results</span> <span class="o">=</span> <span class="n">start</span><span class="p">(</span><span class="n">result_stream</span><span class="p">)</span>
+            <span class="k">assert</span> <span class="n">results</span> <span class="o">==</span> <span class="n">expected</span>
+
+</code></pre></div></div>
+
+<h2 id="conclusion">Conclusion</h2>
+
+<p>In this blog series, we discussed common challenges when implementing a vision based solution. In part 1 of the blog post, we discussed how to handle backpressure when ML model is unable to keep up to the FPS rate of camera. We also discussed how to run inference on ML model while concurrently performing other tasks. We learned the bottlenecks of <em>threading</em> and <em>GIL</em> in Python and how to leverage <em>multiprocessing</em> instead. In this article we saw how ReactiveX can be leveraged to multiplex the camera stream to multiple consumers in a asynchronous and non blocking manner.</p>
+
+<h2 id="references">References</h2>
+
+<ol>
+  <li><a href="https://reactivex.io/">ReactiveX</a></li>
+  <li><a href="https://rxpy.readthedocs.io/en/latest/">ReactiveX for Python (RxPY)</a></li>
+  <li><a href="https://github.com/ReactiveX/RxPY">github.com/ReactiveX/RxPY</a></li>
+  <li><a href="https://rxmarbles.com/">Interactive diagrams of Rx Observables</a></li>
+</ol>
+
+  </div>
+  <div class="PageNavigation">
+  
+  <div class="prevDiv">
+    <a class="prev" href="/blog/2022/06/vision-on-edge-part-1/">&laquo; Patterns for Vision on the Edge - Part 1 - Concurrent processing</a>
+  </div>
+  
+  
+</div>
+<!-- from https://github.com/utterance/utterances -->
+<script src="https://utteranc.es/client.js"
+        repo="ankitbko/blog"
+        issue-term="title"
+        label="blogpost-comment"
+        theme="github-light"
+        crossorigin="anonymous"
+        async>
+</script><a class="u-url" href="/blog/2022/06/vision-on-edge-part-2/" hidden></a>
+</article>
+      </div>
+    </main><footer class="site-footer h-card">
+  <data class="u-url" href="/blog/"></data>
+
+  <div class="wrapper">
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col">
+        <p class="feed-subscribe">
+          <a href="/blog/feed.xml">
+            <svg class="svg-icon orange">
+              <use xlink:href="/blog/assets/minima-social-icons.svg#rss"></use>
+            </svg><span>Subscribe</span>
+          </a>
+        </p>
+        <ul class="contact-list">
+          <li class="p-name">Ankit Sinha</li>
+          
+        </ul>
+      </div>
+      <div class="footer-col">
+        <p>A technology blog focusing on random stuff</p>
+      </div>
+    </div>
+
+    <div class="social-links"><ul class="social-media-list"><li><a rel="me" href="https://github.com/ankitbko" target="_blank" title="ankitbko"><svg class="svg-icon grey"><use xlink:href="/blog/assets/minima-social-icons.svg#github"></use></svg></a></li><li><a rel="me" href="https://twitter.com/ankitbko" target="_blank" title="ankitbko"><svg class="svg-icon grey"><use xlink:href="/blog/assets/minima-social-icons.svg#twitter"></use></svg></a></li></ul>
+</div>
+
+  </div>
+
+</footer>
+</body>
+
+</html>
