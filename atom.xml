@@ -4,7 +4,7 @@
  <title>F5 - Squashing Bugs</title>
  <link href="https://ankitbko.github.io/atom.xml" rel="self"/>
  <link href="https://ankitbko.github.io/"/>
- <updated>2022-07-01T00:55:34-05:00</updated>
+ <updated>2022-07-01T03:39:14-05:00</updated>
  <id>https://ankitbko.github.io</id>
  <author>
    <name>Ankit Sinha</name>
@@ -13,7 +13,7 @@
 
  
  <entry>
-   <title>Patterns for Vision on the Edge - Part 2 - Handle Multiple Consumers</title>
+   <title>Patterns for Vision on the Edge - Part 2 - Handling Multiple Consumers</title>
    <link href="https://ankitbko.github.io/blog/2022/06/vision-on-edge-part-2/"/>
    <updated>2022-06-30T00:00:00-05:00</updated>
    <id>https://ankitbko.github.io/blog/2022/06/vision-on-edge-part-2</id>
