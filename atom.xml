@@ -4,7 +4,7 @@
  <title>F5 - Squashing Bugs</title>
  <link href="https://ankitbko.github.io/atom.xml" rel="self"/>
  <link href="https://ankitbko.github.io/"/>
- <updated>2022-06-30T23:36:39-05:00</updated>
+ <updated>2022-07-01T00:36:11-05:00</updated>
  <id>https://ankitbko.github.io</id>
  <author>
    <name>Ankit Sinha</name>
@@ -89,6 +89,47 @@
 
 &lt;h2 id=&quot;conclusion&quot;&gt;Conclusion&lt;/h2&gt;
 &lt;p&gt;As we can see, calculating websocket message latency is not straightforward. It requires additional messages that needs to be sent which adds to the network load. In case the primary websocket connection is already throttled, a different dedicated websocket connection for measuring latency can be used to send ACK messages with condition that a client connect to same instance of server for both the socket connections to avoid clock skew between servers.&lt;/p&gt;
+</content>
+ </entry>
+ 
+ <entry>
+   <title>Optimizing network footprint using MessagePack</title>
+   <link href="https://ankitbko.github.io/blog/2022/06/messagepack-vs-base64/"/>
+   <updated>2022-06-22T00:00:00-05:00</updated>
+   <id>https://ankitbko.github.io/blog/2022/06/messagepack-vs-base64</id>
+   <content type="html">&lt;p&gt;The most commonly used technique to send binary data from server to client is to encode it using Base64 and send it as JSON. Base64 encodes each set of &lt;em&gt;three bytes&lt;/em&gt; into &lt;em&gt;four bytes&lt;/em&gt;. In addition the output will be padded to always be multiple of four. So the final output would be &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;4/3&lt;/code&gt; or 33% larger than the original data. Add overhead of JSON to it and output grows even larger. In most of the scenarios this overhead is negligible and worth paying the cost in return of ease of integration with other applications as most of the languages or frameworks have native support of Base64 encoding.&lt;/p&gt;
+
+&lt;p&gt;However in scenarios such as IoT devices, where the bandwidth is limited or there is need of squeezing extra performance, there are other alternatives to Base64 encoding that are more efficient. One such alternative is to use &lt;a href=&quot;https://msgpack.org/&quot;&gt;MessagePack&lt;/a&gt;. It is a binary serialization format which is faster and emits smaller output than using Base64 + JSON.&lt;/p&gt;
+
+&lt;h2 id=&quot;running-the-sample&quot;&gt;Running the sample&lt;/h2&gt;
+
+&lt;p&gt;In the provided sample we will send an image from server to UI over a websocket connection using both &lt;em&gt;MessagePack&lt;/em&gt; and &lt;em&gt;Base64 encoding + JSON&lt;/em&gt; and measure their performance. The browser’s network tab will give us the size of each message. To measure the latency of each message we will use the technique described in my &lt;a href=&quot;/blog/2022/06/websocket-latency&quot;&gt;Measuring latency of Websocket Messages&lt;/a&gt; blog post.&lt;/p&gt;
+
+&lt;p&gt;Run the sample by following below steps.&lt;/p&gt;
+
+&lt;ol&gt;
+  &lt;li&gt;Install Python 3.6+.&lt;/li&gt;
+  &lt;li&gt;Install the dependencies by running &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;pip install -r requirements.txt&lt;/code&gt;.&lt;/li&gt;
+  &lt;li&gt;Run the application using &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;python main.py&lt;/code&gt; and open &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;http://localhost:7001&lt;/code&gt; in the browser.&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;h3 id=&quot;using-base64-encoding-and-json&quot;&gt;Using Base64 encoding and JSON&lt;/h3&gt;
+&lt;p&gt;In &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;frame_handler.py&lt;/code&gt; set &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;USE_MSGPACK&lt;/code&gt; to &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;False&lt;/code&gt; and in &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;index.html&lt;/code&gt; set &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;useMsgPack&lt;/code&gt; to &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;False&lt;/code&gt;. This will result in application encoding the image using Base64 and sending JSON over socket connection. Open browser network tab, refresh the page and press &lt;em&gt;Start&lt;/em&gt; button. In the network tab, open the &lt;em&gt;websocket&lt;/em&gt; connection to view the size of each message. You should see multiple messages being transmitted over the connection which are needed to calculate the latency. The message that contains the image is about 238KB. The browser’s console will log the latency of each message in milliseconds.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/blog/assets/images/posts/messagepack/json-n.png&quot; alt=&quot;Json size&quot; /&gt;
+&lt;img src=&quot;/blog/assets/images/posts/messagepack/json-l.png&quot; alt=&quot;Json latency&quot; /&gt;&lt;/p&gt;
+
+&lt;h3 id=&quot;using-messagepack&quot;&gt;Using MessagePack&lt;/h3&gt;
+&lt;p&gt;The application is setup to use &lt;em&gt;MessagePack&lt;/em&gt; to send the image over websocket. Reverse the changes done in &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;frame_handler.py&lt;/code&gt; and &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;index.html&lt;/code&gt;. Follow the same approach as above to see the size and latency of each message. In the network tab you should see multiple &lt;em&gt;Binary message&lt;/em&gt; being received. This is because after using MessagePack we can send the message in binary instead of text. The message that contains image is about 179KB in size.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/blog/assets/images/posts/messagepack/msg-n.png&quot; alt=&quot;MessagePack size&quot; /&gt;
+&lt;img src=&quot;/blog/assets/images/posts/messagepack/msg-l.png&quot; alt=&quot;MessagePack latency&quot; /&gt;&lt;/p&gt;
+
+&lt;h2 id=&quot;conclusion&quot;&gt;Conclusion&lt;/h2&gt;
+
+&lt;p&gt;When using MessagePack, messages are &lt;em&gt;25% smaller&lt;/em&gt; when compared to its JSON counterpart. Due to this, the latency has been reduced to over &lt;em&gt;40%&lt;/em&gt; when compared with JSON message.&lt;/p&gt;
+
+&lt;p&gt;The MessagePack encoding is useful where data needs to be delivered quickly or when bandwidth needs to be saved. One such use case is streaming video from camera from server to client in realtime. MessagePack will allow better FPS and smoother video experience.&lt;/p&gt;
 </content>
  </entry>
  
