@@ -1,6 +1,6 @@
 ---
 layout: post
-title: KV-Cache Aware Prompt Engineering - How Stable Prefixes Unlock 64% Latency Improvements
+title: KV-Cache Aware Prompt Engineering - How Stable Prefixes Unlock 65% Latency Improvements
 comments: true
 categories: [AI, ML, LLM, Large Language Model, KV Cache, Prompt Engineering, OpenAI]
 description: Exploring how KV-Cache aware prompt engineering can lead to significant latency improvements in LLMs.
@@ -44,7 +44,7 @@ The results were even more dramatic than we expected! Let's break down what we d
 
 ![TTFT Comparison]({{ site.baseurl }}/assets/images/posts/kv-cache/ttft.png)
 
-The headline number tells the story: stable prefixes delivered responses in an average of 2,258 milliseconds, while perturbed prompts took 3,714 milliseconds. That's a massive **39.2% improvement** in Time to First Token – but here's what makes it even better. The median TTFT for stable prefixes was just 953ms compared to 2,727ms for perturbed prompts. This means that most users with stable prefixes got sub-second responses, while perturbed prompt users were consistently waiting nearly 3 seconds just to see the first token.
+The headline number tells the story: stable prefixes delivered responses in an average of 2,258 milliseconds, while perturbed prompts took 3,714 milliseconds. That's a massive **39.2% improvement** in Time to First Token – but here's what makes it even better. The median TTFT for stable prefixes was just 953ms compared to 2,727ms for perturbed prompts (**65% improvement**). This means that most users with stable prefixes got sub-second responses, while perturbed prompt users were consistently waiting nearly 3 seconds just to see the first token.
 
 ### Total Latency: Beyond First Response
 
