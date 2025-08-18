@@ -129,7 +129,7 @@ jobs:
         id: py
         run: |
           npm install -g --unsafe-perm=true netlify-cli
-          netlify deploy --dir _site | tee _netlify_logs.txt
+          netlify deploy --dir _site --no-build | tee _netlify_logs.txt
           cat _netlify_logs.txt | python _action_files/parse_netlify.py
 
       - name: make comment on PR
