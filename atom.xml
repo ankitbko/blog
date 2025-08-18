@@ -4,7 +4,7 @@
  <title>F5 - Squashing Bugs</title>
  <link href="https://ankitbko.github.io/atom.xml" rel="self"/>
  <link href="https://ankitbko.github.io/"/>
- <updated>2025-08-18T15:38:36-05:00</updated>
+ <updated>2025-08-18T15:55:34-05:00</updated>
  <id>https://ankitbko.github.io</id>
  <author>
    <name>Ankit Sinha</name>
@@ -13,7 +13,7 @@
 
  
  <entry>
-   <title>KV-Cache Aware Prompt Engineering - How Stable Prefixes Unlock 64% Latency Improvements</title>
+   <title>KV-Cache Aware Prompt Engineering - How Stable Prefixes Unlock 65% Latency Improvements</title>
    <link href="https://ankitbko.github.io/blog/2025/08/prompt-engineering-kv-cache/"/>
    <updated>2025-08-18T00:00:00-05:00</updated>
    <id>https://ankitbko.github.io/blog/2025/08/prompt-engineering-kv-cache</id>
@@ -53,7 +53,7 @@
 
 &lt;p&gt;&lt;img src=&quot;/blog/assets/images/posts/kv-cache/ttft.png&quot; alt=&quot;TTFT Comparison&quot; /&gt;&lt;/p&gt;
 
-&lt;p&gt;The headline number tells the story: stable prefixes delivered responses in an average of 2,258 milliseconds, while perturbed prompts took 3,714 milliseconds. That’s a massive &lt;strong&gt;39.2% improvement&lt;/strong&gt; in Time to First Token – but here’s what makes it even better. The median TTFT for stable prefixes was just 953ms compared to 2,727ms for perturbed prompts. This means that most users with stable prefixes got sub-second responses, while perturbed prompt users were consistently waiting nearly 3 seconds just to see the first token.&lt;/p&gt;
+&lt;p&gt;The headline number tells the story: stable prefixes delivered responses in an average of 2,258 milliseconds, while perturbed prompts took 3,714 milliseconds. That’s a massive &lt;strong&gt;39.2% improvement&lt;/strong&gt; in Time to First Token – but here’s what makes it even better. The median TTFT for stable prefixes was just 953ms compared to 2,727ms for perturbed prompts (&lt;strong&gt;65% improvement&lt;/strong&gt;). This means that most users with stable prefixes got sub-second responses, while perturbed prompt users were consistently waiting nearly 3 seconds just to see the first token.&lt;/p&gt;
 
 &lt;h3 id=&quot;total-latency-beyond-first-response&quot;&gt;Total Latency: Beyond First Response&lt;/h3&gt;
 
