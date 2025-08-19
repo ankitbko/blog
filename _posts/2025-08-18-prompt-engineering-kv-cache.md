@@ -72,9 +72,9 @@ This visualization perfectly captures why cache optimization isn't just about av
 
 ![Cost Analysis]({{ site.baseurl }}/assets/images/posts/kv-cache/cost-cache.png)
 
-The financial implications blew my mind. Stable prefixes cost an average of **$0.009556 per request** while perturbed prefixes burned through **$0.033306 per request** – that's a whopping **71.3% cost difference**. Over the course of my experiments, the total cost was $6.83 for stable prefixes versus $19.48 for perturbed prefixes.
+The financial implications blew my mind. Stable prefixes cost an average of **$0.009556 per request** while perturbed prefixes burned through **$0.033306 per request** – that's a whopping **71.3% cost difference**. Over the course of my experiments, the total cost was **$6.83** for stable prefixes versus **$19.48** for perturbed prefixes.
 
-Scale this up to production volumes and the difference becomes staggering. If you're processing 10,000 requests per day, the difference between cache-optimized and cache-breaking prompts could mean $95,560 versus $333,060 in annual costs – a quarter of a million dollars in savings just from better prompt engineering!
+Scale this up to production volumes and the difference becomes staggering. If you're processing 10,000 requests per day, the difference between cache-optimized and cache-breaking prompts could mean **$95,560** versus **$333,060** in annual costs – a quarter of a million dollars in savings just from better prompt engineering!
 
 ### Statistical Validation: This Isn't a Fluke
 
