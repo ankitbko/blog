@@ -28,17 +28,19 @@ The key insight? Consistency is everything. When your prompts start with the sam
 
 I wanted to prove this theory, so I ran a controlled experiment with Azure OpenAI's GPT-4.1-mini. Our hypothesis was simple: if we keep our system prompts rock-solid stable, we should see way better cache performance than if we keep tweaking them.
 
-Here's what we tested:
+I wanted to prove this theory, so I ran a controlled experiment with Azure OpenAI's GPT-4.1-mini. My hypothesis was simple: if I keep the system prompts rock-solid stable, I should see way better cache performance than if I keep tweaking them.
+
+Here's what I tested:
 - **Control group**: Used identical system prompts across all requests (the "stable" approach)
 - **Experimental group**: Intentionally modified system prompts between requests (the "perturbed" approach, simulating what happens when developers get creative with dynamic prompts)
 
-We used the same dataset for both ([SCBench](https://huggingface.co/datasets/microsoft/SCBench) with repository QA, summarization, and few-shot examples), identical model settings (temperature=0.0, max_tokens=1024), and ran 20 examples with 3 trials each. This gave us solid statistical power to measure the real impact of prompt stability on cache performance.
+I used the same dataset for both ([SCBench](https://huggingface.co/datasets/microsoft/SCBench) with repository QA, summarization, and few-shot examples), identical model settings (temperature=0.0, max_tokens=1024), and ran 20 examples with 3 trials each. This gave me solid statistical power to measure the real impact of prompt stability on cache performance.
 
 ## The Results: A Complete Performance Transformation
 
 ![summary]({{ site.baseurl }}/assets/images/posts/kv-cache/summary.png)
 
-The results were even more dramatic than we expected! Let's break down what we discovered across every dimension of performance:
+The results were even more dramatic than I expected! Let's break down what I discovered across every dimension of performance:
 
 ### Time to First Token (TTFT): The User Experience Game-Changer
 
@@ -48,13 +50,13 @@ The headline number tells the story: stable prefixes delivered responses in an a
 
 ### Total Latency: Beyond First Response
 
-The TTFT improvement was just the beginning. When we looked at total request completion time, stable prefixes averaged 4,023ms while perturbed took 5,314ms – a **24.3% improvement** in overall latency. This matters because it's not just about how quickly users see something happening, but how quickly they get complete, actionable responses.
+The TTFT improvement was just the beginning. When I looked at total request completion time, stable prefixes averaged 4,023ms while perturbed took 5,314ms – a **24.3% improvement** in overall latency. This matters because it's not just about how quickly users see something happening, but how quickly they get complete, actionable responses.
 
 ### Cache Effectiveness: The Secret Behind the Speed
 
 ![Cache Effectiveness]({{ site.baseurl }}/assets/images/posts/kv-cache/cache-hit.png)
 
-Here's where the magic really shows: our stable prefix strategy achieved an incredible **85.2% cache hit rate**, reusing an average of 46,059 tokens per request. Meanwhile, the perturbed prompts? A devastating **0% cache hit rate** with zero cached tokens – every single request had to start from computational scratch.
+Here's where the magic really shows: my stable prefix strategy achieved an incredible **85.2% cache hit rate**, reusing an average of 46,059 tokens per request. Meanwhile, the perturbed prompts? A devastating **0% cache hit rate** with zero cached tokens – every single request had to start from computational scratch.
 
 This isn't just a number – it represents the fundamental difference between leveraging previous work and starting over completely. Those 46,000+ cached tokens per request in the stable condition meant the model could skip massive amounts of attention computation and jump straight to processing the unique parts of each request.
 
@@ -70,13 +72,13 @@ This visualization perfectly captures why cache optimization isn't just about av
 
 ![Cost Analysis]({{ site.baseurl }}/assets/images/posts/kv-cache/cost-cache.png)
 
-The financial implications blew our minds. Stable prefixes cost an average of **$0.009556 per request** while perturbed prefixes burned through **$0.033306 per request** – that's a whopping **71.3% cost difference**. Over the course of our experiments, the total cost was $6.83 for stable prefixes versus $19.48 for perturbed prefixes.
+The financial implications blew my mind. Stable prefixes cost an average of **$0.009556 per request** while perturbed prefixes burned through **$0.033306 per request** – that's a whopping **71.3% cost difference**. Over the course of my experiments, the total cost was $6.83 for stable prefixes versus $19.48 for perturbed prefixes.
 
 Scale this up to production volumes and the difference becomes staggering. If you're processing 10,000 requests per day, the difference between cache-optimized and cache-breaking prompts could mean $95,560 versus $333,060 in annual costs – a quarter of a million dollars in savings just from better prompt engineering!
 
 ### Statistical Validation: This Isn't a Fluke
 
-The statistical confidence was off the charts with a p-value < 0.000001 and t-statistic of -8.65. This wasn't random variation or experimental noise – this was a genuine breakthrough in understanding how prompt design affects performance. With 715 control requests and 585 experimental requests, we had solid statistical power to detect these differences with complete confidence.
+The statistical confidence was off the charts with a p-value < 0.000001 and t-statistic of -8.65. This wasn't random variation or experimental noise – this was a genuine breakthrough in understanding how prompt design affects performance. With 715 control requests and 585 experimental requests, I had solid statistical power to detect these differences with complete confidence.
 
 ## Your Action Plan: Cache-Friendly Context Engineering
 
@@ -128,6 +130,6 @@ Think about how multi-turn conversations can build on cached foundations. Each n
 
 ## The Bottom Line: Cache-Aware Design Pays Off Big Time
 
-Our experiment proves that KV cache optimization isn't some abstract performance theory – it's a concrete competitive advantage waiting to be unlocked. The 64% latency improvement and massive cost savings we achieved through stable prompt design aren't just nice-to-have optimizations; they're the difference between an AI application that delights users and one that frustrates them with slow responses and burns through your budget.
+My experiment proves that KV cache optimization isn't some abstract performance theory – it's a concrete competitive advantage waiting to be unlocked. The 64% latency improvement and massive cost savings I achieved through stable prompt design aren't just nice-to-have optimizations; they're the difference between an AI application that delights users and one that frustrates them with slow responses and burns through your budget.
 
 The best part? These techniques don't require fancy infrastructure or complex changes to your application architecture. It's all about being intentional with how you structure prompts and being mindful of the cache implications of your design choices. Start with stable system prompts, fix your serialization patterns, and watch your AI applications transform from sluggish to snappy. Your users (and your finance team) will thank you!
