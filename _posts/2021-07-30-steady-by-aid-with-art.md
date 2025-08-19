@@ -17,7 +17,7 @@ So what does the title of the article mean?
 - Techniques - by **AID** - **A**pproximate, **I**ncremental, **D**ivide and Conquer.
 - Process - with **ART** - **A**rchitecture, **A**utomate, **R**eview, **T**echinques, **T**est.
 
-In this article we explore these ideas focusing mostly on *goals*. But before we get started we need to understand a bit about tradeoffs and oppositions.
+In this article I explore these ideas focusing mostly on *goals*. But before I get started I need to understand a bit about tradeoffs and oppositions.
 
 # Tradeoffs and Oppositions
 
@@ -31,7 +31,7 @@ Designing a system is a balance between the following (not exhaustive list):
 - **Maintainability:** The system should be easy to maintain.
 - **Reliability:** The system should output correct result and doesn't loose data in spite of partial failure.
 
-Software design is an art of managing tradeoffs. In ideal world we could achieve all the above criteria. Unfortunately real systems are constrained by many factors which results in us making decisions on what is important. Some of these choices can even affect other choices indirectly. For example can we keep a system simple or should we make it more rich. Do we want to fetch all data from database (increase memory and I/O bandwidth) or paginate data (increased number of I/O calls). Some of these tradeoffs are talked later in the article. The *goals* described below will act as guide on making choices on tradeoffs.
+Software design is an art of managing tradeoffs. In ideal world I could achieve all the above criteria. Unfortunately real systems are constrained by many factors which results in me making decisions on what is important. Some of these choices can even affect other choices indirectly. For example can I keep a system simple or should I make it more rich. Do I want to fetch all data from database (increase memory and I/O bandwidth) or paginate data (increased number of I/O calls). Some of these tradeoffs are talked later in the article. The *goals* described below will act as guide on making choices on tradeoffs.
 
 Butler expresses this idea as form of *oppositions*. Oppositions are *extremes* between choices. These are not opposite but the endpoints of a range of possibilities. Imagine these oppositions as a continuous scale (like 1 to 10), and when designing make choice where your system will fall in this scale. Some of the examples of oppositions are `simple <-> rich`, `general <-> specialized`, `perfect <-> adequate`, `time <-> space`, etc. I will not discuss the oppositions in great length in this article so I recommend reading the paper to get better understanding of what oppositions are. But keep in mind the idea about oppositions being a scale of extreme possibilities.
 
@@ -81,7 +81,7 @@ When performance of module is bad or unpredictable, you have incurred a *perform
 - Fragile: its sufficient now but you don't have any process to keep it that way.
 
 ### Concurrency
-This is one way to reduce *latency*. The other is *fast path*. The requirement to create concurrent program is to divide the work in independent parts. Using concurrency we trade more resources (bandwidth) for less latency. There are two main problems with concurrency-
+This is one way to reduce *latency*. The other is *fast path*. The requirement to create concurrent program is to divide the work in independent parts. Using concurrency I trade more resources (bandwidth) for less latency. There are two main problems with concurrency-
 - It's hard to reason and debug concurrent computation that make arbitrary code change.
 - To run fast, data must be either immutable or local.
 

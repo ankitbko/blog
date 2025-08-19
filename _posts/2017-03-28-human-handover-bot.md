@@ -12,22 +12,22 @@ description: A tutorial on how to perform live agent transfer / human handover u
 One of the frequent questions which I am asked is how to transfer chat to a human from the bot. It is especially necessary if your bot is in space of customer service. Chat bots are not meant to (or atleast, not mature enough currently) to completely replace humans. Many a times chat bot will fail to answer satisfactorily or user would just want to talk to a human from the start. When this happens the chatbot should transfer the chats to a human agent or a customer care representative. But how can we achieve that?
 
 
-In this article, I will give an overview on how we can integrate a live chat into our bot using Microsoft Bot Framework. Microsoft Bot Framework is highly extensible and lets us do this easily. The source code is available over at my github repo.
+In this article, I will give an overview on how I can integrate a live chat into my bot using Microsoft Bot Framework. Microsoft Bot Framework is highly extensible and lets me do this easily. The source code is available over at my github repo.
 
 
 ### High Level Overview
 
-Our bot would be central piece to whole solution. Apart from performing all it's normal functionality, our bot would also act as a proxy between user and agent. So, what is required to create this feature and who are the actors involved?
+My bot would be central piece to whole solution. Apart from performing all it's normal functionality, my bot would also act as a proxy between user and agent. So, what is required to create this feature and who are the actors involved?
 
 #### Actors Involved
 
-- **Bot**: Well, we have our bot (duh!).
-- **Users**: Users are our customers who would be using our bot. Our users can be on any channel which are supported by Bot Framework.
-- **Agent**: Agents are humans who would chat with our users. Our agent will also need a chat window. For this we will use [Bot Framework Web Chat](https://github.com/Microsoft/BotFramework-WebChat) as a dashboard for our agents.
+- **Bot**: Well, I have my bot (duh!).
+- **Users**: Users are my customers who would be using my bot. My users can be on any channel which are supported by Bot Framework.
+- **Agent**: Agents are humans who would chat with my users. My agent will also need a chat window. For this I will use [Bot Framework Web Chat](https://github.com/Microsoft/BotFramework-WebChat) as a dashboard for my agents.
 
 ### Running the bot
 
-Let us first run the bot and see how it works. Nothing helps better in understanding than running the code and seeing it first hand.
+Let me first run the bot and see how it works. Nothing helps better in understanding than running the code and seeing it first hand.
 
 To run the bot, follow the steps -
 
@@ -66,18 +66,18 @@ Once user has initiated the conversation with an agent, any messages user sends 
 To stop conversation with user, click on *Stop Conversation with User* button on agent dashboard. Click on *Disconnect* to remove agent from **available** pool.
 
 
-We will see how each of these works shortly, but first let us understand some of the concepts involved in it.
+I will see how each of these works shortly, but first let me understand some of the concepts involved in it.
 
 
 ### Building Blocks
 
-Let us understand what we did while running the code. We will divide the flow into logical groups -
+Let me understand what I did while running the code. I will divide the flow into logical groups -
 
 - **Initiating Transfer**: A user can **initiate** a transfer to an agent anytime. Initiation is successful if an agent is **available** for chat. A user can only talk to **one** agent at a time. Once initiated, all the messages from user will be routed to the agent instead of being handled by current `Dialog`.
 
 - **Agent Availability**: An agent is termed **available** if he is **not** already in an exisiting conversation with a user. This effectively means that an agent can only talk to **one** user at a time. In other words, Agent and User have *1:1* mapping.
 
-- **Agent User Mapping**: We established that an agent and a user have *1:1* mapping. Since we have to route messages to and fro, we must maintain this mapping somewhere.
+- **Agent User Mapping**: I established that an agent and a user have *1:1* mapping. Since I have to route messages to and fro, I must maintain this mapping somewhere.
 
 - **Message Routing**: Message is routed by fetching the *Agent User Mapping* and sending the current message to it's counterpart. For example, if a user sends a message, we fetch the agent associated with that user, and send the message text to the agent. Same applies the other way around.
 

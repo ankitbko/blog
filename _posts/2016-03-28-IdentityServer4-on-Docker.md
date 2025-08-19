@@ -12,7 +12,7 @@ description: A tutorial on how to host IdentityServer 4 on Docker
 This article was written when ASP.NET Core was in RC1. ASP.NET Core 1.0 was released in June 2016 which had some breaking changes. I have updated my repo and written a new post which explains the changes required to target ASP.NET Core 1.0. You can find it <a href="https://ankitbko.github.io/2016/08/IdentityServer4-on-Docker-netcorertm/">here</a>.
 </div>
 
-With Microsoft supporting .NET on Linux and docker supporting running containers on Windows, its a great time to be working on .NET stack. Now you can develop and test .NET code on containers directly from Windows without having to switch OS. Moreover Docker is [beta testing](https://blog.docker.com/2016/03/docker-for-mac-windows-beta/) its new program which makes running containers on Windows much easier. For this post we will go oldschool and use docker toolbox.
+With Microsoft supporting .NET on Linux and docker supporting running containers on Windows, its a great time to be working on .NET stack. Now you can develop and test .NET code on containers directly from Windows without having to switch OS. Moreover Docker is [beta testing](https://blog.docker.com/2016/03/docker-for-mac-windows-beta/) its new program which makes running containers on Windows much easier. For this post I will go oldschool and use docker toolbox.
 
 ### What is IdentityServer?
 
@@ -41,7 +41,7 @@ Docker Toolbox installs Oracle VirtualBox which has known issue if you have hype
 Lets break down the above command.
 
 
-* `docker-machine`: Docker Machine allows us to provision and manage our Dockerized hosts (hosts with Docker Engine on them).
+* `docker-machine`: Docker Machine allows me to provision and manage my Dockerized hosts (hosts with Docker Engine on them).
 * `create`: Create command creates a Linux Virtual Machine and installs docker engine to it.
 * `--driver virtualbox`: Docker Machine supports multiple virtualization options and environment. We will be using virtualbox which comes installed with docker toolbox. Have a look at [complete list](https://docs.docker.com/machine/drivers/) of supported driver for more information.
 * `--virtualbox-no-vtx`: This is only required if you have Hyper-v installed and have disabled Hyper-v. This command disables checking for other hardware virtualization before VM is started.
@@ -60,7 +60,7 @@ Setup the environment by running `docker-machine env --shell=cmd idsrv-demo` and
 
 You will have to change the URLs in your code to point to the new VM URL in the following places:
 
-* `IdSrvHost\Configuration\Clients.cs`: Change all the URL here to point to the VM. Leave the port to 7017 as we will host our client on the same port.
+* `IdSrvHost\Configuration\Clients.cs`: Change all the URL here to point to the VM. Leave the port to 7017 as I will host my client on the same port.
 * `SampleApi\Startup.cs`: Change the URL in `app.UseIdentityServerAuthentication`. Leave the port as 22530.
 * `JavaScript Oidc\wwwroot\index.html`: There are two places in this file where URL needs to be changed. Leave the port number as it is in each place.
 * `project.json` in each project: Change the `web` command to pass option to Kestrel to listen to specific URL. This is required as by default the docker container will start the application and listen to `0.0.0.0` which is not same as `localhost`. Port number here specifies which port needs to be opened in docker container. This is already been done in my sample. In case you are using your own code, do the following changes.
