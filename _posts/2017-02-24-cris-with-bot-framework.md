@@ -18,7 +18,7 @@ CRIS lets us create a customized language and acoustic model. What are these mod
 - **Acoustic Model**: The acoustic model would break down a short fragment of audio and classify it into one of the phonemes. This can help the system to recognize domain specific words in a sentence such as "When did Neanderthal became extinct". Acoustic models are trained by providing audio files of speech data and a text file of its corresponding transcript. The audio data should be as close to the environment where you expect your app/bot to be used most. For example, if you expect your user to use your bot on road, you should provide audio files of people speaking on road. Acoustic model can then learn the environment and would work much better.
 
 
-More details about the models are available in the [documentation](https://cris.ai/Home/Help). In this sample, we would only train the Language model and use the base acoustic model.
+More details about the models are available in the [documentation](https://cris.ai/Home/Help). In this sample, I would only train the Language model and use the base acoustic model.
 
 
 ### Getting Started

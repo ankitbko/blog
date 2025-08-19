@@ -74,8 +74,8 @@ public async Task AboutMe(IDialogContext context, LuisResult result)
 }
 ```
 
-This is also similar to the "None" intent handler. Instead of sending only one response, I send two since the sentences are quite big. The response is quire simple but let us keep it this way. Decorate the `MeBotLuisDialog` class with `[LuisModel("modelid", "subskey")]` with correct LUIS ModelId and Subscription Key. You can get the keys from published URL of your LUIS app.
-There is just one more place that we need to change before we can test our bot that is in `MessageController`. Replace the entire `If` section of the method with the one below -
+This is also similar to the "None" intent handler. Instead of sending only one response, I send two since the sentences are quite big. The response is quire simple but let me keep it this way. Decorate the `MeBotLuisDialog` class with `[LuisModel("modelid", "subskey")]` with correct LUIS ModelId and Subscription Key. You can get the keys from published URL of your LUIS app.
+There is just one more place that I need to change before I can test my bot that is in `MessageController`. Replace the entire `If` section of the method with the one below -
 
 ```csharp
 if (activity.Type == ActivityTypes.Message)
@@ -89,7 +89,7 @@ Done. Press F5 to run the bot. Open the emulator and send a text to check if the
 ![About me]({{ site.baseurl }}/assets/images/posts/mebot-2/aboutme.png)
 
 
-One last feature to add. When a user add/open our bot for the first time, it is good practice to show a welcome text having information about what our bot can do and how to interact with it. Let us add a small help text and send it to the user when he first interacts with our bot. The place to do it is in `ActivityTypes.ConversationUpdate` block in `MessageController`. Microsoft Bot Framework supports Markdown, which we can utilize to give a richer experience to our user. I have added the relevant welcome text as below.
+One last feature to add. When a user add/open my bot for the first time, it is good practice to show a welcome text having information about what my bot can do and how to interact with it. Let me add a small help text and send it to the user when he first interacts with my bot. The place to do it is in `ActivityTypes.ConversationUpdate` block in `MessageController`. Microsoft Bot Framework supports Markdown, which I can utilize to give a richer experience to my user. I have added the relevant welcome text as below.
 
 ```csharp
 else if (message.Type == ActivityTypes.ConversationUpdate)
@@ -110,9 +110,9 @@ else if (message.Type == ActivityTypes.ConversationUpdate)
 
 #### Registering the bot
 
-Before registering, we need to publish our bot and make it accessible from internet over HTTPS. Once done, head over to bot [registration portal](https://dev.botframework.com/bots/new). An excellent article on how to register the bot is [here](https://docs.botframework.com/en-us/csharp/builder/sdkreference/gettingstarted.html#registering). Once registered, update the `web.config` with correct id and secret and publish the bot again.
+Before registering, I need to publish my bot and make it accessible from internet over HTTPS. Once done, head over to bot [registration portal](https://dev.botframework.com/bots/new). An excellent article on how to register the bot is [here](https://docs.botframework.com/en-us/csharp/builder/sdkreference/gettingstarted.html#registering). Once registered, update the `web.config` with correct id and secret and publish the bot again.
 
-Registering the bot will auto-configure it with skype. But let us go a step further and configure the Web Chat Channel. Configuring web chat gives us an iframe which we can include in our web site. I have added the iframe to my blog and the bot appears at the bottom right corner. This is so cool.
+Registering the bot will auto-configure it with skype. But let me go a step further and configure the Web Chat Channel. Configuring web chat gives me an iframe which I can include in my web site. I have added the iframe to my blog and the bot appears at the bottom right corner. This is so cool.
 
-I have tagged the code till this point as part2 in my [repo](https://github.com/ankitbko/MeBot/tree/part2). In next post we will add more features to our bot.
+I have tagged the code till this point as part2 in my [repo](https://github.com/ankitbko/MeBot/tree/part2). In next post I will add more features to my bot.
 Meanwhile if you have any questions or feedbacks, post a comment below.
