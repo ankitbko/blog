@@ -181,19 +181,21 @@ window.onload = wrap_img;
 
 <p>I wanted to prove this theory, so I ran a controlled experiment with Azure OpenAI’s GPT-4.1-mini. Our hypothesis was simple: if we keep our system prompts rock-solid stable, we should see way better cache performance than if we keep tweaking them.</p>
 
-<p>Here’s what we tested:</p>
+<p>I wanted to prove this theory, so I ran a controlled experiment with Azure OpenAI’s GPT-4.1-mini. My hypothesis was simple: if I keep the system prompts rock-solid stable, I should see way better cache performance than if I keep tweaking them.</p>
+
+<p>Here’s what I tested:</p>
 <ul>
   <li><strong>Control group</strong>: Used identical system prompts across all requests (the “stable” approach)</li>
   <li><strong>Experimental group</strong>: Intentionally modified system prompts between requests (the “perturbed” approach, simulating what happens when developers get creative with dynamic prompts)</li>
 </ul>
 
-<p>We used the same dataset for both (<a href="https://huggingface.co/datasets/microsoft/SCBench">SCBench</a> with repository QA, summarization, and few-shot examples), identical model settings (temperature=0.0, max_tokens=1024), and ran 20 examples with 3 trials each. This gave us solid statistical power to measure the real impact of prompt stability on cache performance.</p>
+<p>I used the same dataset for both (<a href="https://huggingface.co/datasets/microsoft/SCBench">SCBench</a> with repository QA, summarization, and few-shot examples), identical model settings (temperature=0.0, max_tokens=1024), and ran 20 examples with 3 trials each. This gave me solid statistical power to measure the real impact of prompt stability on cache performance.</p>
 
 <h2 id="the-results-a-complete-performance-transformation">The Results: A Complete Performance Transformation</h2>
 
 <p><img src="/blog/assets/images/posts/kv-cache/summary.png" alt="summary" /></p>
 
-<p>The results were even more dramatic than we expected! Let’s break down what we discovered across every dimension of performance:</p>
+<p>The results were even more dramatic than I expected! Let’s break down what I discovered across every dimension of performance:</p>
 
 <h3 id="time-to-first-token-ttft-the-user-experience-game-changer">Time to First Token (TTFT): The User Experience Game-Changer</h3>
 
@@ -203,13 +205,13 @@ window.onload = wrap_img;
 
 <h3 id="total-latency-beyond-first-response">Total Latency: Beyond First Response</h3>
 
-<p>The TTFT improvement was just the beginning. When we looked at total request completion time, stable prefixes averaged 4,023ms while perturbed took 5,314ms – a <strong>24.3% improvement</strong> in overall latency. This matters because it’s not just about how quickly users see something happening, but how quickly they get complete, actionable responses.</p>
+<p>The TTFT improvement was just the beginning. When I looked at total request completion time, stable prefixes averaged 4,023ms while perturbed took 5,314ms – a <strong>24.3% improvement</strong> in overall latency. This matters because it’s not just about how quickly users see something happening, but how quickly they get complete, actionable responses.</p>
 
 <h3 id="cache-effectiveness-the-secret-behind-the-speed">Cache Effectiveness: The Secret Behind the Speed</h3>
 
 <p><img src="/blog/assets/images/posts/kv-cache/cache-hit.png" alt="Cache Effectiveness" /></p>
 
-<p>Here’s where the magic really shows: our stable prefix strategy achieved an incredible <strong>85.2% cache hit rate</strong>, reusing an average of 46,059 tokens per request. Meanwhile, the perturbed prompts? A devastating <strong>0% cache hit rate</strong> with zero cached tokens – every single request had to start from computational scratch.</p>
+<p>Here’s where the magic really shows: my stable prefix strategy achieved an incredible <strong>85.2% cache hit rate</strong>, reusing an average of 46,059 tokens per request. Meanwhile, the perturbed prompts? A devastating <strong>0% cache hit rate</strong> with zero cached tokens – every single request had to start from computational scratch.</p>
 
 <p>This isn’t just a number – it represents the fundamental difference between leveraging previous work and starting over completely. Those 46,000+ cached tokens per request in the stable condition meant the model could skip massive amounts of attention computation and jump straight to processing the unique parts of each request.</p>
 
@@ -225,13 +227,13 @@ window.onload = wrap_img;
 
 <p><img src="/blog/assets/images/posts/kv-cache/cost-cache.png" alt="Cost Analysis" /></p>
 
-<p>The financial implications blew our minds. Stable prefixes cost an average of <strong>$0.009556 per request</strong> while perturbed prefixes burned through <strong>$0.033306 per request</strong> – that’s a whopping <strong>71.3% cost difference</strong>. Over the course of our experiments, the total cost was $6.83 for stable prefixes versus $19.48 for perturbed prefixes.</p>
+<p>The financial implications blew my mind. Stable prefixes cost an average of <strong>$0.009556 per request</strong> while perturbed prefixes burned through <strong>$0.033306 per request</strong> – that’s a whopping <strong>71.3% cost difference</strong>. Over the course of my experiments, the total cost was $6.83 for stable prefixes versus $19.48 for perturbed prefixes.</p>
 
 <p>Scale this up to production volumes and the difference becomes staggering. If you’re processing 10,000 requests per day, the difference between cache-optimized and cache-breaking prompts could mean $95,560 versus $333,060 in annual costs – a quarter of a million dollars in savings just from better prompt engineering!</p>
 
 <h3 id="statistical-validation-this-isnt-a-fluke">Statistical Validation: This Isn’t a Fluke</h3>
 
-<p>The statistical confidence was off the charts with a p-value &lt; 0.000001 and t-statistic of -8.65. This wasn’t random variation or experimental noise – this was a genuine breakthrough in understanding how prompt design affects performance. With 715 control requests and 585 experimental requests, we had solid statistical power to detect these differences with complete confidence.</p>
+<p>The statistical confidence was off the charts with a p-value &lt; 0.000001 and t-statistic of -8.65. This wasn’t random variation or experimental noise – this was a genuine breakthrough in understanding how prompt design affects performance. With 715 control requests and 585 experimental requests, I had solid statistical power to detect these differences with complete confidence.</p>
 
 <h2 id="your-action-plan-cache-friendly-context-engineering">Your Action Plan: Cache-Friendly Context Engineering</h2>
 
@@ -279,7 +281,7 @@ User: Hi, I'm Sarah, a project manager, and I need help with...
 
 <h2 id="the-bottom-line-cache-aware-design-pays-off-big-time">The Bottom Line: Cache-Aware Design Pays Off Big Time</h2>
 
-<p>Our experiment proves that KV cache optimization isn’t some abstract performance theory – it’s a concrete competitive advantage waiting to be unlocked. The 64% latency improvement and massive cost savings we achieved through stable prompt design aren’t just nice-to-have optimizations; they’re the difference between an AI application that delights users and one that frustrates them with slow responses and burns through your budget.</p>
+<p>My experiment proves that KV cache optimization isn’t some abstract performance theory – it’s a concrete competitive advantage waiting to be unlocked. The 64% latency improvement and massive cost savings I achieved through stable prompt design aren’t just nice-to-have optimizations; they’re the difference between an AI application that delights users and one that frustrates them with slow responses and burns through your budget.</p>
 
 <p>The best part? These techniques don’t require fancy infrastructure or complex changes to your application architecture. It’s all about being intentional with how you structure prompts and being mindful of the cache implications of your design choices. Start with stable system prompts, fix your serialization patterns, and watch your AI applications transform from sluggish to snappy. Your users (and your finance team) will thank you!</p>
 
