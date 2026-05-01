@@ -26,9 +26,9 @@ That's it. No App Service plans, no Kubernetes manifests, no ingress controllers
 
 ## Why Hosted Agents?
 
-But why would you choose to host your agent in Foundry instead of running it on numerous other compute platforms, like AKS, Azure Functions, or even your own server? The anwer is that Foundry hosted agents solve some hard problems that arise with advent of more general purpose agents (like Github Copilot or Claude Code). These agents write and execute code on the machine where they are running. This mean that you would never want to have request from two different users go to the same instance of the agent, otherwise a nefarious user could execute code that could exfiltrate data from another user's session. What you need here is isolation.
+But why would you choose to host your agent in Foundry instead of running it on numerous other compute platforms, like AKS, Azure Functions, or even your own server? The answer is that Foundry hosted agents solve some hard problems that arise with the advent of more general-purpose agents (like Github Copilot or Claude Code). These agents write and execute code on the machine where they are running. This means that you would never want to have requests from two different users go to the same instance of the agent, otherwise a nefarious user could execute code that could exfiltrate data from another user's session. What you need here is isolation.
 
-This is where Foundry hosted agents shine. Each **request** is guaranteed to be executed in a new *microvm*, which is spawned on the hot-path of the request, isolated from all other requests. This means that you can safely run arbitrary code execution agents without worrying about cross-request data leaks. The platform also handles scaling, so if you have 100 concurrent requests, you'll get 100 microvms — no contention, no queuing. Each request is assigned a unique session ID, and you have option to continue followup requests in the same session, and platform will guarantee that the disk state of microvm is persisted across restarts, for 30 days. 
+This is where Foundry hosted agents shine. Each **request** is guaranteed to be executed in a new *microvm*, which is spawned on the hot path of the request, isolated from all other requests. This means that you can safely run arbitrary code execution agents without worrying about cross-request data leaks. The platform also handles scaling, so if you have 100 concurrent requests, you'll get 100 microvms — no contention, no queuing. Each request is assigned a unique session ID, and you have the option to continue follow-up requests in the same session. The platform will guarantee that the disk state of the microvm is persisted across restarts, for 30 days.
 
 In addition to request isolation, you also get a unique identity assigned to every agent. This means you can control what resources your agents can access using Azure RBAC. You can give your agent permission to read from a specific blob storage container, or access a particular database, and the agent can use its managed identity to authenticate securely. This is a game-changer for building agents that interact with sensitive data or perform actions on behalf of users.
 
@@ -38,7 +38,7 @@ We will delve into each of these and uncover even more features in future posts,
 
 ## Protocols — How Agents Communicate
 
-Hosted agents support two protocols for communication: **Responses** and **Invocations**. Choosing the right one matters — it affects what features you get for free and how much code you write. A great comparision between these two protocols can be found in the official documentation [here](https://learn.microsoft.com/en-us/azure/foundry/agents/concepts/hosted-agents#which-protocol-should-i-use).
+Hosted agents support two protocols for communication: **Responses** and **Invocations**. Choosing the right one matters — it affects what features you get for free and how much code you write. A great comparison between these two protocols can be found in the official documentation [here](https://learn.microsoft.com/en-us/azure/foundry/agents/concepts/hosted-agents#which-protocol-should-i-use).
 
 ### Responses Protocol
 
@@ -50,7 +50,7 @@ Here's what the platform gives you out of the box:
 - **Standard streaming lifecycle events** — `response.created` → `response.in_progress` → `response.output_text.delta` → `response.completed`. These are well understood conventions that work with any OpenAI-compatible client.
 - **Background execution** via `background: true` for long-running tasks.
 - **Built-in heads** for Teams/M365 publishing and agent-to-agent (A2A) delegation — these come free with Responses. No extra code needed.
-- Numerous other Foundry features like evaluation comes out of the box.
+- Numerous other Foundry features like evaluation come out of the box.
 
 The big selling point: you write minimal code and the platform handles the HTTP contract, session management, and streaming lifecycle.
 
@@ -82,7 +82,7 @@ Same idea, but for the Invocations protocol. Handles the HTTP server, health che
 
 ### Agent Framework ([agent-framework-foundry-hosting](https://pypi.org/project/agent-framework-foundry-hosting/))
 
-Built **on top of** the Responses and Invocations SDKs. This is the batteries-included option — it adds native integration with Microsoft Agent Framework. Makes it super easy to deploy your MAF agent as hosted agents.
+Built **on top of** the Responses and Invocations SDKs. This is the batteries-included option — it adds native integration with [Microsoft Agent Framework](https://github.com/microsoft/agent-framework). Makes it super easy to deploy your MAF agent as a hosted agent.
 
 ### BYO (Bring Your Own) Framework
 
@@ -99,7 +99,7 @@ Here's a simple way to think about it:
 
 ## Building first agent — Responses Protocol
 
-> Hosted Agent and `azd` are in active development. `azd` command surfaces are expected to evolve and new features will be added in Hosted Agent platform. If you see any discrepencies or issues with the commands mentioned in this post, please comment below and I will update the post accordingly.
+> Hosted Agents and `azd` are in active development. `azd` command surfaces are expected to evolve and new features will be added to the Hosted Agent platform. If you see any discrepancies or issues with the commands mentioned in this post, please comment below and I will update the post accordingly.
 
 Let's get an agent up and running. We'll use the hello-world sample from the [foundry-samples](https://github.com/microsoft-foundry/foundry-samples/tree/main/samples/python/hosted-agents) repo. 
 
@@ -188,12 +188,12 @@ Let's break this down:
 
 SDKs implement `/readiness` endpoints for health checks, so the platform knows when your agent is ready to receive requests. They also have OpenTelemetry integration built in, so you get structured logs and traces in Application Insights without extra code.
 
-You would notice there are some `FOUNDRY_*` environment variables in the code which is absent from `agent.yaml`. `FOUNDRY_*` are reserved environment variabled what are injected by the platform at runtime. Here are list of environment variables injected by the platform today:
+You would notice there are some `FOUNDRY_*` environment variables in the code which are absent from `agent.yaml`. `FOUNDRY_*` are reserved environment variables that are injected by the platform at runtime. Here is a list of environment variables injected by the platform today:
 
 - `FOUNDRY_AGENT_NAME` - The name of the agent.
 - `FOUNDRY_AGENT_VERSION` - The version of the agent.
 - `FOUNDRY_AGENT_SESSION_ID` - The unique session ID for the current request.
-- `FOUNDRY_PROJECT_ENDPOINT` - The endpoint URL for the Foundry project,
+- `FOUNDRY_PROJECT_ENDPOINT` - The endpoint URL for the Foundry project.
 - `FOUNDRY_PROJECT_ARM_ID` - The ARM resource ID for the Foundry project.
 - `FOUNDRY_HOSTING_ENVIRONMENT` - Set to "1" to indicate the agent is running in a Foundry hosted environment.
 - `SSE_KEEPALIVE_INTERVAL` - Keep-alive interval in seconds for SSE connections (default is 15 seconds).
@@ -218,7 +218,7 @@ Open another terminal and send a request:
 azd ai agent invoke --local "What is Microsoft Foundry?"
 ```
 
-You would get response like below. Lets decode it.
+You would get a response like below. Let's decode it.
 
 ```bash
 ❯ azd ai agent invoke --local "What is Microsoft Foundry?"
@@ -231,9 +231,9 @@ Conversation: a92c8023-13c5-4cb2-8a12-ef0f042804f6
 ```
 
 - `Conversation`: Because we are using a sample based on Responses protocol, `azd` automatically generates a conversation id and sends it to our agent.
-- `Session`: In Responses protocol every conversation gets mapped to a session. Session represents your context and compute. I will talk more about sessions in next post.
+- `Session`: In the Responses protocol, every conversation gets mapped to a session. A session represents your context and compute. I will talk more about sessions in the next post.
 
-Lets try to do a follow up conversation
+Let's try to do a follow-up conversation:
 
 ```bash
 ❯ azd ai agent invoke --local "what are its features"
@@ -248,7 +248,7 @@ Conversation: a92c8023-13c5-4cb2-8a12-ef0f042804f6
 <redacted for brevity>
 ```
 
-`azd` remembers the session and converation details and sends followup request on the same conversation and session id and `context.get_history()` will pull in existing messages from Foundry Agent Conversation store.
+`azd` remembers the session and conversation details and sends the follow-up request on the same conversation and session ID. `context.get_history()` will pull in existing messages from the Foundry Agent Conversation store.
 
 You can easily start a new conversation in a new session by using `--new-conversation` and `--new-session` flags.
 
@@ -270,7 +270,7 @@ Once you're happy with local testing, deploy to the cloud:
 azd deploy
 ```
 
-You would need either `Azure AI Project Manager` or `Owner` role to assign `Azure AI User` role to the newly created agent identity. We will explore more about agent identity in later posts.
+You would need either the `Azure AI Project Manager` or `Owner` role to assign the `Azure AI User` role to the newly created agent identity. We will explore more about agent identity in later posts.
 
 Once deployed, your agent gets a dedicated endpoint and you can access it through the Foundry UI or directly calling the REST API.
 
@@ -292,7 +292,7 @@ Session:      6dc22b28d7464602068297b9756543dc29856cf16391b4a108b03535720e1f8 (a
 The exact scope and offerings may vary depending on the specific Microsoft Foundry context, such as partnerships, industry solutions, or innovation hubs.
 ```
 
-You will notice here that session id was assigned by the Foundry platform. You can also supply a custom session id by using `--session-id` flag.
+You will notice here that the session ID was assigned by the Foundry platform. You can also supply a custom session ID by using the `--session-id` flag.
 
 ```bash
 ❯ azd ai agent invoke "What is Github Copilot?" --session-id "my-session-1"
@@ -316,7 +316,7 @@ You will find both these sessions visible in the Foundry Portal for your agent.
 azd ai agent monitor
 ```
 
-Run the above command to stream logs from the current session. You can pass in a custom session id via `--session-id` flag to view log stream from that session.
+Run the above command to stream logs from the current session. You can pass in a custom session ID via the `--session-id` flag to view the log stream from that session.
 
 ### Endpoints exposed by Responses protocol SDK
 
@@ -357,7 +357,7 @@ And here's `main.py` —
 ```python
 app = InvocationAgentServerHost()
 
-_history: list[dict[str, str]] = {}
+_history: list[dict[str, str]] = []
 
 
 @app.invoke_handler
@@ -410,22 +410,22 @@ async def handle_invoke(request: Request):
 app.run()
 ```
 
-Lets break it down:
+Let's break it down:
 1. `InvocationAgentServerHost` is the Invocations protocol SDK. It handles the HTTP server on port 8088, health checks, OpenTelemetry tracing, and the `/invocations` contract.
 2. `@app.invoke_handler` is where you plug in your logic. The SDK calls this for every incoming request to `/invocations`.
 3. The schema of the request and response is entirely up to you. In this sample, we showcase how to accept both a plain text string or a JSON object with either a `message` or `input` field. You can define your own schema and parse it as needed.
-4. Because `invocation` protocol does not define a fix schema, the platform does not store the conversation by default. You will need to manage storing the conversation history yourself.
+4. Because the Invocations protocol does not define a fixed schema, the platform does not store conversation history by default. You will need to manage storing the conversation history yourself.
 
 ### Endpoints exposed by Invocations protocol SDK
 
-Contrary to Responses protocol, Invocation protocol SDK requires you to write explicit handlers for all endpoints. Invocation protocol exposes an optional OpenAPI spec endpoint at `/invocations/docs/openapi.json` which you can use to expose the contract of your agent to the world.
+Contrary to the Responses protocol, the Invocations protocol SDK requires you to write explicit handlers for all endpoints. The Invocations protocol exposes an optional OpenAPI spec endpoint at `/invocations/docs/openapi.json` which you can use to expose the contract of your agent to the world.
 
 | Method | Route | Required | Summary |
 |--------|-------|----------|---------|
 | `POST` | `/invocations` | **Yes** | Execute the agent. Handler - `invoke_handler` |
 | `GET` | `/invocations/{invocation_id}` | No | Retrieve invocation status or result. Handler - `get_invocation_handler` |
 | `POST` | `/invocations/{invocation_id}/cancel` | No | Cancel a running invocation. Handler - `cancel_invocation_handler` |
-| `GET` | `/invocations/docs/openapi.json` | No | Serve OpenAPI 3.x spec for the agent's contract. Pass it to the InvocationAgentServerHost(openapi_spec={...}) constructor |
+| `GET` | `/invocations/docs/openapi.json` | No | Serve OpenAPI 3.x spec for the agent's contract. Pass it to `InvocationAgentServerHost(openapi_spec={...})` |
 
 
 ## Both Protocols in One Agent
