@@ -4,6 +4,7 @@ title: Microsoft Foundry Hosted Agents - What, Why, Protocols & Your First Deplo
 comments: true
 categories: [Azure, AI, Foundry, Hosted Agents, Agent Framework, Responses Protocol, Invocations Protocol]
 description: Introduction to Foundry Hosted Agents - understanding the platform, protocols, SDK layers, and deploying your first agent.
+image: images/previews/ai-icon.png
 author: <a href='https://twitter.com/ankitbko', target='_blank'>Ankit Sinha</a>
 ---
 
