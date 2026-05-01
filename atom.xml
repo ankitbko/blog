@@ -4,13 +4,551 @@
  <title>F5 - Squashing Bugs</title>
  <link href="https://ankitbko.github.io/atom.xml" rel="self"/>
  <link href="https://ankitbko.github.io/"/>
- <updated>2025-08-18T23:29:31-05:00</updated>
+ <updated>2026-05-01T14:55:22-05:00</updated>
  <id>https://ankitbko.github.io</id>
  <author>
    <name>Ankit Sinha</name>
    <email></email>
  </author>
 
+ 
+ <entry>
+   <title>Microsoft Foundry Hosted Agents - What, Why, Protocols & Your First Deployment</title>
+   <link href="https://ankitbko.github.io/blog/2026/05/hosted-agents-part-1/"/>
+   <updated>2026-05-01T00:00:00-05:00</updated>
+   <id>https://ankitbko.github.io/blog/2026/05/hosted-agents-part-1</id>
+   <content type="html">&lt;p&gt;Building agentic applications is exciting — until you realize you also need to solve containerization, web servers, identity, state persistence, scaling, and observability before your agent can say “Hello.” You just want to write agent logic, not plumb infrastructure. That’s the problem that my team has solved with the launch of Microsoft Foundry Hosted Agents: you write the code, package it in a container, and the platform handles everything else.&lt;/p&gt;
+
+&lt;p&gt;This is Part 1 of a series on Foundry Hosted Agents. In this post we’ll cover what hosted agents are, the two communication protocols they support, the SDK landscape, and — most importantly — we’ll deploy a working agent by the end.&lt;/p&gt;
+
+&lt;h2 id=&quot;what-are-hosted-agents&quot;&gt;What Are Hosted Agents?&lt;/h2&gt;
+
+&lt;p&gt;If you’ve used the Foundry portal to define an agent entirely through prompts and tool configurations, you’ve built a &lt;em&gt;prompt-based&lt;/em&gt; agent. Prompt agents are declarative agents that work great for straightforward scenarios, but the moment you need custom business logic, external integrations, or a framework like LangGraph — you’ve hit the ceiling.&lt;/p&gt;
+
+&lt;p&gt;Hosted agents flip the model. Instead of declaring specification of an agent, you write your own code, package it as a &lt;strong&gt;container image&lt;/strong&gt;, and let the Agent Service do the rest. The flow looks like this:&lt;/p&gt;
+
+&lt;ol&gt;
+  &lt;li&gt;You build a container image with your agent code.&lt;/li&gt;
+  &lt;li&gt;Push it to Azure Container Registry (ACR).&lt;/li&gt;
+  &lt;li&gt;The Agent Service provisions compute, assigns a managed identity, and exposes a dedicated endpoint.&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;That’s it. No App Service plans, no Kubernetes manifests, no ingress controllers. You get a URL and your agent is live.&lt;/p&gt;
+
+&lt;h2 id=&quot;why-hosted-agents&quot;&gt;Why Hosted Agents?&lt;/h2&gt;
+
+&lt;p&gt;But why would you choose to host your agent in Foundry instead of running it on numerous other compute platforms, like AKS, Azure Functions, or even your own server? The answer is that Foundry hosted agents solve some hard problems that arise with the advent of more general-purpose agents (like Github Copilot or Claude Code). These agents write and execute code on the machine where they are running. This means that you would never want to have requests from two different users go to the same instance of the agent, otherwise a nefarious user could execute code that could exfiltrate data from another user’s session. What you need here is isolation.&lt;/p&gt;
+
+&lt;p&gt;This is where Foundry hosted agents shine. Each &lt;strong&gt;request&lt;/strong&gt; is guaranteed to be executed in a new &lt;em&gt;microvm&lt;/em&gt;, which is spawned on the hot path of the request, isolated from all other requests. This means that you can safely run arbitrary code execution agents without worrying about cross-request data leaks. The platform also handles scaling, so if you have 100 concurrent requests, you’ll get 100 microvms — no contention, no queuing. Each request is assigned a unique session ID, and you have the option to continue follow-up requests in the same session. The platform will guarantee that the disk state of the microvm is persisted across restarts, for 30 days.&lt;/p&gt;
+
+&lt;p&gt;In addition to request isolation, you also get a unique identity assigned to every agent. This means you can control what resources your agents can access using Azure RBAC. You can give your agent permission to read from a specific blob storage container, or access a particular database, and the agent can use its managed identity to authenticate securely. This is a game-changer for building agents that interact with sensitive data or perform actions on behalf of users.&lt;/p&gt;
+
+&lt;p&gt;Every agent also gets built-in observability with OpenTelemetry. You get structured logs, metrics, and traces without adding any instrumentation code. This makes debugging and monitoring your agents in production much easier.&lt;/p&gt;
+
+&lt;p&gt;We will delve into each of these and uncover even more features in future posts, but the key takeaway is that Foundry hosted agents provide a secure, scalable, and fully managed environment for running your agent code — so you can focus on building great agent experiences without worrying about infrastructure.&lt;/p&gt;
+
+&lt;h2 id=&quot;protocols--how-agents-communicate&quot;&gt;Protocols — How Agents Communicate&lt;/h2&gt;
+
+&lt;p&gt;Hosted agents support two protocols for communication: &lt;strong&gt;Responses&lt;/strong&gt; and &lt;strong&gt;Invocations&lt;/strong&gt;. Choosing the right one matters — it affects what features you get for free and how much code you write. A great comparison between these two protocols can be found in the official documentation &lt;a href=&quot;https://learn.microsoft.com/en-us/azure/foundry/agents/concepts/hosted-agents#which-protocol-should-i-use&quot;&gt;here&lt;/a&gt;.&lt;/p&gt;
+
+&lt;h3 id=&quot;responses-protocol&quot;&gt;Responses Protocol&lt;/h3&gt;
+
+&lt;p&gt;The Responses protocol follows the &lt;a href=&quot;https://developers.openai.com/api/reference/responses/overview&quot;&gt;OpenAI /responses contract&lt;/a&gt;. If you’ve used the OpenAI SDK, this will feel familiar.&lt;/p&gt;
+
+&lt;p&gt;Here’s what the platform gives you out of the box:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;&lt;strong&gt;Platform-managed conversation history&lt;/strong&gt; via &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;conversation_id&lt;/code&gt; — you don’t need to track chat turns yourself.&lt;/li&gt;
+  &lt;li&gt;&lt;strong&gt;Standard streaming lifecycle events&lt;/strong&gt; — &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;response.created&lt;/code&gt; → &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;response.in_progress&lt;/code&gt; → &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;response.output_text.delta&lt;/code&gt; → &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;response.completed&lt;/code&gt;. These are well understood conventions that work with any OpenAI-compatible client.&lt;/li&gt;
+  &lt;li&gt;&lt;strong&gt;Background execution&lt;/strong&gt; via &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;background: true&lt;/code&gt; for long-running tasks.&lt;/li&gt;
+  &lt;li&gt;&lt;strong&gt;Built-in heads&lt;/strong&gt; for Teams/M365 publishing and agent-to-agent (A2A) delegation — these come free with Responses. No extra code needed.&lt;/li&gt;
+  &lt;li&gt;Numerous other Foundry features like evaluation come out of the box.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;The big selling point: you write minimal code and the platform handles the HTTP contract, session management, and streaming lifecycle.&lt;/p&gt;
+
+&lt;h3 id=&quot;invocations-protocol&quot;&gt;Invocations Protocol&lt;/h3&gt;
+
+&lt;p&gt;The Invocations protocol gives you raw control. Your agent exposes &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;/invocations&lt;/code&gt; and accepts arbitrary payload — you define the schema. It is blob-in and blob-out for the platform. This means:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;&lt;strong&gt;You manage session state&lt;/strong&gt; yourself.&lt;/li&gt;
+  &lt;li&gt;&lt;strong&gt;Raw SSE control&lt;/strong&gt; — you format events and manage the stream.&lt;/li&gt;
+  &lt;li&gt;&lt;strong&gt;Full payload freedom&lt;/strong&gt; — send whatever JSON/byte structure your use case demands.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;The trade-off: Teams/M365 publishing and A2A delegation are &lt;strong&gt;not available&lt;/strong&gt; for the Invocations protocol. You get more control, but fewer platform features.&lt;/p&gt;
+
+&lt;h3 id=&quot;which-one-should-you-pick&quot;&gt;Which One Should You Pick?&lt;/h3&gt;
+
+&lt;p&gt;My recommendation: &lt;strong&gt;start with Responses&lt;/strong&gt; unless you have a specific reason not to. You get conversation management, streaming, and Teams/A2A integration for free. Only reach for Invocations when you need arbitrary payloads, custom streaming behavior, or full HTTP control. And as we’ll see later — both protocols can coexist in a single agent, so this isn’t a one-way door.&lt;/p&gt;
+
+&lt;h2 id=&quot;sdk-layers--framework-landscape&quot;&gt;SDK Layers &amp;amp; Framework Landscape&lt;/h2&gt;
+
+&lt;p&gt;Before we write code, let’s understand the SDK stack. There are four layers, and knowing which one to use will save you a lot of confusion.&lt;/p&gt;
+
+&lt;h3 id=&quot;responses-sdk-azure-ai-agentserver-responses&quot;&gt;Responses SDK (&lt;a href=&quot;https://github.com/Azure/azure-sdk-for-python/tree/main/sdk/agentserver/azure-ai-agentserver-responses&quot;&gt;azure-ai-agentserver-responses&lt;/a&gt;)&lt;/h3&gt;
+
+&lt;p&gt;The SDK for the Responses protocol. It handles the HTTP server, health checks, OpenTelemetry integration, and the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;/responses&lt;/code&gt; contract. You plug in your agent logic — it handles the plumbing.&lt;/p&gt;
+
+&lt;h3 id=&quot;invocations-sdk-azure-ai-agentserver-invocations&quot;&gt;Invocations SDK (&lt;a href=&quot;https://github.com/Azure/azure-sdk-for-python/tree/main/sdk/agentserver/azure-ai-agentserver-invocations&quot;&gt;azure-ai-agentserver-invocations&lt;/a&gt;)&lt;/h3&gt;
+
+&lt;p&gt;Same idea, but for the Invocations protocol. Handles the HTTP server, health checks, OTel, and the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;/invocations&lt;/code&gt; contract.&lt;/p&gt;
+
+&lt;h3 id=&quot;agent-framework-agent-framework-foundry-hosting&quot;&gt;Agent Framework (&lt;a href=&quot;https://pypi.org/project/agent-framework-foundry-hosting/&quot;&gt;agent-framework-foundry-hosting&lt;/a&gt;)&lt;/h3&gt;
+
+&lt;p&gt;Built &lt;strong&gt;on top of&lt;/strong&gt; the Responses and Invocations SDKs. This is the batteries-included option — it adds native integration with &lt;a href=&quot;https://github.com/microsoft/agent-framework&quot;&gt;Microsoft Agent Framework&lt;/a&gt;. Makes it super easy to deploy your MAF agent as a hosted agent.&lt;/p&gt;
+
+&lt;h3 id=&quot;byo-bring-your-own-framework&quot;&gt;BYO (Bring Your Own) Framework&lt;/h3&gt;
+
+&lt;p&gt;Already have an agent built with LangGraph, CrewAI, or your own custom code? Use the Responses or Invocations SDKs directly. They handle the HTTP server and protocol mechanics — you supply the agent logic. This is the escape hatch that lets you bring any framework into the hosted agent world.&lt;/p&gt;
+
+&lt;h3 id=&quot;decision-framework&quot;&gt;Decision Framework&lt;/h3&gt;
+
+&lt;p&gt;Here’s a simple way to think about it:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;&lt;strong&gt;Starting from scratch?&lt;/strong&gt; → Use &lt;strong&gt;Agent Framework&lt;/strong&gt;. It’s the fastest path to a working agent with sessions, tools, and streaming.&lt;/li&gt;
+  &lt;li&gt;&lt;strong&gt;Already have LangGraph/CrewAI code?&lt;/strong&gt; → &lt;strong&gt;BYO&lt;/strong&gt; with the appropriate SDK (Responses or Invocations).&lt;/li&gt;
+  &lt;li&gt;&lt;strong&gt;Need full HTTP control or custom payloads?&lt;/strong&gt; → &lt;strong&gt;BYO&lt;/strong&gt; with the Invocations SDK.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h2 id=&quot;building-first-agent--responses-protocol&quot;&gt;Building first agent — Responses Protocol&lt;/h2&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;Hosted Agents and &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;azd&lt;/code&gt; are in active development. &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;azd&lt;/code&gt; command surfaces are expected to evolve and new features will be added to the Hosted Agent platform. If you see any discrepancies or issues with the commands mentioned in this post, please comment below and I will update the post accordingly.&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;Let’s get an agent up and running. We’ll use the hello-world sample from the &lt;a href=&quot;https://github.com/microsoft-foundry/foundry-samples/tree/main/samples/python/hosted-agents&quot;&gt;foundry-samples&lt;/a&gt; repo.&lt;/p&gt;
+
+&lt;h3 id=&quot;prerequisites&quot;&gt;Prerequisites&lt;/h3&gt;
+
+&lt;p&gt;You need two things:&lt;/p&gt;
+
+&lt;ol&gt;
+  &lt;li&gt;&lt;strong&gt;&lt;a href=&quot;https://learn.microsoft.com/en-us/azure/developer/azure-developer-cli/install-azd&quot;&gt;Azure Developer CLI (&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;azd&lt;/code&gt;)&lt;/a&gt;&lt;/strong&gt; with the AI agent extension: &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;azd ext install azure.ai.agents&lt;/code&gt;. If you already have it installed, run &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;azd ext upgrade --all&lt;/code&gt; to ensure you have the latest version.&lt;/li&gt;
+  &lt;li&gt;&lt;strong&gt;An Azure subscription&lt;/strong&gt; — &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;azd&lt;/code&gt; can provision a Foundry project and model deployment for you if you don’t have one.&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;h3 id=&quot;initialize-the-project&quot;&gt;Initialize the Project&lt;/h3&gt;
+
+&lt;p&gt;Create an empty folder and point &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;azd&lt;/code&gt; at the sample manifest:&lt;/p&gt;
+
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;nb&quot;&gt;mkdir &lt;/span&gt;hello-world-agent &lt;span class=&quot;o&quot;&gt;&amp;amp;&amp;amp;&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;cd &lt;/span&gt;hello-world-agent
+
+azd ai agent init &lt;span class=&quot;nt&quot;&gt;-m&lt;/span&gt; https://github.com/microsoft-foundry/foundry-samples/blob/main/samples/python/hosted-agents/bring-your-own/responses/hello-world/agent.manifest.yaml
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Follow the prompts — &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;azd&lt;/code&gt; will scaffold the project, generate deployment files, and walk you through connecting to (or creating) a Foundry project and model deployment.&lt;/p&gt;
+
+&lt;p&gt;If you don’t have an existing Foundry project, run &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;azd provision&lt;/code&gt; to create one along with the necessary Azure resources (resource group, Foundry instance, model deployment, Application Insights, and a container registry). You will need &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Owner&lt;/code&gt; permission in the subscription to assign &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;ACRPull&lt;/code&gt; permission to Foundry Project Managed Identity on the Container Registry.&lt;/p&gt;
+
+&lt;h3 id=&quot;the-agent-code&quot;&gt;The Agent code&lt;/h3&gt;
+
+&lt;p&gt;&lt;strong&gt;agent.yaml&lt;/strong&gt; — this is your agent definition:&lt;/p&gt;
+
+&lt;div class=&quot;language-yaml highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;na&quot;&gt;kind&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;hosted&lt;/span&gt;
+&lt;span class=&quot;na&quot;&gt;name&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;hello-world-python-responses&lt;/span&gt;
+&lt;span class=&quot;na&quot;&gt;protocols&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
+  &lt;span class=&quot;pi&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;na&quot;&gt;protocol&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;responses&lt;/span&gt;
+    &lt;span class=&quot;na&quot;&gt;version&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;1.0.0&lt;/span&gt;
+&lt;span class=&quot;na&quot;&gt;resources&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
+  &lt;span class=&quot;na&quot;&gt;cpu&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;0.25&quot;&lt;/span&gt;
+  &lt;span class=&quot;na&quot;&gt;memory&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;0.5Gi&lt;/span&gt;
+&lt;span class=&quot;na&quot;&gt;environment_variables&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
+  &lt;span class=&quot;pi&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;na&quot;&gt;name&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;AZURE_AI_MODEL_DEPLOYMENT_NAME&lt;/span&gt;
+    &lt;span class=&quot;na&quot;&gt;value&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;${AZURE_AI_MODEL_DEPLOYMENT_NAME}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;ol&gt;
+  &lt;li&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;kind: hosted&lt;/code&gt; — declares this is a hosted agent.&lt;/li&gt;
+  &lt;li&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;protocols&lt;/code&gt; — lists which protocols this agent supports. Here we declare Responses version 1.0.0.&lt;/li&gt;
+  &lt;li&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;resources&lt;/code&gt; — the sandbox size. We’re using the smallest allocation: 0.25 vCPU and 0.5 GiB memory.&lt;/li&gt;
+  &lt;li&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;environment_variables&lt;/code&gt; — runtime config. &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;AZURE_AI_MODEL_DEPLOYMENT_NAME&lt;/code&gt; gets resolved from your &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;azd&lt;/code&gt; environment.&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;&lt;strong&gt;main.py&lt;/strong&gt; — the agent logic.&lt;/p&gt;
+
+&lt;div class=&quot;language-python highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;n&quot;&gt;app&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;ResponsesAgentServerHost&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;options&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;ResponsesServerOptions&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;default_fetch_history_count&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;20&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;),&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+
+&lt;span class=&quot;o&quot;&gt;@&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;app&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;response_handler&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;async&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;def&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;handler&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;request&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;CreateResponse&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;context&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;ResponseContext&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;_cancellation_signal&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;asyncio&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Event&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;):&lt;/span&gt;
+    &lt;span class=&quot;s&quot;&gt;&quot;&quot;&quot;Forward user input to the model with conversation history.&quot;&quot;&quot;&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;user_input&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;await&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;context&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;get_input_text&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;ow&quot;&gt;or&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&quot;Hello!&quot;&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;history&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;await&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;context&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;get_history&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
+
+    &lt;span class=&quot;n&quot;&gt;input_items&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;_build_input&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;user_input&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;history&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+
+    &lt;span class=&quot;n&quot;&gt;response&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;await&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;asyncio&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;get_running_loop&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;().&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;run_in_executor&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;
+        &lt;span class=&quot;bp&quot;&gt;None&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+        &lt;span class=&quot;k&quot;&gt;lambda&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;_responses_client&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;create&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;
+            &lt;span class=&quot;n&quot;&gt;model&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;_model&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+            &lt;span class=&quot;n&quot;&gt;instructions&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;You are a helpful AI assistant. Be concise and informative.&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+            &lt;span class=&quot;nb&quot;&gt;input&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;input_items&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+            &lt;span class=&quot;n&quot;&gt;store&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;bp&quot;&gt;False&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+        &lt;span class=&quot;p&quot;&gt;),&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+
+    &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;TextResponse&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;context&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;request&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;text&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;response&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;output_text&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Let’s break this down:&lt;/p&gt;
+
+&lt;ol&gt;
+  &lt;li&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;ResponsesAgentServerHost&lt;/code&gt; is the Responses protocol SDK. It handles the HTTP server on port 8088, health checks, OpenTelemetry tracing, and the full &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;/responses&lt;/code&gt; contract with SSE lifecycle events.&lt;/li&gt;
+  &lt;li&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;@app.response_handler&lt;/code&gt; is where you plug in your logic. The SDK calls this for every incoming request.&lt;/li&gt;
+  &lt;li&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;context.get_history()&lt;/code&gt; retrieves previous conversation turns — the platform manages this automatically via &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;conversation_id&lt;/code&gt; or &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;previous_response_id&lt;/code&gt;. You don’t need to store history yourself.&lt;/li&gt;
+  &lt;li&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;TextResponse&lt;/code&gt; is a convenience class that wraps your model output into the proper Responses protocol format. The SDK handles streaming lifecycle events (&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;response.created&lt;/code&gt; → &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;response.in_progress&lt;/code&gt; → &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;response.completed&lt;/code&gt;) behind the scenes.&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;SDKs implement &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;/readiness&lt;/code&gt; endpoints for health checks, so the platform knows when your agent is ready to receive requests. They also have OpenTelemetry integration built in, so you get structured logs and traces in Application Insights without extra code.&lt;/p&gt;
+
+&lt;p&gt;You would notice there are some &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;FOUNDRY_*&lt;/code&gt; environment variables in the code which are absent from &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;agent.yaml&lt;/code&gt;. &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;FOUNDRY_*&lt;/code&gt; are reserved environment variables that are injected by the platform at runtime. Here is a list of environment variables injected by the platform today:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;FOUNDRY_AGENT_NAME&lt;/code&gt; - The name of the agent.&lt;/li&gt;
+  &lt;li&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;FOUNDRY_AGENT_VERSION&lt;/code&gt; - The version of the agent.&lt;/li&gt;
+  &lt;li&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;FOUNDRY_AGENT_SESSION_ID&lt;/code&gt; - The unique session ID for the current request.&lt;/li&gt;
+  &lt;li&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;FOUNDRY_PROJECT_ENDPOINT&lt;/code&gt; - The endpoint URL for the Foundry project.&lt;/li&gt;
+  &lt;li&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;FOUNDRY_PROJECT_ARM_ID&lt;/code&gt; - The ARM resource ID for the Foundry project.&lt;/li&gt;
+  &lt;li&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;FOUNDRY_HOSTING_ENVIRONMENT&lt;/code&gt; - Set to “1” to indicate the agent is running in a Foundry hosted environment.&lt;/li&gt;
+  &lt;li&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;SSE_KEEPALIVE_INTERVAL&lt;/code&gt; - Keep-alive interval in seconds for SSE connections (default is 15 seconds).&lt;/li&gt;
+  &lt;li&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;APPLICATIONINSIGHTS_CONNECTION_STRING&lt;/code&gt; - The connection string for Application Insights, if connected with Foundry project.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&quot;run-locally&quot;&gt;Run Locally&lt;/h3&gt;
+
+&lt;p&gt;Start the agent with &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;azd&lt;/code&gt; — it handles environment variables and startup automatically:&lt;/p&gt;
+
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;azd ai agent run
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Your agent is now running on &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;http://localhost:8088&lt;/code&gt;.&lt;/p&gt;
+
+&lt;h3 id=&quot;invoke-the-agent-running-locally&quot;&gt;Invoke the Agent running locally&lt;/h3&gt;
+
+&lt;p&gt;Open another terminal and send a request:&lt;/p&gt;
+
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;c&quot;&gt;# Using azd&lt;/span&gt;
+azd ai agent invoke &lt;span class=&quot;nt&quot;&gt;--local&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;What is Microsoft Foundry?&quot;&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;You would get a response like below. Let’s decode it.&lt;/p&gt;
+
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;❯ azd ai agent invoke &lt;span class=&quot;nt&quot;&gt;--local&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;What is Microsoft Foundry?&quot;&lt;/span&gt;
+Target:       localhost:8088 &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;local&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
+Message:      &lt;span class=&quot;s2&quot;&gt;&quot;What is Microsoft Foundry?&quot;&lt;/span&gt;
+Session:      a0b59cc0-9c4c-413e-b5d3-7843fe456168
+Conversation: a92c8023-13c5-4cb2-8a12-ef0f042804f6
+
+&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;local&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt; Microsoft Foundry is a collaborative innovation program by Microsoft that helps startups and enterprises accelerate product development, scale their solutions, and go to market faster by providing technical support, resources, and access to Microsoft&lt;span class=&quot;s1&quot;&gt;'s cloud platform, technologies, and expertise. It often focuses on co-innovation, mentoring, and leveraging Microsoft Azure and other tools to foster growth and digital transformation.
+&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Conversation&lt;/code&gt;: Because we are using a sample based on Responses protocol, &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;azd&lt;/code&gt; automatically generates a conversation id and sends it to our agent.&lt;/li&gt;
+  &lt;li&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Session&lt;/code&gt;: In the Responses protocol, every conversation gets mapped to a session. A session represents your context and compute. I will talk more about sessions in the next post.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;Let’s try to do a follow-up conversation:&lt;/p&gt;
+
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;❯ azd ai agent invoke &lt;span class=&quot;nt&quot;&gt;--local&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;what are its features&quot;&lt;/span&gt;
+Target:       localhost:8088 &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;local&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
+Message:      &lt;span class=&quot;s2&quot;&gt;&quot;what are its features&quot;&lt;/span&gt;
+Session:      a0b59cc0-9c4c-413e-b5d3-7843fe456168
+Conversation: a92c8023-13c5-4cb2-8a12-ef0f042804f6
+
+&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;local&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt; Key features of Microsoft Foundry include:
+
+1. &lt;span class=&quot;k&quot;&gt;**&lt;/span&gt;Technical Support:&lt;span class=&quot;k&quot;&gt;**&lt;/span&gt; Access to Microsoft engineers and experts &lt;span class=&quot;k&quot;&gt;for &lt;/span&gt;guidance on architecture, development, and cloud adoption.
+&amp;lt;redacted &lt;span class=&quot;k&quot;&gt;for &lt;/span&gt;brevity&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;azd&lt;/code&gt; remembers the session and conversation details and sends the follow-up request on the same conversation and session ID. &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;context.get_history()&lt;/code&gt; will pull in existing messages from the Foundry Agent Conversation store.&lt;/p&gt;
+
+&lt;p&gt;You can easily start a new conversation in a new session by using &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;--new-conversation&lt;/code&gt; and &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;--new-session&lt;/code&gt; flags.&lt;/p&gt;
+
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;❯ azd ai agent invoke &lt;span class=&quot;nt&quot;&gt;--local&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;What is Github Copilot&quot;&lt;/span&gt; &lt;span class=&quot;nt&quot;&gt;--new-conversation&lt;/span&gt; &lt;span class=&quot;nt&quot;&gt;--new-session&lt;/span&gt;
+Target:       localhost:8088 &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;local&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
+Message:      &lt;span class=&quot;s2&quot;&gt;&quot;What is Github Copilot&quot;&lt;/span&gt;
+Session:      5a3a9e1a-3e01-42fe-875c-348d265d67e0
+Conversation: 5237226b-d0e5-4cc6-814a-893d0a4778b5
+
+&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;local&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt; GitHub Copilot is an AI-powered code completion tool developed by GitHub &lt;span class=&quot;k&quot;&gt;in &lt;/span&gt;collaboration with OpenAI. It uses machine learning models trained on a vast amount of publicly available code to suggest code snippets, functions, and even entire blocks of code &lt;span class=&quot;k&quot;&gt;in &lt;/span&gt;real-time as developers write, helping to speed up coding and reduce errors. It integrates directly into popular code editors like Visual Studio Code.
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h3 id=&quot;deploy-to-foundry&quot;&gt;Deploy to Foundry&lt;/h3&gt;
+
+&lt;p&gt;Once you’re happy with local testing, deploy to the cloud:&lt;/p&gt;
+
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;azd deploy
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;You would need either the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Azure AI Project Manager&lt;/code&gt; or &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Owner&lt;/code&gt; role to assign the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Azure AI User&lt;/code&gt; role to the newly created agent identity. We will explore more about agent identity in later posts.&lt;/p&gt;
+
+&lt;p&gt;Once deployed, your agent gets a dedicated endpoint and you can access it through the Foundry UI or directly calling the REST API.&lt;/p&gt;
+
+&lt;h3 id=&quot;invoke-the-agent-running-in-foundry-hosted-agents&quot;&gt;Invoke the Agent running in Foundry Hosted Agents&lt;/h3&gt;
+
+&lt;p&gt;We can use the same &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;azd ai agent invoke&lt;/code&gt; command but &lt;em&gt;without&lt;/em&gt; the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;--local&lt;/code&gt; flag to invoke our deployed agent.&lt;/p&gt;
+
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;❯ azd ai agent invoke &lt;span class=&quot;s2&quot;&gt;&quot;What is Microsoft Foundry?&quot;&lt;/span&gt;
+Agent:        hello-world-python-responses &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;remote&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
+Message:      &lt;span class=&quot;s2&quot;&gt;&quot;What is Microsoft Foundry?&quot;&lt;/span&gt;
+Session:      &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;new — server will assign&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
+Conversation: conv_dab13330c3fcbf5800mauQn5G3CawWK3CJZcd5qV82P6hQaVVC
+
+Trace ID: 73fbb56a-d39c-4f02-b0a1-af74b43e3b00
+Session:      6dc22b28d7464602068297b9756543dc29856cf16391b4a108b03535720e1f8 &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;assigned by server&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;hello-world-python-responses] Microsoft Foundry is a specialized program or initiative by Microsoft designed to accelerate innovation and transformation by helping organizations develop and deploy advanced cloud-based solutions, often focusing on AI, data, and digital transformation. It provides access to Microsoft technologies, expert guidance, and resources to build scalable and impactful business applications.
+
+The exact scope and offerings may vary depending on the specific Microsoft Foundry context, such as partnerships, industry solutions, or innovation hubs.
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;You will notice here that the session ID was assigned by the Foundry platform. You can also supply a custom session ID by using the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;--session-id&lt;/code&gt; flag.&lt;/p&gt;
+
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;❯ azd ai agent invoke &lt;span class=&quot;s2&quot;&gt;&quot;What is Github Copilot?&quot;&lt;/span&gt; &lt;span class=&quot;nt&quot;&gt;--session-id&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;my-session-1&quot;&lt;/span&gt;
+Agent:        hello-world-python-responses &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;remote&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
+Message:      &lt;span class=&quot;s2&quot;&gt;&quot;What is Github Copilot?&quot;&lt;/span&gt;
+Session:      my-session-1
+Conversation: conv_dab13330c3fcbf5800mauQn5G3CawWK3CJZcd5qV82P6hQaVVC
+
+Trace ID: ee7c5041-5cb5-4d66-b9e9-8f8791f91cc8
+&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;hello-world-python-responses] GitHub Copilot is an AI-powered code completion tool developed by GitHub &lt;span class=&quot;k&quot;&gt;in &lt;/span&gt;collaboration with OpenAI. It uses machine learning models to assist developers by suggesting whole lines or blocks of code as they write, helping to speed up coding, reduce errors, and improve productivity. It supports multiple programming languages and integrates directly into popular code editors like Visual Studio Code.
+
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;You will find both these sessions visible in the Foundry Portal for your agent.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/blog/assets/images/posts/fha-1/foundry_portal.png&quot; alt=&quot;Architecture&quot; /&gt;&lt;/p&gt;
+
+&lt;h3 id=&quot;view-agent-logs&quot;&gt;View Agent logs&lt;/h3&gt;
+
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;azd ai agent monitor
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Run the above command to stream logs from the current session. You can pass in a custom session ID via the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;--session-id&lt;/code&gt; flag to view the log stream from that session.&lt;/p&gt;
+
+&lt;h3 id=&quot;endpoints-exposed-by-responses-protocol-sdk&quot;&gt;Endpoints exposed by Responses protocol SDK&lt;/h3&gt;
+
+&lt;p&gt;Only &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;POST /responses&lt;/code&gt; endpoint requires handler implementation, the Responses protocol SDK internally implements all other endpoints:&lt;/p&gt;
+
+&lt;table&gt;
+  &lt;thead&gt;
+    &lt;tr&gt;
+      &lt;th&gt;Method&lt;/th&gt;
+      &lt;th&gt;Path&lt;/th&gt;
+      &lt;th&gt;Summary&lt;/th&gt;
+    &lt;/tr&gt;
+  &lt;/thead&gt;
+  &lt;tbody&gt;
+    &lt;tr&gt;
+      &lt;td&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;POST&lt;/code&gt;&lt;/td&gt;
+      &lt;td&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;/responses&lt;/code&gt;&lt;/td&gt;
+      &lt;td&gt;Create a new response&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;GET&lt;/code&gt;&lt;/td&gt;
+      &lt;td&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;/responses/{id}&lt;/code&gt;&lt;/td&gt;
+      &lt;td&gt;Retrieve response (JSON snapshot)&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;GET&lt;/code&gt;&lt;/td&gt;
+      &lt;td&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;/responses/{id}?stream=true&lt;/code&gt;&lt;/td&gt;
+      &lt;td&gt;SSE event replay (background+streaming only)&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;POST&lt;/code&gt;&lt;/td&gt;
+      &lt;td&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;/responses/{id}/cancel&lt;/code&gt;&lt;/td&gt;
+      &lt;td&gt;Cancel a background response&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;DELETE&lt;/code&gt;&lt;/td&gt;
+      &lt;td&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;/responses/{id}&lt;/code&gt;&lt;/td&gt;
+      &lt;td&gt;Delete a stored response&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;GET&lt;/code&gt;&lt;/td&gt;
+      &lt;td&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;/responses/{id}/input_items&lt;/code&gt;&lt;/td&gt;
+      &lt;td&gt;List input items (paginated)&lt;/td&gt;
+    &lt;/tr&gt;
+  &lt;/tbody&gt;
+&lt;/table&gt;
+
+&lt;h2 id=&quot;the-same-agent--invocations-protocol&quot;&gt;The Same Agent — Invocations Protocol&lt;/h2&gt;
+
+&lt;p&gt;Now let’s see the same agent using the Invocations protocol. In a new folder, run&lt;/p&gt;
+
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;azd ai agent init &lt;span class=&quot;nt&quot;&gt;-m&lt;/span&gt; https://github.com/microsoft-foundry/foundry-samples/blob/main/samples/python/hosted-agents/bring-your-own/invocations/hello-world/agent.manifest.yaml
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;The &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;agent.yaml&lt;/code&gt; changes to declare the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;invocations&lt;/code&gt; protocol:&lt;/p&gt;
+
+&lt;div class=&quot;language-yaml highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;na&quot;&gt;kind&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;hosted&lt;/span&gt;
+&lt;span class=&quot;na&quot;&gt;name&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;hello-world-python-invocations&lt;/span&gt;
+&lt;span class=&quot;na&quot;&gt;protocols&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
+  &lt;span class=&quot;pi&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;na&quot;&gt;protocol&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;invocations&lt;/span&gt;
+    &lt;span class=&quot;na&quot;&gt;version&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;1.0.0&lt;/span&gt;
+&lt;span class=&quot;na&quot;&gt;resources&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
+  &lt;span class=&quot;na&quot;&gt;cpu&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;0.25&quot;&lt;/span&gt;
+  &lt;span class=&quot;na&quot;&gt;memory&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;0.5Gi&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;And here’s &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;main.py&lt;/code&gt; —&lt;/p&gt;
+
+&lt;div class=&quot;language-python highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;n&quot;&gt;app&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;InvocationAgentServerHost&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
+
+&lt;span class=&quot;n&quot;&gt;_history&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;list&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;dict&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;str&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;str&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]]&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[]&lt;/span&gt;
+
+
+&lt;span class=&quot;o&quot;&gt;@&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;app&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;invoke_handler&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;async&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;def&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;handle_invoke&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;request&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Request&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;):&lt;/span&gt;
+    &lt;span class=&quot;s&quot;&gt;&quot;&quot;&quot;Handle a streaming multi-turn chat request.&quot;&quot;&quot;&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;body&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;await&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;request&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;body&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;ow&quot;&gt;not&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;body&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;
+        &lt;span class=&quot;k&quot;&gt;raise&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;ValueError&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;empty body&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;try&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;data&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;json&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;loads&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;body&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;except&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;json&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;JSONDecodeError&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;user_message&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;body&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;decode&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;utf-8&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;errors&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;replace&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;).&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;strip&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;else&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;
+        &lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;isinstance&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;data&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;dict&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;):&lt;/span&gt;
+            &lt;span class=&quot;n&quot;&gt;user_message&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;data&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;get&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;message&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;ow&quot;&gt;or&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;data&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;get&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;input&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;ow&quot;&gt;or&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&quot;&quot;&lt;/span&gt;
+        &lt;span class=&quot;k&quot;&gt;else&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;
+            &lt;span class=&quot;n&quot;&gt;user_message&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;body&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;decode&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;utf-8&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;errors&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;replace&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;).&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;strip&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;ow&quot;&gt;not&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;isinstance&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;user_message&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;str&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;ow&quot;&gt;or&lt;/span&gt; &lt;span class=&quot;ow&quot;&gt;not&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;user_message&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;strip&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;():&lt;/span&gt;
+        &lt;span class=&quot;k&quot;&gt;raise&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;ValueError&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;missing message text&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+
+    &lt;span class=&quot;n&quot;&gt;session_id&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;request&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;state&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;session_id&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;invocation_id&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;request&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;state&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;invocation_id&lt;/span&gt;
+
+    &lt;span class=&quot;c1&quot;&gt;# Retrieve or create conversation history for this session
+&lt;/span&gt;    &lt;span class=&quot;n&quot;&gt;_history&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;append&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;({&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;role&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&quot;user&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&quot;content&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;user_message&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;})&lt;/span&gt;
+
+    &lt;span class=&quot;k&quot;&gt;async&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;def&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;event_generator&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;():&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;full_reply&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&quot;&quot;&lt;/span&gt;
+        &lt;span class=&quot;k&quot;&gt;for&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;event&lt;/span&gt; &lt;span class=&quot;ow&quot;&gt;in&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;_responses_client&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;create&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;
+            &lt;span class=&quot;n&quot;&gt;model&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;_model&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+            &lt;span class=&quot;n&quot;&gt;instructions&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;You are a helpful AI assistant.&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+            &lt;span class=&quot;nb&quot;&gt;input&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;list&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;_history&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;),&lt;/span&gt;
+            &lt;span class=&quot;n&quot;&gt;store&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;bp&quot;&gt;False&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+            &lt;span class=&quot;n&quot;&gt;stream&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;bp&quot;&gt;True&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+        &lt;span class=&quot;p&quot;&gt;):&lt;/span&gt;
+            &lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;event&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;type&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;==&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&quot;response.output_text.delta&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;
+                &lt;span class=&quot;n&quot;&gt;full_reply&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;+=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;event&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;delta&lt;/span&gt;
+                &lt;span class=&quot;k&quot;&gt;yield&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;f&quot;data: &lt;/span&gt;&lt;span class=&quot;si&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;json&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;dumps&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;si&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;'type'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;'token'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;'content'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;event&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;delta&lt;/span&gt;&lt;span class=&quot;si&quot;&gt;}&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;si&quot;&gt;}&lt;/span&gt;&lt;span class=&quot;se&quot;&gt;\n\n&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;&lt;/span&gt;
+
+        &lt;span class=&quot;k&quot;&gt;yield&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;f&quot;data: &lt;/span&gt;&lt;span class=&quot;si&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;json&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;dumps&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;si&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;'type'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;'done'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;'full_text'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;full_reply&lt;/span&gt;&lt;span class=&quot;si&quot;&gt;}&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;si&quot;&gt;}&lt;/span&gt;&lt;span class=&quot;se&quot;&gt;\n\n&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;_history&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;append&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;({&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;role&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&quot;assistant&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&quot;content&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;full_reply&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;})&lt;/span&gt;
+
+    &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;StreamingResponse&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;event_generator&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(),&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;media_type&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;text/event-stream&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;headers&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;Cache-Control&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&quot;no-cache&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;},&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+
+
+&lt;span class=&quot;n&quot;&gt;app&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;run&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Let’s break it down:&lt;/p&gt;
+&lt;ol&gt;
+  &lt;li&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;InvocationAgentServerHost&lt;/code&gt; is the Invocations protocol SDK. It handles the HTTP server on port 8088, health checks, OpenTelemetry tracing, and the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;/invocations&lt;/code&gt; contract.&lt;/li&gt;
+  &lt;li&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;@app.invoke_handler&lt;/code&gt; is where you plug in your logic. The SDK calls this for every incoming request to &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;/invocations&lt;/code&gt;.&lt;/li&gt;
+  &lt;li&gt;The schema of the request and response is entirely up to you. In this sample, we showcase how to accept both a plain text string or a JSON object with either a &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;message&lt;/code&gt; or &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;input&lt;/code&gt; field. You can define your own schema and parse it as needed.&lt;/li&gt;
+  &lt;li&gt;Because the Invocations protocol does not define a fixed schema, the platform does not store conversation history by default. You will need to manage storing the conversation history yourself.&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;h3 id=&quot;endpoints-exposed-by-invocations-protocol-sdk&quot;&gt;Endpoints exposed by Invocations protocol SDK&lt;/h3&gt;
+
+&lt;p&gt;Contrary to the Responses protocol, the Invocations protocol SDK requires you to write explicit handlers for all endpoints. The Invocations protocol exposes an optional OpenAPI spec endpoint at &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;/invocations/docs/openapi.json&lt;/code&gt; which you can use to expose the contract of your agent to the world.&lt;/p&gt;
+
+&lt;table&gt;
+  &lt;thead&gt;
+    &lt;tr&gt;
+      &lt;th&gt;Method&lt;/th&gt;
+      &lt;th&gt;Route&lt;/th&gt;
+      &lt;th&gt;Required&lt;/th&gt;
+      &lt;th&gt;Summary&lt;/th&gt;
+    &lt;/tr&gt;
+  &lt;/thead&gt;
+  &lt;tbody&gt;
+    &lt;tr&gt;
+      &lt;td&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;POST&lt;/code&gt;&lt;/td&gt;
+      &lt;td&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;/invocations&lt;/code&gt;&lt;/td&gt;
+      &lt;td&gt;&lt;strong&gt;Yes&lt;/strong&gt;&lt;/td&gt;
+      &lt;td&gt;Execute the agent. Handler - &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;invoke_handler&lt;/code&gt;&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;GET&lt;/code&gt;&lt;/td&gt;
+      &lt;td&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;/invocations/{invocation_id}&lt;/code&gt;&lt;/td&gt;
+      &lt;td&gt;No&lt;/td&gt;
+      &lt;td&gt;Retrieve invocation status or result. Handler - &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;get_invocation_handler&lt;/code&gt;&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;POST&lt;/code&gt;&lt;/td&gt;
+      &lt;td&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;/invocations/{invocation_id}/cancel&lt;/code&gt;&lt;/td&gt;
+      &lt;td&gt;No&lt;/td&gt;
+      &lt;td&gt;Cancel a running invocation. Handler - &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;cancel_invocation_handler&lt;/code&gt;&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;GET&lt;/code&gt;&lt;/td&gt;
+      &lt;td&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;/invocations/docs/openapi.json&lt;/code&gt;&lt;/td&gt;
+      &lt;td&gt;No&lt;/td&gt;
+      &lt;td&gt;Serve OpenAPI 3.x spec for the agent’s contract. Pass it to &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;InvocationAgentServerHost(openapi_spec={...})&lt;/code&gt;&lt;/td&gt;
+    &lt;/tr&gt;
+  &lt;/tbody&gt;
+&lt;/table&gt;
+
+&lt;h2 id=&quot;both-protocols-in-one-agent&quot;&gt;Both Protocols in One Agent&lt;/h2&gt;
+
+&lt;p&gt;Here’s something that surprises a lot of people: you can expose both protocols from a single agent.&lt;/p&gt;
+
+&lt;div class=&quot;language-yaml highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;na&quot;&gt;kind&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;hosted&lt;/span&gt;
+&lt;span class=&quot;na&quot;&gt;name&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;my-dual-protocol-agent&lt;/span&gt;
+&lt;span class=&quot;na&quot;&gt;protocols&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
+  &lt;span class=&quot;pi&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;na&quot;&gt;protocol&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;responses&lt;/span&gt;
+    &lt;span class=&quot;na&quot;&gt;version&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;1.0.0&lt;/span&gt;
+  &lt;span class=&quot;pi&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;na&quot;&gt;protocol&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;invocations&lt;/span&gt;
+    &lt;span class=&quot;na&quot;&gt;version&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;1.0.0&lt;/span&gt;
+&lt;span class=&quot;na&quot;&gt;resources&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
+  &lt;span class=&quot;na&quot;&gt;cpu&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;'&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;0.25'&lt;/span&gt;
+  &lt;span class=&quot;na&quot;&gt;memory&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;'&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;0.5Gi'&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;The Responses endpoint serves at &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;/responses&lt;/code&gt; and Invocations at &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;/invocations&lt;/code&gt; — both active on the same container. This is useful when you want the convenience of Responses for conversational use cases (and the free Teams/A2A integration) while also exposing a custom Invocations endpoint for specialized payloads or integrations.&lt;/p&gt;
+
+&lt;h2 id=&quot;conclusion&quot;&gt;Conclusion&lt;/h2&gt;
+
+&lt;p&gt;We covered a lot of ground in this post. Here’s the recap:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;&lt;strong&gt;Hosted agents&lt;/strong&gt; let you run your own code in a managed sandbox — you focus on agent logic, the platform handles infrastructure.&lt;/li&gt;
+  &lt;li&gt;The &lt;strong&gt;Responses protocol&lt;/strong&gt; gives you OpenAI-compatible conversation management, streaming, and Teams/A2A integration with minimal code.&lt;/li&gt;
+  &lt;li&gt;The &lt;strong&gt;Invocations protocol&lt;/strong&gt; gives you full control over payloads and streaming at the cost of more code.&lt;/li&gt;
+  &lt;li&gt;The &lt;strong&gt;SDK stack&lt;/strong&gt; ranges from the high-level Agent Framework down to raw Responses/Invocations SDKs for BYO scenarios.&lt;/li&gt;
+  &lt;li&gt;Both protocols can coexist in a single agent.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;In the next posts in this series, we’ll dive into sessions and state management, agent identity and security, tool integration, and multi-agent architectures. There’s a lot more to explore.&lt;/p&gt;
+
+&lt;h2 id=&quot;references&quot;&gt;References&lt;/h2&gt;
+
+&lt;ol&gt;
+  &lt;li&gt;&lt;a href=&quot;https://learn.microsoft.com/en-us/azure/foundry/agents/concepts/hosted-agents&quot;&gt;Hosted Agents Overview&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;https://github.com/microsoft-foundry/foundry-samples/tree/main/samples/python/hosted-agents&quot;&gt;foundry-samples Repository&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;https://github.com/microsoft/agent-framework&quot;&gt;Agent Framework on GitHub&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;https://pypi.org/project/azure-ai-agentserver-responses/&quot;&gt;Responses SDK on PyPI&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;https://pypi.org/project/azure-ai-agentserver-invocations/&quot;&gt;Invocations SDK on PyPI&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;https://github.com/Azure/azure-rest-api-specs/blob/feature/foundry-release/specification/ai-foundry/data-plane/Foundry/openapi3/v1/microsoft-foundry-openapi3.json&quot;&gt;Foundry OpenAPI spec&lt;/a&gt;&lt;/li&gt;
+&lt;/ol&gt;
+</content>
+ </entry>
  
  <entry>
    <title>KV-Cache Aware Prompt Engineering - How Stable Prefixes Unlock 65% Latency Improvements</title>
