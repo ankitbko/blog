@@ -6,6 +6,7 @@ categories: [Azure, AI, Foundry, Hosted Agents, Sessions, State Management, Sand
 description: Deep dive into sessions, session lifecycle, $HOME persistence, and exploring the sandbox from inside using a VS Code tunnel.
 image: images/previews/ai-icon.png
 author: <a href='https://twitter.com/ankitbko', target='_blank'>Ankit Sinha</a>
+source_code: https://github.com/ankitbko/hosted-agents-vscode-tunnel
 ---
 
 
@@ -111,7 +112,7 @@ Open that URL in your browser or connect via VS Code Remote and login with same 
 
 ## Exploring the Sandbox
 
-Once connected, open the VS Code terminal. Let's poke around. You have complete control over the sandbox environment. You can also run vscode copilot chat in the terminal to ask questions about the environment and get code suggestions in real time.
+Once connected, open the VS Code terminal. Let's poke around. You have complete control over the sandbox environment. You can also run VS Code Copilot Chat in the terminal to ask questions about the environment and get code suggestions in real time.
 
 ### Check the OS
 
@@ -185,13 +186,13 @@ After ~15 minutes of no activity, the platform deprovisions compute. Your VS Cod
 
 ### Step 3: Resume the Session
 
-Send a new request with the same session ID. The platform provisions fresh compute and restores `$HOME`:
+Any request to the same session triggers the platform to provision fresh compute and restores the state. Send a new request with the same session ID:
 
 ```bash
 azd ai agent invoke '{"action": "status"}'
 ```
 
-This time the status will show that the tunnel is not running in the new sandbox.
+The platform spins up a new microvm, restores `$HOME` from durable storage, and routes the request. This time the status will show that the tunnel is not running in the new sandbox — because the tunnel process was an in-memory process that didn't survive the idle cycle. But the files we wrote to `$HOME` should still be there.
 
 
 ### Step 4: Verify the $HOME state
@@ -202,7 +203,7 @@ We can use `azd` to view the contents of `$HOME` without needing to reconnect th
 azd ai agent files list .
 ```
 
-The command will return the list of files in `$HOME` as json. You should see `greeting.txt` and `notes.json` still there, with their contents intact. Lets download these files to verify their content
+The command will return the list of files in `$HOME` as JSON. You should see `greeting.txt` and `notes.json` still there, with their contents intact. Let's download these files to verify their content:
 
 ```bash
 azd ai agent files download greeting.txt
@@ -218,7 +219,7 @@ The files survived. New compute, same `$HOME`. This is the persistence model.
 
 This is the mental model: **`$HOME` is your agent's durable memory. Everything else is ephemeral.** Design your agent to write anything important to `$HOME`, and the idle/resume cycle becomes invisible.
 
-Lets try to create a new session and look at the files there:
+Let's try to create a new session and look at the files there:
 
 ```bash
 $ azd ai agent invoke '{"action": "status"}' --new-session
@@ -227,7 +228,7 @@ $ azd ai agent files list .
 
 This will create a new session with a different `session_id`. If you check the files in this new session, you'll see that `$HOME` does not have the two files we created — proving that sessions are isolated sandboxes with their own persistent storage.
 
-You can list down all sessions using `azd ai agent sessions list`. Each session is associated with an agent version and has its own state.
+You can list all sessions using `azd ai agent sessions list`. Each session is associated with an agent version and has its own state.
 
 ## Isolation Keys
 
@@ -253,11 +254,9 @@ How the isolation key gets set depends on the agent endpoint's **authorization s
 
 This is the simplest option and works well when your callers authenticate directly with Entra and each caller should only see their own sessions.
 
-**`Header`** — The platform reads the isolation key from the `x-ms-user-isolation-key` request header. You send a stable string per session owner (a user ID, tenant ID, or any logical boundary) on every request — invocations, session operations, and file operations.
+**`Header`** — The platform reads the isolation key from the `x-ms-user-isolation-key` request header. You send a stable string per session owner (a user ID, tenant ID, or any logical boundary) on every request — invocations, session operations, and file operations. Your backend is responsible for choosing the right key for each call.
 
-This mode is for backend services that authenticate with their own service principal but need to scope sessions to individual end-users or tenants. Your backend is responsible for choosing the right key for each call.
-
-Till now we have been implicitly using `Entra` mode in our examples. To update the agent to use the `Header` isolation mode, you will need to update the agent using PATCH operation:
+Until now we have been implicitly using `Entra` mode in our examples. To update the agent to use the `Header` isolation mode, you will need to update the agent using a PATCH operation:
 
 ```bash
 az rest --method PATCH \
@@ -277,7 +276,7 @@ az rest --method PATCH \
          }
      }'
 ```
-> Note: AZD does not yet have first class support for updating agent endpoint configuration, so we need to call the REST API directly here. We are actively working on adding this support to AZD to make it easier to manage agent endpoints.
+> Note: `azd` does not yet have first-class support for updating agent endpoint configuration, so we need to call the REST API directly here. We are actively working on adding this support to `azd` to make it easier to manage agent endpoints.
 
 Now let's invoke the agent with isolation key `user-A`. The platform will create a session scoped to this key:
 
@@ -313,7 +312,7 @@ az rest --method GET \
 
 Empty. `user-B` can't see `user-A`'s session. Same authentication token, same agent, different isolation key — different view of the world.
 
-Similarly, trying to GET the specific session with the wrong key returns a 403:
+Let's try to get the session details using `user-B`'s key:
 
 ```bash
 # Try to get user-A's session using user-B's key — 403
@@ -321,7 +320,11 @@ az rest --method GET \
     --url "${BASE_URL}/agents/${AGENT_NAME}/endpoint/sessions/${SESSION_ID}?api-version=v1" \
     --resource "https://ai.azure.com" \
     --headers "x-ms-user-isolation-key=user-B" "Foundry-Features=HostedAgents=V1Preview"
+```
 
+You get a 403 Forbidden error because `user-B` is not authorized to access `user-A`'s session. 
+
+```bash
 Forbidden({
   "error": {
     "code": "session_not_accessible",
