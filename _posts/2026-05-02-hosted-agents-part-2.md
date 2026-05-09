@@ -232,29 +232,45 @@ You can list all sessions using `azd ai agent sessions list`. Each session is as
 
 ## Isolation Keys
 
-So far we've seen that each session is an isolated sandbox. But in a real application, you need to answer a harder question: **which caller is allowed to operate on which sessions?** That's what isolation keys solve.
+So far we've seen that each session is an isolated sandbox. But in a real application, you need to answer harder questions: **which caller is allowed to operate on which sessions?** and **can multiple users share a conversation thread while keeping their personal data private?** That's what isolation keys solve.
 
-### What Is an Isolation Key?
+### The Two-Key Model
 
-An isolation key is a scoping value attached to every session. Think of it as a partition tag — every session belongs to exactly one isolation key, and the platform ensures that a caller only sees and operates on sessions tagged with the key their request supplies.
+The platform uses two isolation keys to partition data:
 
-The key applies consistently across all session-related endpoints:
-- Session CRUD operations (`/sessions`)
-- Responses (`/protocols/openai/responses`)
-- Invocations (`/protocols/invocations`)
-- File operations (`/sessions/{id}/files`)
+**User Isolation Key** (`x-ms-user-isolation-key`) — identifies the individual user. This key scopes per-user resources like OAuth consent tokens and memory stores. It ensures that user A's personal data never leaks to user B, even if they participate in the same conversation.
 
-> **Important:** The isolation key is a partitioning value, not an authentication mechanism. The Microsoft Entra token on the request authenticates the caller and authorizes the call against the project's role assignments. The isolation key only narrows *which sessions* that authenticated caller can act on.
+**Chat Isolation Key** (`x-ms-chat-isolation-key`) — identifies the conversation thread. This key scopes conversations, responses, and sessions. It enables scenarios like shared chat threads (e.g., a Teams channel) where multiple users participate in the same conversation while maintaining separate personal data.
+
+The user key is **required** on every request (in Header mode). The chat key is **optional** — if you don't send it, the platform defaults it to the user key value, which means conversations are scoped per-user.
+
+### How the Two Keys Work Together
+
+The interaction between these two keys creates four natural scenarios:
+
+| Scenario | Conversations & Sessions | Per-User Resources (OAuth, Memory) |
+|----------|-------------------------|-----------------------------------|
+| Same user, same chat | Shared | Shared |
+| Same user, different chat | **Isolated** | Shared |
+| Different user, same chat | Shared | **Isolated** |
+| Different user, different chat | **Isolated** | **Isolated** |
+
+The key insight: **chat key controls conversation-level isolation**, while **user key controls per-user resource isolation**. This means:
+
+- Two requests from the **same user in different chats** see different conversations and sessions — but share the same OAuth tokens and memory (because it's the same user).
+- Two requests from **different users in the same chat** see the same conversations and sessions (it's a shared thread) — but each user has their own OAuth tokens and memory.
+
+> We'll cover memory stores, tools, and OAuth integration in detail in later posts in this series. For now, just remember that the user key follows the user across chats, while the chat key scopes the conversation.
 
 ### Two Authorization Schemes
 
-How the isolation key gets set depends on the agent endpoint's **authorization scheme**, which you configure when setting up the agent:
+How isolation keys get set depends on the agent endpoint's **authorization scheme**, which you configure when setting up the agent:
 
-**`Entra` (default)** — The platform derives the isolation key automatically from the caller's Microsoft Entra token. Each authenticated caller gets their own scope without any extra work. You don't need to send any header — the platform handles it.
+**`Entra` (default)** — The platform derives the user isolation key automatically from the caller's Microsoft Entra token. Each authenticated caller gets their own scope without any extra work. You don't need to send any header — the platform handles it.
 
 This is the simplest option and works well when your callers authenticate directly with Entra and each caller should only see their own sessions.
 
-**`Header`** — The platform reads the isolation key from the `x-ms-user-isolation-key` request header. You send a stable string per session owner (a user ID, tenant ID, or any logical boundary) on every request — invocations, session operations, and file operations. Your backend is responsible for choosing the right key for each call.
+**`Header`** — The platform reads the keys from request headers: `x-ms-user-isolation-key` (required) and `x-ms-chat-isolation-key` (optional). You send stable strings per session owner on every request — invocations, session operations, and file operations. Your backend is responsible for choosing the right keys for each call.
 
 Until now we have been implicitly using `Entra` mode in our examples. To update the agent to use the `Header` isolation mode, you will need to update the agent using a PATCH operation:
 
@@ -278,7 +294,9 @@ az rest --method PATCH \
 ```
 > Note: `azd` does not yet have first-class support for updating agent endpoint configuration, so we need to call the REST API directly here. We are actively working on adding this support to `azd` to make it easier to manage agent endpoints.
 
-Now let's invoke the agent with isolation key `user-A`. The platform will create a session scoped to this key:
+### Seeing Isolation in Action
+
+Let's invoke the agent with user key `user-A`. The platform will create a session scoped to this key:
 
 ```bash
 az rest --method POST \
@@ -290,7 +308,7 @@ az rest --method POST \
     }'
 ```
 
-The response includes an `agent_session_id`. Let's verify we can see the session when listing with the same isolation key:
+The response includes an `agent_session_id`. Let's verify we can see the session when listing with the same user key:
 
 ```bash
 # List sessions with user-A's key — the session shows up
@@ -300,7 +318,7 @@ az rest --method GET \
     --headers "x-ms-user-isolation-key=user-A" "Foundry-Features=HostedAgents=V1Preview"
 ```
 
-You'll see the session we just created. Now try listing with a **different** isolation key:
+You'll see the session we just created. Now try listing with a **different** user key:
 
 ```bash
 # List sessions with user-B's key — empty result
@@ -310,7 +328,7 @@ az rest --method GET \
     --headers "x-ms-user-isolation-key=user-B" "Foundry-Features=HostedAgents=V1Preview"
 ```
 
-Empty. `user-B` can't see `user-A`'s session. Same authentication token, same agent, different isolation key — different view of the world.
+Empty. `user-B` can't see `user-A`'s session. Same authentication token, same agent, different user key — different view of the world.
 
 Let's try to get the session details using `user-B`'s key:
 
@@ -338,6 +356,33 @@ Forbidden({
 })
 ```
 
+Now let's see the **chat key** in action. We'll send two requests from the same user but with different chat keys:
+
+```bash
+# User A, Chat thread-1
+az rest --method POST \
+    --url "${BASE_URL}/agents/${AGENT_NAME}/endpoint/protocols/openai/responses?api-version=v1" \
+    --resource "https://ai.azure.com" \
+    --headers "x-ms-user-isolation-key=user-A" "x-ms-chat-isolation-key=thread-1" "Foundry-Features=HostedAgents=V1Preview" \
+    --body '{"input": "Hello from thread 1"}'
+
+# User A, Chat thread-2
+az rest --method POST \
+    --url "${BASE_URL}/agents/${AGENT_NAME}/endpoint/protocols/openai/responses?api-version=v1" \
+    --resource "https://ai.azure.com" \
+    --headers "x-ms-user-isolation-key=user-A" "x-ms-chat-isolation-key=thread-2" "Foundry-Features=HostedAgents=V1Preview" \
+    --body '{"input": "Hello from thread 2"}'
+```
+
+**Sessions are partitioned by the chat key, not the user key.**
+
+- **Same user, same chat key** → can access the session. This is the normal case.
+- **Same user, different chat key** → **403 Forbidden**. Even though it's the same user, a different chat key means a different scope. User A in `thread-1` cannot see user A's sessions from `thread-2`.
+- **Different user, same chat key** → **can access the session**. This is the shared conversation scenario — user B with `chat-key=thread-1` can see and access the same sessions that user A created with `chat-key=thread-1`. This is by design: a shared chat key represents a shared conversation thread (like a Teams channel) where multiple users collaborate.
+- **No chat key** → defaults to a scope derived from the user key. Sessions created without an explicit chat key live in their own partition — they're invisible to requests that specify a chat key, and vice versa.
+
+This is a powerful model. The chat key gives you conversation-level boundaries, while the user key gives you per-user resource boundaries. I'd encourage you to run through these permutations yourself using `az rest` to see the behavior firsthand — try creating sessions with different user/chat key combinations and listing them with various headers to build intuition for the partitioning.
+
 ### When to Use Which Scheme
 
 **Use `Entra` (default) when:**
@@ -349,15 +394,21 @@ Forbidden({
 - A backend service calls the agent on behalf of multiple end-users using a single service principal
 - Your users don't have direct Entra identities on the Foundry project (e.g., they authenticate against your app, not against Azure)
 - You need to scope sessions by something other than the caller's identity — a tenant ID, a team ID, or any application-level grouping
+- You need shared conversation threads where multiple users participate (use the same `x-ms-chat-isolation-key` with different `x-ms-user-isolation-key` values)
 
-This gives you full control over the partitioning, but your backend is responsible for sending the right `x-ms-user-isolation-key` on every request.
+This gives you full control over the partitioning, but your backend is responsible for sending the right keys on every request.
 
 ### Key Behaviors to Remember
 
-- The isolation key is **immutable** — once set at session creation, it can't be changed.
-- The key is **write-once** — it's never returned in any response payload (Create, Get, List). You must track it yourself.
+- The user isolation key is **required** in Header mode — requests without it fail with 400.
+- The chat isolation key is **optional** — defaults to the user key value if absent (per-user scoping).
+- Isolation keys are **immutable** — once set at session creation, they can't be changed.
+- Keys are **never returned** in any response payload (Create, Get, List). You must track them yourself.
 - **Delete requires the matching key** — when using Header mode, you must pass the same isolation key that was used at creation.
-- **All session-scoped operations** use the same key — invocations, file uploads, session management.
+- **All session-scoped operations** use the same keys — invocations, file uploads, session management.
+- Both keys are **forwarded to your container** as request headers, but in **obfuscated form** — your agent code can read them to implement its own per-user or per-chat logic, but the raw values you sent are never exposed to the container.
+
+> **Important:** Isolation keys are partitioning values, not authentication mechanisms. The Microsoft Entra token authenticates the caller. The isolation keys only narrow *which sessions and data* that authenticated caller can act on.
 
 ## Conclusion
 
@@ -367,8 +418,8 @@ We covered a lot of ground in this post. Here's the recap:
 - The **lifecycle** is Active → Idle (15 min) → Resumed (state restored) → Expired (30 days). Only `$HOME` survives the idle/resume cycle.
 - **Conversations** provide message history (Responses protocol only) and are mapped to sessions by the platform.
 - **`$HOME` is your agent's durable memory** — design for resume-friendliness by writing working state to files.
-- **Isolation keys** partition sessions by caller — use Entra mode for per-identity scoping, Header mode for backend services acting on behalf of end-users.
-- The **file API** bridges the outside world and the agent's filesystem — upload inputs, download outputs, up to 50 MB.
+- **Isolation keys** use a two-key model — the user key scopes per-user resources (OAuth, memory), the chat key scopes conversations and sessions. Use Entra mode for automatic scoping, Header mode for backend services.
+- The **file API** bridges the outside world and the agent's filesystem — upload inputs, download outputs.
 
 In the next post, we'll explore agent identity, security, and how to inject secrets into your agent — because a production agent needs more than just a filesystem.
 
