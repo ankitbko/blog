@@ -4,13 +4,472 @@
  <title>F5 - Squashing Bugs</title>
  <link href="https://ankitbko.github.io/atom.xml" rel="self"/>
  <link href="https://ankitbko.github.io/"/>
- <updated>2026-05-01T14:55:22-05:00</updated>
+ <updated>2026-05-09T14:16:12-05:00</updated>
  <id>https://ankitbko.github.io</id>
  <author>
    <name>Ankit Sinha</name>
    <email></email>
  </author>
 
+ 
+ <entry>
+   <title>Foundry Hosted Agents - Sessions, State & the Sandbox</title>
+   <link href="https://ankitbko.github.io/blog/2026/05/hosted-agents-part-2/"/>
+   <updated>2026-05-02T00:00:00-05:00</updated>
+   <id>https://ankitbko.github.io/blog/2026/05/hosted-agents-part-2</id>
+   <content type="html">&lt;p&gt;In &lt;a href=&quot;/blog/2026/05/hosted-agents-part-1/&quot;&gt;Part 1&lt;/a&gt; we deployed a hello-world agent and had a conversation with it. It replied, remembered context across turns, and we moved on. But what actually happened behind the scenes? Where did the conversation history live? What if the agent needed to save a file — a report, a processed dataset, a set of notes — where would that go? And what happens when nobody talks to the agent for an hour?&lt;/p&gt;
+
+&lt;p&gt;State management is what separates a toy demo from a real agent. If your agent can’t remember what happened five minutes ago, or loses a file it generated, it’s useless in production. Foundry Hosted Agents have a rich state model built around &lt;strong&gt;sessions&lt;/strong&gt; — isolated, persistent sandboxes that give each agent instance its own workspace.&lt;/p&gt;
+
+&lt;p&gt;This is Part 2 of my series on Foundry Hosted Agents. Let’s dig into how state actually works.&lt;/p&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;Hosted Agents and &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;azd&lt;/code&gt; are in active development. Command surfaces are expected to evolve and new features will be added. If you see any discrepancies with the commands mentioned in this post, please comment below and I will update accordingly.&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;h2 id=&quot;what-is-a-session&quot;&gt;What Is a Session?&lt;/h2&gt;
+
+&lt;p&gt;A session is the core primitive of Foundry Hosted Agents’ state model. Think of it as an &lt;strong&gt;isolated compute sandbox + persistent filesystem&lt;/strong&gt;, bundled together and assigned to your agent.&lt;/p&gt;
+
+&lt;p&gt;Every session runs in its own &lt;strong&gt;microvm&lt;/strong&gt; — completely isolated from other sessions. There’s no cross-session access, no shared filesystem, no shared memory. Each session gets its own &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;$HOME&lt;/code&gt; directory that persists across idle and resume cycles. This is your agent’s durable workspace.&lt;/p&gt;
+
+&lt;p&gt;Sessions are identified by a &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;session_id&lt;/code&gt; (called &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;agent_session_id&lt;/code&gt; in the API) and are scoped to a specific agent. You can’t share a session across agents. Sessions persist for up to &lt;strong&gt;30 days&lt;/strong&gt; — after that, they’re cleaned up automatically.&lt;/p&gt;
+
+&lt;p&gt;How do sessions get created? Two ways:&lt;/p&gt;
+
+&lt;ol&gt;
+  &lt;li&gt;&lt;strong&gt;Implicitly&lt;/strong&gt; — send a request to your agent without specifying a session ID, and the platform creates one for you automatically.&lt;/li&gt;
+  &lt;li&gt;&lt;strong&gt;Explicitly&lt;/strong&gt; — use the Session Management API to create a session before sending any requests &lt;em&gt;or&lt;/em&gt; specify your own &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;agent_session_id&lt;/code&gt; in the request.&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;Either way, once a session exists, subsequent requests with the same &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;session_id&lt;/code&gt; land in the sandbox with the same &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;$HOME&lt;/code&gt;.&lt;/p&gt;
+
+&lt;h2 id=&quot;a-brief-note-on-conversations&quot;&gt;A Brief Note on Conversations&lt;/h2&gt;
+
+&lt;p&gt;If you’re using the Responses protocol, the platform also manages &lt;strong&gt;conversations&lt;/strong&gt; — durable records of message history. Conversations are what &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;context.get_history()&lt;/code&gt; reads from when your agent needs to recall previous turns. Every conversation is mapped to a session — the platform handles this mapping for you. The session provides compute and filesystem; the conversation provides message history.&lt;/p&gt;
+
+&lt;p&gt;For the Invocations protocol, there are no platform-managed conversations — you manage history yourself. We’ll focus on sessions for the rest of this post since that’s the core primitive that applies to both protocols.&lt;/p&gt;
+
+&lt;h2 id=&quot;session-lifecycle&quot;&gt;Session Lifecycle&lt;/h2&gt;
+
+&lt;p&gt;Sessions go through a well-defined lifecycle. Understanding this is critical to building agents that behave correctly in production.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Active&lt;/strong&gt; — Compute is running and your agent code is executing. This is the state your session is in while serving requests.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Idle (~15 minutes)&lt;/strong&gt; — No requests have arrived for about 15 minutes. The platform deprovisions compute — the container process is killed, CPU and memory are reclaimed. But &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;$HOME&lt;/code&gt; is persisted to durable storage before teardown. Any in-memory state is gone.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Expired (30 days)&lt;/strong&gt; — The session has exceeded its TTL. Everything is cleaned up — compute, &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;$HOME&lt;/code&gt;, all state is deleted.&lt;/p&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;The 15-minute idle timeout is the key number to remember. Your container process restarts from scratch on resume — only &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;$HOME&lt;/code&gt; survives. If you keep your working state in files under &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;$HOME&lt;/code&gt;, the idle/resume cycle is completely transparent to your agent code. If you rely on in-memory variables or processes running in the background — those won’t survive. We are actively working to enable sandbox to be running for more than 15 minutes to support long running workflows.&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;h2 id=&quot;lets-ssh-into-the-sandbox--vs-code-tunnel-agent&quot;&gt;Let’s SSH Into the Sandbox — VS Code Tunnel Agent&lt;/h2&gt;
+
+&lt;p&gt;The best way to understand sessions is to get inside one. I built a simple agent that starts a &lt;a href=&quot;https://code.visualstudio.com/docs/remote/tunnels&quot;&gt;VS Code tunnel&lt;/a&gt; from inside the sandbox — letting you connect to the running microvm and explore it like any remote machine.&lt;/p&gt;
+
+&lt;p&gt;The sample is available at &lt;a href=&quot;https://github.com/ankitbko/hosted-agents-vscode-tunnel&quot;&gt;ankitbko/hosted-agents-vscode-tunnel&lt;/a&gt;. You can literally drop in the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;vscode_tunnel.py&lt;/code&gt; in any of your agents to get the same functionality.&lt;/p&gt;
+
+&lt;h3 id=&quot;deploy-the-tunnel-agent&quot;&gt;Deploy the Tunnel Agent&lt;/h3&gt;
+
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;nb&quot;&gt;mkdir &lt;/span&gt;vscode-tunnel &lt;span class=&quot;o&quot;&gt;&amp;amp;&amp;amp;&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;cd &lt;/span&gt;vscode-tunnel
+
+azd ai agent init &lt;span class=&quot;nt&quot;&gt;-m&lt;/span&gt; https://github.com/ankitbko/hosted-agents-vscode-tunnel/blob/main/agent.manifest.yaml
+
+azd provision  &lt;span class=&quot;c&quot;&gt;# if you don't have an existing Foundry project&lt;/span&gt;
+azd deploy
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h3 id=&quot;start-the-tunnel&quot;&gt;Start the Tunnel&lt;/h3&gt;
+
+&lt;p&gt;Once deployed, invoke the agent to start a VS Code tunnel. You can specify provider as either &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;github&lt;/code&gt; or &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;microsoft&lt;/code&gt; — both work with the same authentication flow.&lt;/p&gt;
+
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;azd ai agent invoke &lt;span class=&quot;s1&quot;&gt;'{&quot;action&quot;: &quot;start&quot;, &quot;provider&quot;: &quot;github&quot;}'&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;The response will include a device code and a URL:&lt;/p&gt;
+
+&lt;div class=&quot;language-json highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+  &lt;/span&gt;&lt;span class=&quot;nl&quot;&gt;&quot;status&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;waiting_for_auth&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+  &lt;/span&gt;&lt;span class=&quot;nl&quot;&gt;&quot;message&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;To grant access to the server, please log into https://github.com/login/device and use code ABCD-1234&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+  &lt;/span&gt;&lt;span class=&quot;nl&quot;&gt;&quot;auth_url&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;https://github.com/login/device&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+  &lt;/span&gt;&lt;span class=&quot;nl&quot;&gt;&quot;device_code&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;ABCD-1234&quot;&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Open the device code URL in your browser and enter the user code to authenticate. Then get the status using&lt;/p&gt;
+
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;azd ai agent invoke &lt;span class=&quot;s1&quot;&gt;'{&quot;action&quot;: &quot;status&quot;}'&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;The response will have &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;tunnel_url&lt;/code&gt;:&lt;/p&gt;
+
+&lt;div class=&quot;language-json highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+  &lt;/span&gt;&lt;span class=&quot;nl&quot;&gt;&quot;status&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;running&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+  &lt;/span&gt;&lt;span class=&quot;nl&quot;&gt;&quot;message&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;Tunnel is running.&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+  &lt;/span&gt;&lt;span class=&quot;nl&quot;&gt;&quot;tunnel_url&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;https://vscode.dev/tunnel/vscode-tunnel-agent/app/user_agent&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+  &lt;/span&gt;&lt;span class=&quot;nl&quot;&gt;&quot;device_code_info&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+    &lt;/span&gt;&lt;span class=&quot;nl&quot;&gt;&quot;auth_url&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;https://github.com/login/device&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+    &lt;/span&gt;&lt;span class=&quot;nl&quot;&gt;&quot;device_code&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;ABCD-1234&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+    &lt;/span&gt;&lt;span class=&quot;nl&quot;&gt;&quot;message&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;To grant access to the server, please log into https://github.com/login/device and use code ABCD-1234&quot;&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+  &lt;/span&gt;&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Open that URL in your browser or connect via VS Code Remote and login with same provider and account you used to set up tunnel. You’re now inside the sandbox microvm.&lt;/p&gt;
+
+&lt;h2 id=&quot;exploring-the-sandbox&quot;&gt;Exploring the Sandbox&lt;/h2&gt;
+
+&lt;p&gt;Once connected, open the VS Code terminal. Let’s poke around. You have complete control over the sandbox environment. You can also run VS Code Copilot Chat in the terminal to ask questions about the environment and get code suggestions in real time.&lt;/p&gt;
+
+&lt;h3 id=&quot;check-the-os&quot;&gt;Check the OS&lt;/h3&gt;
+
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;cat&lt;/span&gt; /etc/os-release
+&lt;span class=&quot;nv&quot;&gt;PRETTY_NAME&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;Debian GNU/Linux 13 (trixie)&quot;&lt;/span&gt;
+&lt;span class=&quot;nv&quot;&gt;NAME&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;Debian GNU/Linux&quot;&lt;/span&gt;
+&lt;span class=&quot;nv&quot;&gt;VERSION_ID&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;13&quot;&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h3 id=&quot;check-resources&quot;&gt;Check Resources&lt;/h3&gt;
+
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;apt update &lt;span class=&quot;o&quot;&gt;&amp;amp;&amp;amp;&lt;/span&gt; apt &lt;span class=&quot;nb&quot;&gt;install &lt;/span&gt;procps &lt;span class=&quot;nt&quot;&gt;-y&lt;/span&gt;
+&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;free &lt;span class=&quot;nt&quot;&gt;-h&lt;/span&gt;
+              total        used        free
+Mem:          2.2Gi       434Mi       1.3Gi
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h3 id=&quot;check-environment-variables&quot;&gt;Check Environment Variables&lt;/h3&gt;
+
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;env&lt;/span&gt; | &lt;span class=&quot;nb&quot;&gt;grep &lt;/span&gt;FOUNDRY
+&lt;span class=&quot;nv&quot;&gt;FOUNDRY_PROJECT_ENDPOINT&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;https://myaccount.services.ai.azure.com/api/projects/myproject
+&lt;span class=&quot;nv&quot;&gt;FOUNDRY_AGENT_NAME&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;vscode-tunnel-agent
+&lt;span class=&quot;nv&quot;&gt;FOUNDRY_AGENT_VERSION&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;1
+&lt;span class=&quot;nv&quot;&gt;FOUNDRY_AGENT_SESSION_ID&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;abc123def456...
+&lt;span class=&quot;nv&quot;&gt;FOUNDRY_HOSTING_ENVIRONMENT&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;1
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;These are the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;FOUNDRY_*&lt;/code&gt; environment variables I mentioned in Part 1 — injected by the platform at runtime. Your agent automatically knows its name, version, session ID, and project endpoint without any configuration.&lt;/p&gt;
+
+&lt;h2 id=&quot;session-state-persistence&quot;&gt;Session State Persistence&lt;/h2&gt;
+
+&lt;h3 id=&quot;explore-the-filesystem&quot;&gt;Explore the Filesystem&lt;/h3&gt;
+
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;echo&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;$HOME&lt;/span&gt;
+/root
+
+&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;ls&lt;/span&gt; &lt;span class=&quot;nt&quot;&gt;-la&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;$HOME&lt;/span&gt;
+total 30020
+drwx------  5 root root     4096 May  6 18:00 &lt;span class=&quot;nb&quot;&gt;.&lt;/span&gt;
+drwxr-xr-x 20 root root     4096 May  6 17:56 ..
+&lt;span class=&quot;nt&quot;&gt;-rw-r--r--&lt;/span&gt;  1 root root      607 Mar  2 21:50 .bashrc
+drwxr-xr-x  4 root root     4096 May  6 18:00 .cache
+&lt;span class=&quot;nt&quot;&gt;-rw-r--r--&lt;/span&gt;  1 root root      132 Mar  2 21:50 .profile
+drwxr-xr-x  3 root root     4096 May  6 17:56 .vscode
+drwx------  4 root root     4096 May  6 18:00 .vscode-server
+&lt;span class=&quot;nt&quot;&gt;-rw-r--r--&lt;/span&gt;  1 root root      169 Apr 22 02:01 .wget-hsts
+&lt;span class=&quot;nt&quot;&gt;-rwxr-xr-x&lt;/span&gt;  1 1000 1000 30704864 May  5 18:31 code
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;$HOME&lt;/code&gt; is the directory that the platform persists across idle/resume cycles. Let’s create some files and prove they survive the idle/resume cycle.&lt;/p&gt;
+
+&lt;h3 id=&quot;step-1-create-files-in-home&quot;&gt;Step 1: Create Files in $HOME&lt;/h3&gt;
+
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;echo&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;Hello from session &lt;/span&gt;&lt;span class=&quot;si&quot;&gt;$(&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;printenv &lt;/span&gt;FOUNDRY_AGENT_SESSION_ID&lt;span class=&quot;si&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;$HOME&lt;/span&gt;/greeting.txt
+&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;echo&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;'{&quot;notes&quot;: [&quot;review PR #42&quot;, &quot;deploy v2 on Friday&quot;]}'&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;$HOME&lt;/span&gt;/notes.json
+&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;ls&lt;/span&gt; &lt;span class=&quot;nt&quot;&gt;-l&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;$HOME&lt;/span&gt;
+total 29996
+&lt;span class=&quot;nt&quot;&gt;-rwxr-xr-x&lt;/span&gt; 1 1000 1000 30704864 May  5 18:31 code
+&lt;span class=&quot;nt&quot;&gt;-rw-r--r--&lt;/span&gt; 1 root root       70 May  6 18:15 greeting.txt
+&lt;span class=&quot;nt&quot;&gt;-rw-r--r--&lt;/span&gt; 1 root root       52 May  6 18:15 notes.json
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h3 id=&quot;step-2-wait-for-idle-timeout&quot;&gt;Step 2: Wait for Idle Timeout&lt;/h3&gt;
+
+&lt;p&gt;After ~15 minutes of no activity, the platform deprovisions compute. Your VS Code tunnel will disconnect — the container process was killed, along with everything running in memory.&lt;/p&gt;
+
+&lt;h3 id=&quot;step-3-resume-the-session&quot;&gt;Step 3: Resume the Session&lt;/h3&gt;
+
+&lt;p&gt;Any request to the same session triggers the platform to provision fresh compute and restores the state. Send a new request with the same session ID:&lt;/p&gt;
+
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;azd ai agent invoke &lt;span class=&quot;s1&quot;&gt;'{&quot;action&quot;: &quot;status&quot;}'&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;The platform spins up a new microvm, restores &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;$HOME&lt;/code&gt; from durable storage, and routes the request. This time the status will show that the tunnel is not running in the new sandbox — because the tunnel process was an in-memory process that didn’t survive the idle cycle. But the files we wrote to &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;$HOME&lt;/code&gt; should still be there.&lt;/p&gt;
+
+&lt;h3 id=&quot;step-4-verify-the-home-state&quot;&gt;Step 4: Verify the $HOME state&lt;/h3&gt;
+
+&lt;p&gt;We can use &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;azd&lt;/code&gt; to view the contents of &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;$HOME&lt;/code&gt; without needing to reconnect the VS Code tunnel:&lt;/p&gt;
+
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;azd ai agent files list &lt;span class=&quot;nb&quot;&gt;.&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;The command will return the list of files in &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;$HOME&lt;/code&gt; as JSON. You should see &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;greeting.txt&lt;/code&gt; and &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;notes.json&lt;/code&gt; still there, with their contents intact. Let’s download these files to verify their content:&lt;/p&gt;
+
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;azd ai agent files download greeting.txt
+azd ai agent files download notes.json
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;The files survived. New compute, same &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;$HOME&lt;/code&gt;. This is the persistence model.&lt;/p&gt;
+
+&lt;h3 id=&quot;what-did-not-survive&quot;&gt;What Did NOT Survive&lt;/h3&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;Any in-memory state (variables, caches, running background processes).&lt;/li&gt;
+  &lt;li&gt;Any files outside &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;$HOME&lt;/code&gt; (like &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;/tmp&lt;/code&gt;).&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;This is the mental model: &lt;strong&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;$HOME&lt;/code&gt; is your agent’s durable memory. Everything else is ephemeral.&lt;/strong&gt; Design your agent to write anything important to &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;$HOME&lt;/code&gt;, and the idle/resume cycle becomes invisible.&lt;/p&gt;
+
+&lt;p&gt;Let’s try to create a new session and look at the files there:&lt;/p&gt;
+
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;azd ai agent invoke &lt;span class=&quot;s1&quot;&gt;'{&quot;action&quot;: &quot;status&quot;}'&lt;/span&gt; &lt;span class=&quot;nt&quot;&gt;--new-session&lt;/span&gt;
+&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;azd ai agent files list &lt;span class=&quot;nb&quot;&gt;.&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;This will create a new session with a different &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;session_id&lt;/code&gt;. If you check the files in this new session, you’ll see that &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;$HOME&lt;/code&gt; does not have the two files we created — proving that sessions are isolated sandboxes with their own persistent storage.&lt;/p&gt;
+
+&lt;p&gt;You can list all sessions using &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;azd ai agent sessions list&lt;/code&gt;. Each session is associated with an agent version and has its own state.&lt;/p&gt;
+
+&lt;h2 id=&quot;isolation-keys&quot;&gt;Isolation Keys&lt;/h2&gt;
+
+&lt;p&gt;So far we’ve seen that each session is an isolated sandbox. But in a real application, you need to answer harder questions: &lt;strong&gt;which caller is allowed to operate on which sessions?&lt;/strong&gt; and &lt;strong&gt;can multiple users share a conversation thread while keeping their personal data private?&lt;/strong&gt; That’s what isolation keys solve.&lt;/p&gt;
+
+&lt;h3 id=&quot;the-two-key-model&quot;&gt;The Two-Key Model&lt;/h3&gt;
+
+&lt;p&gt;The platform uses two isolation keys to partition data:&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;User Isolation Key&lt;/strong&gt; (&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;x-ms-user-isolation-key&lt;/code&gt;) — identifies the individual user. This key scopes per-user resources like OAuth consent tokens and memory stores. It ensures that user A’s personal data never leaks to user B, even if they participate in the same conversation.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Chat Isolation Key&lt;/strong&gt; (&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;x-ms-chat-isolation-key&lt;/code&gt;) — identifies the conversation thread. This key scopes conversations, responses, and sessions. It enables scenarios like shared chat threads (e.g., a Teams channel) where multiple users participate in the same conversation while maintaining separate personal data.&lt;/p&gt;
+
+&lt;p&gt;The user key is &lt;strong&gt;required&lt;/strong&gt; on every request (in Header mode). The chat key is &lt;strong&gt;optional&lt;/strong&gt; — if you don’t send it, the platform defaults it to the user key value, which means conversations are scoped per-user.&lt;/p&gt;
+
+&lt;h3 id=&quot;how-the-two-keys-work-together&quot;&gt;How the Two Keys Work Together&lt;/h3&gt;
+
+&lt;p&gt;The interaction between these two keys creates four natural scenarios:&lt;/p&gt;
+
+&lt;table&gt;
+  &lt;thead&gt;
+    &lt;tr&gt;
+      &lt;th&gt;Scenario&lt;/th&gt;
+      &lt;th&gt;Conversations &amp;amp; Sessions&lt;/th&gt;
+      &lt;th&gt;Per-User Resources (OAuth, Memory)&lt;/th&gt;
+    &lt;/tr&gt;
+  &lt;/thead&gt;
+  &lt;tbody&gt;
+    &lt;tr&gt;
+      &lt;td&gt;Same user, same chat&lt;/td&gt;
+      &lt;td&gt;Shared&lt;/td&gt;
+      &lt;td&gt;Shared&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;Same user, different chat&lt;/td&gt;
+      &lt;td&gt;&lt;strong&gt;Isolated&lt;/strong&gt;&lt;/td&gt;
+      &lt;td&gt;Shared&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;Different user, same chat&lt;/td&gt;
+      &lt;td&gt;Shared&lt;/td&gt;
+      &lt;td&gt;&lt;strong&gt;Isolated&lt;/strong&gt;&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;Different user, different chat&lt;/td&gt;
+      &lt;td&gt;&lt;strong&gt;Isolated&lt;/strong&gt;&lt;/td&gt;
+      &lt;td&gt;&lt;strong&gt;Isolated&lt;/strong&gt;&lt;/td&gt;
+    &lt;/tr&gt;
+  &lt;/tbody&gt;
+&lt;/table&gt;
+
+&lt;p&gt;The key insight: &lt;strong&gt;chat key controls conversation-level isolation&lt;/strong&gt;, while &lt;strong&gt;user key controls per-user resource isolation&lt;/strong&gt;. This means:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;Two requests from the &lt;strong&gt;same user in different chats&lt;/strong&gt; see different conversations and sessions — but share the same OAuth tokens and memory (because it’s the same user).&lt;/li&gt;
+  &lt;li&gt;Two requests from &lt;strong&gt;different users in the same chat&lt;/strong&gt; see the same conversations and sessions (it’s a shared thread) — but each user has their own OAuth tokens and memory.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;We’ll cover memory stores, tools, and OAuth integration in detail in later posts in this series. For now, just remember that the user key follows the user across chats, while the chat key scopes the conversation.&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;h3 id=&quot;two-authorization-schemes&quot;&gt;Two Authorization Schemes&lt;/h3&gt;
+
+&lt;p&gt;How isolation keys get set depends on the agent endpoint’s &lt;strong&gt;authorization scheme&lt;/strong&gt;, which you configure when setting up the agent:&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Entra&lt;/code&gt; (default)&lt;/strong&gt; — The platform derives the user isolation key automatically from the caller’s Microsoft Entra token. Each authenticated caller gets their own scope without any extra work. You don’t need to send any header — the platform handles it.&lt;/p&gt;
+
+&lt;p&gt;This is the simplest option and works well when your callers authenticate directly with Entra and each caller should only see their own sessions.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Header&lt;/code&gt;&lt;/strong&gt; — The platform reads the keys from request headers: &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;x-ms-user-isolation-key&lt;/code&gt; (required) and &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;x-ms-chat-isolation-key&lt;/code&gt; (optional). You send stable strings per session owner on every request — invocations, session operations, and file operations. Your backend is responsible for choosing the right keys for each call.&lt;/p&gt;
+
+&lt;p&gt;Until now we have been implicitly using &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Entra&lt;/code&gt; mode in our examples. To update the agent to use the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Header&lt;/code&gt; isolation mode, you will need to update the agent using a PATCH operation:&lt;/p&gt;
+
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;az rest &lt;span class=&quot;nt&quot;&gt;--method&lt;/span&gt; PATCH &lt;span class=&quot;se&quot;&gt;\&lt;/span&gt;
+     &lt;span class=&quot;nt&quot;&gt;--url&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;${&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;BASE_URL&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;}&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;/agents/&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;${&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;AGENT_NAME&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;}&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;?api-version=v1&quot;&lt;/span&gt; &lt;span class=&quot;se&quot;&gt;\&lt;/span&gt;
+     &lt;span class=&quot;nt&quot;&gt;--resource&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;https://ai.azure.com&quot;&lt;/span&gt; &lt;span class=&quot;se&quot;&gt;\&lt;/span&gt;
+     &lt;span class=&quot;nt&quot;&gt;--headers&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;Content-Type=application/merge-patch+json&quot;&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;Foundry-Features=AgentEndpoints=V1Preview&quot;&lt;/span&gt; &lt;span class=&quot;se&quot;&gt;\&lt;/span&gt;
+     &lt;span class=&quot;nt&quot;&gt;--body&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;'{
+         &quot;agent_endpoint&quot;: {
+             &quot;authorization_schemes&quot;: [
+                 {
+                     &quot;type&quot;: &quot;Entra&quot;,
+                     &quot;isolation_key_source&quot;: {
+                         &quot;kind&quot;: &quot;Header&quot;
+                     }
+                 }
+             ]
+         }
+     }'&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;blockquote&gt;
+  &lt;p&gt;Note: &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;azd&lt;/code&gt; does not yet have first-class support for updating agent endpoint configuration, so we need to call the REST API directly here. We are actively working on adding this support to &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;azd&lt;/code&gt; to make it easier to manage agent endpoints.&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;h3 id=&quot;seeing-isolation-in-action&quot;&gt;Seeing Isolation in Action&lt;/h3&gt;
+
+&lt;p&gt;Let’s invoke the agent with user key &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;user-A&lt;/code&gt;. The platform will create a session scoped to this key:&lt;/p&gt;
+
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;az rest &lt;span class=&quot;nt&quot;&gt;--method&lt;/span&gt; POST &lt;span class=&quot;se&quot;&gt;\&lt;/span&gt;
+    &lt;span class=&quot;nt&quot;&gt;--url&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;${&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;BASE_URL&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;}&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;/agents/&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;${&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;AGENT_NAME&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;}&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;/endpoint/protocols/openai/responses?api-version=v1&quot;&lt;/span&gt; &lt;span class=&quot;se&quot;&gt;\&lt;/span&gt;
+    &lt;span class=&quot;nt&quot;&gt;--resource&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;https://ai.azure.com&quot;&lt;/span&gt; &lt;span class=&quot;se&quot;&gt;\&lt;/span&gt;
+    &lt;span class=&quot;nt&quot;&gt;--headers&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;x-ms-user-isolation-key=user-A&quot;&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;Foundry-Features=HostedAgents=V1Preview&quot;&lt;/span&gt; &lt;span class=&quot;se&quot;&gt;\&lt;/span&gt;
+    &lt;span class=&quot;nt&quot;&gt;--body&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;'{
+        &quot;input&quot;: &quot;Hello from user A&quot;
+    }'&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;The response includes an &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;agent_session_id&lt;/code&gt;. Let’s verify we can see the session when listing with the same user key:&lt;/p&gt;
+
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;c&quot;&gt;# List sessions with user-A's key — the session shows up&lt;/span&gt;
+az rest &lt;span class=&quot;nt&quot;&gt;--method&lt;/span&gt; GET &lt;span class=&quot;se&quot;&gt;\&lt;/span&gt;
+    &lt;span class=&quot;nt&quot;&gt;--url&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;${&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;BASE_URL&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;}&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;/agents/&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;${&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;AGENT_NAME&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;}&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;/endpoint/sessions?api-version=v1&quot;&lt;/span&gt; &lt;span class=&quot;se&quot;&gt;\&lt;/span&gt;
+    &lt;span class=&quot;nt&quot;&gt;--resource&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;https://ai.azure.com&quot;&lt;/span&gt; &lt;span class=&quot;se&quot;&gt;\&lt;/span&gt;
+    &lt;span class=&quot;nt&quot;&gt;--headers&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;x-ms-user-isolation-key=user-A&quot;&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;Foundry-Features=HostedAgents=V1Preview&quot;&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;You’ll see the session we just created. Now try listing with a &lt;strong&gt;different&lt;/strong&gt; user key:&lt;/p&gt;
+
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;c&quot;&gt;# List sessions with user-B's key — empty result&lt;/span&gt;
+az rest &lt;span class=&quot;nt&quot;&gt;--method&lt;/span&gt; GET &lt;span class=&quot;se&quot;&gt;\&lt;/span&gt;
+    &lt;span class=&quot;nt&quot;&gt;--url&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;${&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;BASE_URL&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;}&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;/agents/&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;${&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;AGENT_NAME&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;}&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;/endpoint/sessions?api-version=v1&quot;&lt;/span&gt; &lt;span class=&quot;se&quot;&gt;\&lt;/span&gt;
+    &lt;span class=&quot;nt&quot;&gt;--resource&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;https://ai.azure.com&quot;&lt;/span&gt; &lt;span class=&quot;se&quot;&gt;\&lt;/span&gt;
+    &lt;span class=&quot;nt&quot;&gt;--headers&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;x-ms-user-isolation-key=user-B&quot;&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;Foundry-Features=HostedAgents=V1Preview&quot;&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Empty. &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;user-B&lt;/code&gt; can’t see &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;user-A&lt;/code&gt;’s session. Same authentication token, same agent, different user key — different view of the world.&lt;/p&gt;
+
+&lt;p&gt;Let’s try to get the session details using &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;user-B&lt;/code&gt;’s key:&lt;/p&gt;
+
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;c&quot;&gt;# Try to get user-A's session using user-B's key — 403&lt;/span&gt;
+az rest &lt;span class=&quot;nt&quot;&gt;--method&lt;/span&gt; GET &lt;span class=&quot;se&quot;&gt;\&lt;/span&gt;
+    &lt;span class=&quot;nt&quot;&gt;--url&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;${&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;BASE_URL&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;}&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;/agents/&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;${&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;AGENT_NAME&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;}&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;/endpoint/sessions/&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;${&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;SESSION_ID&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;}&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;?api-version=v1&quot;&lt;/span&gt; &lt;span class=&quot;se&quot;&gt;\&lt;/span&gt;
+    &lt;span class=&quot;nt&quot;&gt;--resource&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;https://ai.azure.com&quot;&lt;/span&gt; &lt;span class=&quot;se&quot;&gt;\&lt;/span&gt;
+    &lt;span class=&quot;nt&quot;&gt;--headers&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;x-ms-user-isolation-key=user-B&quot;&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;Foundry-Features=HostedAgents=V1Preview&quot;&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;You get a 403 Forbidden error because &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;user-B&lt;/code&gt; is not authorized to access &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;user-A&lt;/code&gt;’s session.&lt;/p&gt;
+
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;Forbidden&lt;span class=&quot;o&quot;&gt;({&lt;/span&gt;
+  &lt;span class=&quot;s2&quot;&gt;&quot;error&quot;&lt;/span&gt;: &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;s2&quot;&gt;&quot;code&quot;&lt;/span&gt;: &lt;span class=&quot;s2&quot;&gt;&quot;session_not_accessible&quot;&lt;/span&gt;,
+    &lt;span class=&quot;s2&quot;&gt;&quot;message&quot;&lt;/span&gt;: &lt;span class=&quot;s2&quot;&gt;&quot;Session is not accessible. [Request ID: 1244f2c67b0f87f5f8acf66e89def5b4]&quot;&lt;/span&gt;,
+    &lt;span class=&quot;s2&quot;&gt;&quot;type&quot;&lt;/span&gt;: &lt;span class=&quot;s2&quot;&gt;&quot;invalid_request_error&quot;&lt;/span&gt;,
+    &lt;span class=&quot;s2&quot;&gt;&quot;details&quot;&lt;/span&gt;: &lt;span class=&quot;o&quot;&gt;[]&lt;/span&gt;,
+    &lt;span class=&quot;s2&quot;&gt;&quot;additionalInfo&quot;&lt;/span&gt;: &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+      &lt;span class=&quot;s2&quot;&gt;&quot;request_id&quot;&lt;/span&gt;: &lt;span class=&quot;s2&quot;&gt;&quot;1244f2c67b0f87f5f8acf66e89def5b4&quot;&lt;/span&gt;
+    &lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+  &lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;})&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Now let’s see the &lt;strong&gt;chat key&lt;/strong&gt; in action. We’ll send two requests from the same user but with different chat keys:&lt;/p&gt;
+
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;c&quot;&gt;# User A, Chat thread-1&lt;/span&gt;
+az rest &lt;span class=&quot;nt&quot;&gt;--method&lt;/span&gt; POST &lt;span class=&quot;se&quot;&gt;\&lt;/span&gt;
+    &lt;span class=&quot;nt&quot;&gt;--url&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;${&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;BASE_URL&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;}&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;/agents/&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;${&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;AGENT_NAME&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;}&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;/endpoint/protocols/openai/responses?api-version=v1&quot;&lt;/span&gt; &lt;span class=&quot;se&quot;&gt;\&lt;/span&gt;
+    &lt;span class=&quot;nt&quot;&gt;--resource&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;https://ai.azure.com&quot;&lt;/span&gt; &lt;span class=&quot;se&quot;&gt;\&lt;/span&gt;
+    &lt;span class=&quot;nt&quot;&gt;--headers&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;x-ms-user-isolation-key=user-A&quot;&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;x-ms-chat-isolation-key=thread-1&quot;&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;Foundry-Features=HostedAgents=V1Preview&quot;&lt;/span&gt; &lt;span class=&quot;se&quot;&gt;\&lt;/span&gt;
+    &lt;span class=&quot;nt&quot;&gt;--body&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;'{&quot;input&quot;: &quot;Hello from thread 1&quot;}'&lt;/span&gt;
+
+&lt;span class=&quot;c&quot;&gt;# User A, Chat thread-2&lt;/span&gt;
+az rest &lt;span class=&quot;nt&quot;&gt;--method&lt;/span&gt; POST &lt;span class=&quot;se&quot;&gt;\&lt;/span&gt;
+    &lt;span class=&quot;nt&quot;&gt;--url&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;${&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;BASE_URL&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;}&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;/agents/&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;${&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;AGENT_NAME&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;}&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;/endpoint/protocols/openai/responses?api-version=v1&quot;&lt;/span&gt; &lt;span class=&quot;se&quot;&gt;\&lt;/span&gt;
+    &lt;span class=&quot;nt&quot;&gt;--resource&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;https://ai.azure.com&quot;&lt;/span&gt; &lt;span class=&quot;se&quot;&gt;\&lt;/span&gt;
+    &lt;span class=&quot;nt&quot;&gt;--headers&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;x-ms-user-isolation-key=user-A&quot;&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;x-ms-chat-isolation-key=thread-2&quot;&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;Foundry-Features=HostedAgents=V1Preview&quot;&lt;/span&gt; &lt;span class=&quot;se&quot;&gt;\&lt;/span&gt;
+    &lt;span class=&quot;nt&quot;&gt;--body&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;'{&quot;input&quot;: &quot;Hello from thread 2&quot;}'&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;&lt;strong&gt;Sessions are partitioned by the chat key, not the user key.&lt;/strong&gt;&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;&lt;strong&gt;Same user, same chat key&lt;/strong&gt; → can access the session. This is the normal case.&lt;/li&gt;
+  &lt;li&gt;&lt;strong&gt;Same user, different chat key&lt;/strong&gt; → &lt;strong&gt;403 Forbidden&lt;/strong&gt;. Even though it’s the same user, a different chat key means a different scope. User A in &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;thread-1&lt;/code&gt; cannot see user A’s sessions from &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;thread-2&lt;/code&gt;.&lt;/li&gt;
+  &lt;li&gt;&lt;strong&gt;Different user, same chat key&lt;/strong&gt; → &lt;strong&gt;can access the session&lt;/strong&gt;. This is the shared conversation scenario — user B with &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;chat-key=thread-1&lt;/code&gt; can see and access the same sessions that user A created with &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;chat-key=thread-1&lt;/code&gt;. This is by design: a shared chat key represents a shared conversation thread (like a Teams channel) where multiple users collaborate.&lt;/li&gt;
+  &lt;li&gt;&lt;strong&gt;No chat key&lt;/strong&gt; → defaults to a scope derived from the user key. Sessions created without an explicit chat key live in their own partition — they’re invisible to requests that specify a chat key, and vice versa.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;This is a powerful model. The chat key gives you conversation-level boundaries, while the user key gives you per-user resource boundaries. I’d encourage you to run through these permutations yourself using &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;az rest&lt;/code&gt; to see the behavior firsthand — try creating sessions with different user/chat key combinations and listing them with various headers to build intuition for the partitioning.&lt;/p&gt;
+
+&lt;h3 id=&quot;when-to-use-which-scheme&quot;&gt;When to Use Which Scheme&lt;/h3&gt;
+
+&lt;p&gt;&lt;strong&gt;Use &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Entra&lt;/code&gt; (default) when:&lt;/strong&gt;&lt;/p&gt;
+&lt;ul&gt;
+  &lt;li&gt;Your end-users call the agent directly with their own Entra identity (e.g., a web app where each user signs in with Microsoft Entra)&lt;/li&gt;
+  &lt;li&gt;Each user already has an &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Azure AI User&lt;/code&gt; role assignment on the Foundry project&lt;/li&gt;
+  &lt;li&gt;You want zero-config session scoping — the platform handles everything&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;&lt;strong&gt;Use &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Header&lt;/code&gt; when:&lt;/strong&gt;&lt;/p&gt;
+&lt;ul&gt;
+  &lt;li&gt;A backend service calls the agent on behalf of multiple end-users using a single service principal&lt;/li&gt;
+  &lt;li&gt;Your users don’t have direct Entra identities on the Foundry project (e.g., they authenticate against your app, not against Azure)&lt;/li&gt;
+  &lt;li&gt;You need to scope sessions by something other than the caller’s identity — a tenant ID, a team ID, or any application-level grouping&lt;/li&gt;
+  &lt;li&gt;You need shared conversation threads where multiple users participate (use the same &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;x-ms-chat-isolation-key&lt;/code&gt; with different &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;x-ms-user-isolation-key&lt;/code&gt; values)&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;This gives you full control over the partitioning, but your backend is responsible for sending the right keys on every request.&lt;/p&gt;
+
+&lt;h3 id=&quot;key-behaviors-to-remember&quot;&gt;Key Behaviors to Remember&lt;/h3&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;The user isolation key is &lt;strong&gt;required&lt;/strong&gt; in Header mode — requests without it fail with 400.&lt;/li&gt;
+  &lt;li&gt;The chat isolation key is &lt;strong&gt;optional&lt;/strong&gt; — defaults to the user key value if absent (per-user scoping).&lt;/li&gt;
+  &lt;li&gt;Isolation keys are &lt;strong&gt;immutable&lt;/strong&gt; — once set at session creation, they can’t be changed.&lt;/li&gt;
+  &lt;li&gt;Keys are &lt;strong&gt;never returned&lt;/strong&gt; in any response payload (Create, Get, List). You must track them yourself.&lt;/li&gt;
+  &lt;li&gt;&lt;strong&gt;Delete requires the matching key&lt;/strong&gt; — when using Header mode, you must pass the same isolation key that was used at creation.&lt;/li&gt;
+  &lt;li&gt;&lt;strong&gt;All session-scoped operations&lt;/strong&gt; use the same keys — invocations, file uploads, session management.&lt;/li&gt;
+  &lt;li&gt;Both keys are &lt;strong&gt;forwarded to your container&lt;/strong&gt; as request headers, but in &lt;strong&gt;obfuscated form&lt;/strong&gt; — your agent code can read them to implement its own per-user or per-chat logic, but the raw values you sent are never exposed to the container.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;&lt;strong&gt;Important:&lt;/strong&gt; Isolation keys are partitioning values, not authentication mechanisms. The Microsoft Entra token authenticates the caller. The isolation keys only narrow &lt;em&gt;which sessions and data&lt;/em&gt; that authenticated caller can act on.&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;h2 id=&quot;conclusion&quot;&gt;Conclusion&lt;/h2&gt;
+
+&lt;p&gt;We covered a lot of ground in this post. Here’s the recap:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;&lt;strong&gt;Sessions&lt;/strong&gt; are isolated microvm sandboxes with persistent &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;$HOME&lt;/code&gt; storage — one per agent instance, no cross-session access.&lt;/li&gt;
+  &lt;li&gt;The &lt;strong&gt;lifecycle&lt;/strong&gt; is Active → Idle (15 min) → Resumed (state restored) → Expired (30 days). Only &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;$HOME&lt;/code&gt; survives the idle/resume cycle.&lt;/li&gt;
+  &lt;li&gt;&lt;strong&gt;Conversations&lt;/strong&gt; provide message history (Responses protocol only) and are mapped to sessions by the platform.&lt;/li&gt;
+  &lt;li&gt;&lt;strong&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;$HOME&lt;/code&gt; is your agent’s durable memory&lt;/strong&gt; — design for resume-friendliness by writing working state to files.&lt;/li&gt;
+  &lt;li&gt;&lt;strong&gt;Isolation keys&lt;/strong&gt; use a two-key model — the user key scopes per-user resources (OAuth, memory), the chat key scopes conversations and sessions. Use Entra mode for automatic scoping, Header mode for backend services.&lt;/li&gt;
+  &lt;li&gt;The &lt;strong&gt;file API&lt;/strong&gt; bridges the outside world and the agent’s filesystem — upload inputs, download outputs.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;In the next post, we’ll explore agent identity, security, and how to inject secrets into your agent — because a production agent needs more than just a filesystem.&lt;/p&gt;
+
+&lt;h2 id=&quot;references&quot;&gt;References&lt;/h2&gt;
+
+&lt;ol&gt;
+  &lt;li&gt;&lt;a href=&quot;https://learn.microsoft.com/en-us/azure/foundry/agents/concepts/hosted-agents&quot;&gt;Hosted Agents Overview&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;https://learn.microsoft.com/en-us/azure/foundry/agents/how-to/manage-hosted-sessions&quot;&gt;Manage Hosted Sessions&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;https://github.com/ankitbko/hosted-agents-vscode-tunnel&quot;&gt;VS Code Tunnel Agent Sample&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;https://github.com/microsoft-foundry/foundry-samples/tree/main/samples/python/hosted-agents&quot;&gt;foundry-samples Repository&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;/blog/2026/05/hosted-agents-part-1/&quot;&gt;Part 1 — What, Why, Protocols &amp;amp; Your First Deployment&lt;/a&gt;&lt;/li&gt;
+&lt;/ol&gt;
+</content>
+ </entry>
  
  <entry>
    <title>Microsoft Foundry Hosted Agents - What, Why, Protocols & Your First Deployment</title>
