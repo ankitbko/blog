@@ -4,7 +4,7 @@
  <title>F5 - Squashing Bugs</title>
  <link href="https://ankitbko.github.io/atom.xml" rel="self"/>
  <link href="https://ankitbko.github.io/"/>
- <updated>2026-05-09T14:16:12-05:00</updated>
+ <updated>2026-05-10T06:13:23-05:00</updated>
  <id>https://ankitbko.github.io</id>
  <author>
    <name>Ankit Sinha</name>
@@ -15,7 +15,7 @@
  <entry>
    <title>Foundry Hosted Agents - Sessions, State & the Sandbox</title>
    <link href="https://ankitbko.github.io/blog/2026/05/hosted-agents-part-2/"/>
-   <updated>2026-05-02T00:00:00-05:00</updated>
+   <updated>2026-05-09T00:00:00-05:00</updated>
    <id>https://ankitbko.github.io/blog/2026/05/hosted-agents-part-2</id>
    <content type="html">&lt;p&gt;In &lt;a href=&quot;/blog/2026/05/hosted-agents-part-1/&quot;&gt;Part 1&lt;/a&gt; we deployed a hello-world agent and had a conversation with it. It replied, remembered context across turns, and we moved on. But what actually happened behind the scenes? Where did the conversation history live? What if the agent needed to save a file — a report, a processed dataset, a set of notes — where would that go? And what happens when nobody talks to the agent for an hour?&lt;/p&gt;
 
