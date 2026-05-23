@@ -111,6 +111,7 @@ for container in blob_client.list_containers():
 
 This is the beauty of the model — identity-based access with zero secrets in your code.
 
+{% raw %}
 ## Secrets Management — Project Connections
 
 Your agent might need to call a third-party API — a weather service, a payment gateway, a CRM — that requires an API key. Where do you put that key?
@@ -200,10 +201,10 @@ environment_variables:
 
 Each line maps cleanly to one part of one connection:
 
-1. `$\{\{connections.my-api.credentials.key\}\}` — resolves the API key from the ApiKey connection's secret store.
-2. `$\{\{connections.my-api.target\}\}` — resolves the endpoint URL (not a secret, but kept portable via the template).
-3. `$\{\{connections.my-config.credentials.db-password\}\}` — resolves a secret custom key from a CustomKeys connection.
-4. `$\{\{connections.my-config.metadata.region\}\}` — resolves a plain (non-secret) custom key from the same connection.
+1. `${{connections.my-api.credentials.key}}` — resolves the API key from the ApiKey connection's secret store.
+2. `${{connections.my-api.target}}` — resolves the endpoint URL (not a secret, but kept portable via the template).
+3. `${{connections.my-config.credentials.db-password}}` — resolves a secret custom key from a CustomKeys connection.
+4. `${{connections.my-config.metadata.region}}` — resolves a plain (non-secret) custom key from the same connection.
 
 When the container starts, the platform reads each named connection, resolves each placeholder, and injects the resulting values as environment variables. Your agent code never sees the template syntax — only the resolved values:
 
@@ -305,6 +306,7 @@ In this post we covered the two pillars of agent security in Foundry Hosted Agen
 - **External secrets** are managed through project connections with `${{connections...}}` templates. Secrets are resolved at session creation and injected as environment variables.
 
 In the next post, we'll explore tool integration — how to give your agent the ability to execute code, search the web, and interact with external systems using Foundry's built-in and custom tool framework.
+{% endraw %}
 
 ## References
 
