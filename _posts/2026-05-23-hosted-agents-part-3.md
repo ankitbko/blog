@@ -200,10 +200,10 @@ environment_variables:
 
 Each line maps cleanly to one part of one connection:
 
-1. `${{connections.my-api.credentials.key}}` — resolves the API key from the ApiKey connection's secret store.
-2. `${{connections.my-api.target}}` — resolves the endpoint URL (not a secret, but kept portable via the template).
-3. `${{connections.my-config.credentials.db-password}}` — resolves a secret custom key from a CustomKeys connection.
-4. `${{connections.my-config.metadata.region}}` — resolves a plain (non-secret) custom key from the same connection.
+1. `$\{\{connections.my-api.credentials.key\}\}` — resolves the API key from the ApiKey connection's secret store.
+2. `$\{\{connections.my-api.target\}\}` — resolves the endpoint URL (not a secret, but kept portable via the template).
+3. `$\{\{connections.my-config.credentials.db-password\}\}` — resolves a secret custom key from a CustomKeys connection.
+4. `$\{\{connections.my-config.metadata.region\}\}` — resolves a plain (non-secret) custom key from the same connection.
 
 When the container starts, the platform reads each named connection, resolves each placeholder, and injects the resulting values as environment variables. Your agent code never sees the template syntax — only the resolved values:
 
