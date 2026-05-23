@@ -4,7 +4,7 @@
  <title>F5 - Squashing Bugs</title>
  <link href="https://ankitbko.github.io/atom.xml" rel="self"/>
  <link href="https://ankitbko.github.io/"/>
- <updated>2026-05-23T10:20:57-05:00</updated>
+ <updated>2026-05-23T10:26:04-05:00</updated>
  <id>https://ankitbko.github.io</id>
  <author>
    <name>Ankit Sinha</name>
@@ -155,17 +155,17 @@
   &lt;tbody&gt;
     &lt;tr&gt;
       &lt;td&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;credentials.&amp;lt;field&amp;gt;&lt;/code&gt;&lt;/td&gt;
-      &lt;td&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;$&lt;/code&gt; (ApiKey)&lt;br /&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;$&lt;/code&gt; (CustomKeys secret)&lt;/td&gt;
+      &lt;td&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;${{connections.&amp;lt;name&amp;gt;.credentials.key}}&lt;/code&gt; (ApiKey)&lt;br /&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;${{connections.&amp;lt;name&amp;gt;.credentials.&amp;lt;key-name&amp;gt;}}&lt;/code&gt; (CustomKeys secret)&lt;/td&gt;
       &lt;td&gt;The secret value from the connection’s secret store&lt;/td&gt;
     &lt;/tr&gt;
     &lt;tr&gt;
       &lt;td&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;target&lt;/code&gt;&lt;/td&gt;
-      &lt;td&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;$&lt;/code&gt;&lt;/td&gt;
+      &lt;td&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;${{connections.&amp;lt;name&amp;gt;.target}}&lt;/code&gt;&lt;/td&gt;
       &lt;td&gt;The connection’s endpoint URL&lt;/td&gt;
     &lt;/tr&gt;
     &lt;tr&gt;
       &lt;td&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;metadata.&amp;lt;key&amp;gt;&lt;/code&gt;&lt;/td&gt;
-      &lt;td&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;$&lt;/code&gt;&lt;/td&gt;
+      &lt;td&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;${{connections.&amp;lt;name&amp;gt;.metadata.&amp;lt;key-name&amp;gt;}}&lt;/code&gt;&lt;/td&gt;
       &lt;td&gt;A plain (non-secret) value from the connection’s metadata&lt;/td&gt;
     &lt;/tr&gt;
   &lt;/tbody&gt;
@@ -219,23 +219,23 @@ my-config      RemoteTool       CustomKeys  https://db.example.com
     &lt;span class=&quot;na&quot;&gt;value&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;${AZURE_AI_MODEL_DEPLOYMENT_NAME}&lt;/span&gt;
   &lt;span class=&quot;c1&quot;&gt;# ApiKey connection — secret credential + non-secret target&lt;/span&gt;
   &lt;span class=&quot;pi&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;na&quot;&gt;name&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;API_KEY&lt;/span&gt;
-    &lt;span class=&quot;na&quot;&gt;value&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;$&lt;/span&gt;
+    &lt;span class=&quot;na&quot;&gt;value&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;${{connections.my-api.credentials.key}}&lt;/span&gt;
   &lt;span class=&quot;pi&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;na&quot;&gt;name&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;API_ENDPOINT&lt;/span&gt;
-    &lt;span class=&quot;na&quot;&gt;value&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;$&lt;/span&gt;
+    &lt;span class=&quot;na&quot;&gt;value&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;${{connections.my-api.target}}&lt;/span&gt;
   &lt;span class=&quot;c1&quot;&gt;# CustomKeys connection — secret key + plain metadata key&lt;/span&gt;
   &lt;span class=&quot;pi&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;na&quot;&gt;name&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;DB_PASSWORD&lt;/span&gt;
-    &lt;span class=&quot;na&quot;&gt;value&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;$&lt;/span&gt;
+    &lt;span class=&quot;na&quot;&gt;value&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;${{connections.my-config.credentials.db-password}}&lt;/span&gt;
   &lt;span class=&quot;pi&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;na&quot;&gt;name&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;REGION&lt;/span&gt;
-    &lt;span class=&quot;na&quot;&gt;value&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;$&lt;/span&gt;
+    &lt;span class=&quot;na&quot;&gt;value&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;${{connections.my-config.metadata.region}}&lt;/span&gt;
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
 
 &lt;p&gt;Each line maps cleanly to one part of one connection:&lt;/p&gt;
 
 &lt;ol&gt;
-  &lt;li&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;$\{\{connections.my-api.credentials.key\}\}&lt;/code&gt; — resolves the API key from the ApiKey connection’s secret store.&lt;/li&gt;
-  &lt;li&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;$\{\{connections.my-api.target\}\}&lt;/code&gt; — resolves the endpoint URL (not a secret, but kept portable via the template).&lt;/li&gt;
-  &lt;li&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;$\{\{connections.my-config.credentials.db-password\}\}&lt;/code&gt; — resolves a secret custom key from a CustomKeys connection.&lt;/li&gt;
-  &lt;li&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;$\{\{connections.my-config.metadata.region\}\}&lt;/code&gt; — resolves a plain (non-secret) custom key from the same connection.&lt;/li&gt;
+  &lt;li&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;${{connections.my-api.credentials.key}}&lt;/code&gt; — resolves the API key from the ApiKey connection’s secret store.&lt;/li&gt;
+  &lt;li&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;${{connections.my-api.target}}&lt;/code&gt; — resolves the endpoint URL (not a secret, but kept portable via the template).&lt;/li&gt;
+  &lt;li&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;${{connections.my-config.credentials.db-password}}&lt;/code&gt; — resolves a secret custom key from a CustomKeys connection.&lt;/li&gt;
+  &lt;li&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;${{connections.my-config.metadata.region}}&lt;/code&gt; — resolves a plain (non-secret) custom key from the same connection.&lt;/li&gt;
 &lt;/ol&gt;
 
 &lt;p&gt;When the container starts, the platform reads each named connection, resolves each placeholder, and injects the resulting values as environment variables. Your agent code never sees the template syntax — only the resolved values:&lt;/p&gt;
@@ -264,7 +264,7 @@ my-config      RemoteTool       CustomKeys  https://db.example.com
 &lt;ul&gt;
   &lt;li&gt;&lt;strong&gt;Secrets are resolved at container start.&lt;/strong&gt; Every new session picks up the latest values, which is what makes rotation seamless.&lt;/li&gt;
   &lt;li&gt;&lt;strong&gt;Template syntax is validated at agent creation.&lt;/strong&gt; Typos in connection names or field paths fail fast, not at runtime.&lt;/li&gt;
-  &lt;li&gt;&lt;strong&gt;Plain environment variables still work.&lt;/strong&gt; Templates are opt-in. You can mix &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;${VAR}&lt;/code&gt; (azd-resolved) and &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;$&lt;/code&gt; (platform-resolved) in the same &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;agent.yaml&lt;/code&gt;.&lt;/li&gt;
+  &lt;li&gt;&lt;strong&gt;Plain environment variables still work.&lt;/strong&gt; Templates are opt-in. You can mix &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;${VAR}&lt;/code&gt; (azd-resolved) and &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;${{connections...}}&lt;/code&gt; (platform-resolved) in the same &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;agent.yaml&lt;/code&gt;.&lt;/li&gt;
   &lt;li&gt;&lt;strong&gt;Connection values are never stored in the agent definition.&lt;/strong&gt; Only the template reference is persisted. The actual secret lives in the connection (backed by Key Vault).&lt;/li&gt;
   &lt;li&gt;&lt;strong&gt;CustomKeys can mix secret and non-secret keys.&lt;/strong&gt; Secret keys go to &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;credentials&lt;/code&gt;, non-secret keys go to &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;metadata&lt;/code&gt;. Both are reachable via templates from the same connection.&lt;/li&gt;
 &lt;/ul&gt;
@@ -287,9 +287,9 @@ my-config      RemoteTool       CustomKeys  https://db.example.com
   &lt;span class=&quot;pi&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;na&quot;&gt;name&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;AZURE_AI_MODEL_DEPLOYMENT_NAME&lt;/span&gt;
     &lt;span class=&quot;na&quot;&gt;value&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;${AZURE_AI_MODEL_DEPLOYMENT_NAME}&lt;/span&gt;
   &lt;span class=&quot;pi&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;na&quot;&gt;name&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;API_KEY&lt;/span&gt;
-    &lt;span class=&quot;na&quot;&gt;value&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;$&lt;/span&gt;
+    &lt;span class=&quot;na&quot;&gt;value&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;${{connections.my-api.credentials.key}}&lt;/span&gt;
   &lt;span class=&quot;pi&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;na&quot;&gt;name&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;API_ENDPOINT&lt;/span&gt;
-    &lt;span class=&quot;na&quot;&gt;value&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;$&lt;/span&gt;
+    &lt;span class=&quot;na&quot;&gt;value&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;${{connections.my-api.target}}&lt;/span&gt;
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
 
 &lt;p&gt;And the corresponding code:&lt;/p&gt;
@@ -319,13 +319,13 @@ my-config      RemoteTool       CustomKeys  https://db.example.com
 
 &lt;ol&gt;
   &lt;li&gt;&lt;strong&gt;Azure resources&lt;/strong&gt; → &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;DefaultAzureCredential()&lt;/code&gt; + RBAC. No secrets anywhere. The platform delivers tokens automatically, and RBAC controls access.&lt;/li&gt;
-  &lt;li&gt;&lt;strong&gt;External services&lt;/strong&gt; → Project connections with &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;$&lt;/code&gt; template injection. Secrets live in Key Vault (via connections), get resolved at container start, and arrive as plain environment variables. Your code and container image never contain the actual secret.&lt;/li&gt;
+  &lt;li&gt;&lt;strong&gt;External services&lt;/strong&gt; → Project connections with &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;${{connections...}}&lt;/code&gt; template injection. Secrets live in Key Vault (via connections), get resolved at container start, and arrive as plain environment variables. Your code and container image never contain the actual secret.&lt;/li&gt;
 &lt;/ol&gt;
 
 &lt;h2 id=&quot;security-best-practices&quot;&gt;Security Best Practices&lt;/h2&gt;
 
 &lt;ul&gt;
-  &lt;li&gt;&lt;strong&gt;Never put secrets in images or plain environment variables&lt;/strong&gt; — use project connections with &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;$&lt;/code&gt; templates.&lt;/li&gt;
+  &lt;li&gt;&lt;strong&gt;Never put secrets in images or plain environment variables&lt;/strong&gt; — use project connections with &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;${{connections...}}&lt;/code&gt; templates.&lt;/li&gt;
   &lt;li&gt;&lt;strong&gt;Use &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;DefaultAzureCredential&lt;/code&gt; for Azure resources&lt;/strong&gt; — RBAC-based access is always better than connection strings or shared keys.&lt;/li&gt;
   &lt;li&gt;&lt;strong&gt;Assign least-privilege roles&lt;/strong&gt; — give your agent only the permissions it needs, at the narrowest scope possible.&lt;/li&gt;
   &lt;li&gt;&lt;strong&gt;Rotate secrets by updating connections&lt;/strong&gt; — new sessions pick up changes automatically. No redeployment needed.&lt;/li&gt;
@@ -338,7 +338,7 @@ my-config      RemoteTool       CustomKeys  https://db.example.com
 &lt;ul&gt;
   &lt;li&gt;&lt;strong&gt;Agent identity&lt;/strong&gt; is a service principal in Entra ID, managed entirely by the platform. &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;DefaultAzureCredential()&lt;/code&gt; just works — the platform handles token delivery to your sandbox.&lt;/li&gt;
   &lt;li&gt;&lt;strong&gt;Azure resources&lt;/strong&gt; are accessed via RBAC roles assigned to the agent identity. No secrets needed.&lt;/li&gt;
-  &lt;li&gt;&lt;strong&gt;External secrets&lt;/strong&gt; are managed through project connections with &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;$&lt;/code&gt; templates. Secrets are resolved at session creation and injected as environment variables.&lt;/li&gt;
+  &lt;li&gt;&lt;strong&gt;External secrets&lt;/strong&gt; are managed through project connections with &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;${{connections...}}&lt;/code&gt; templates. Secrets are resolved at session creation and injected as environment variables.&lt;/li&gt;
 &lt;/ul&gt;
 
 &lt;p&gt;In the next post, we’ll explore tool integration — how to give your agent the ability to execute code, search the web, and interact with external systems using Foundry’s built-in and custom tool framework.&lt;/p&gt;

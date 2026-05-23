@@ -292,17 +292,17 @@ window.onload = wrap_img;
   <tbody>
     <tr>
       <td><code class="language-plaintext highlighter-rouge">credentials.&lt;field&gt;</code></td>
-      <td><code class="language-plaintext highlighter-rouge">$</code> (ApiKey)<br /><code class="language-plaintext highlighter-rouge">$</code> (CustomKeys secret)</td>
+      <td><code class="language-plaintext highlighter-rouge">${{connections.&lt;name&gt;.credentials.key}}</code> (ApiKey)<br /><code class="language-plaintext highlighter-rouge">${{connections.&lt;name&gt;.credentials.&lt;key-name&gt;}}</code> (CustomKeys secret)</td>
       <td>The secret value from the connection’s secret store</td>
     </tr>
     <tr>
       <td><code class="language-plaintext highlighter-rouge">target</code></td>
-      <td><code class="language-plaintext highlighter-rouge">$</code></td>
+      <td><code class="language-plaintext highlighter-rouge">${{connections.&lt;name&gt;.target}}</code></td>
       <td>The connection’s endpoint URL</td>
     </tr>
     <tr>
       <td><code class="language-plaintext highlighter-rouge">metadata.&lt;key&gt;</code></td>
-      <td><code class="language-plaintext highlighter-rouge">$</code></td>
+      <td><code class="language-plaintext highlighter-rouge">${{connections.&lt;name&gt;.metadata.&lt;key-name&gt;}}</code></td>
       <td>A plain (non-secret) value from the connection’s metadata</td>
     </tr>
   </tbody>
@@ -356,23 +356,23 @@ my-config      RemoteTool       CustomKeys  https://db.example.com
     <span class="na">value</span><span class="pi">:</span> <span class="s">${AZURE_AI_MODEL_DEPLOYMENT_NAME}</span>
   <span class="c1"># ApiKey connection — secret credential + non-secret target</span>
   <span class="pi">-</span> <span class="na">name</span><span class="pi">:</span> <span class="s">API_KEY</span>
-    <span class="na">value</span><span class="pi">:</span> <span class="s">$</span>
+    <span class="na">value</span><span class="pi">:</span> <span class="s">${{connections.my-api.credentials.key}}</span>
   <span class="pi">-</span> <span class="na">name</span><span class="pi">:</span> <span class="s">API_ENDPOINT</span>
-    <span class="na">value</span><span class="pi">:</span> <span class="s">$</span>
+    <span class="na">value</span><span class="pi">:</span> <span class="s">${{connections.my-api.target}}</span>
   <span class="c1"># CustomKeys connection — secret key + plain metadata key</span>
   <span class="pi">-</span> <span class="na">name</span><span class="pi">:</span> <span class="s">DB_PASSWORD</span>
-    <span class="na">value</span><span class="pi">:</span> <span class="s">$</span>
+    <span class="na">value</span><span class="pi">:</span> <span class="s">${{connections.my-config.credentials.db-password}}</span>
   <span class="pi">-</span> <span class="na">name</span><span class="pi">:</span> <span class="s">REGION</span>
-    <span class="na">value</span><span class="pi">:</span> <span class="s">$</span>
+    <span class="na">value</span><span class="pi">:</span> <span class="s">${{connections.my-config.metadata.region}}</span>
 </code></pre></div></div>
 
 <p>Each line maps cleanly to one part of one connection:</p>
 
 <ol>
-  <li><code class="language-plaintext highlighter-rouge">$\{\{connections.my-api.credentials.key\}\}</code> — resolves the API key from the ApiKey connection’s secret store.</li>
-  <li><code class="language-plaintext highlighter-rouge">$\{\{connections.my-api.target\}\}</code> — resolves the endpoint URL (not a secret, but kept portable via the template).</li>
-  <li><code class="language-plaintext highlighter-rouge">$\{\{connections.my-config.credentials.db-password\}\}</code> — resolves a secret custom key from a CustomKeys connection.</li>
-  <li><code class="language-plaintext highlighter-rouge">$\{\{connections.my-config.metadata.region\}\}</code> — resolves a plain (non-secret) custom key from the same connection.</li>
+  <li><code class="language-plaintext highlighter-rouge">${{connections.my-api.credentials.key}}</code> — resolves the API key from the ApiKey connection’s secret store.</li>
+  <li><code class="language-plaintext highlighter-rouge">${{connections.my-api.target}}</code> — resolves the endpoint URL (not a secret, but kept portable via the template).</li>
+  <li><code class="language-plaintext highlighter-rouge">${{connections.my-config.credentials.db-password}}</code> — resolves a secret custom key from a CustomKeys connection.</li>
+  <li><code class="language-plaintext highlighter-rouge">${{connections.my-config.metadata.region}}</code> — resolves a plain (non-secret) custom key from the same connection.</li>
 </ol>
 
 <p>When the container starts, the platform reads each named connection, resolves each placeholder, and injects the resulting values as environment variables. Your agent code never sees the template syntax — only the resolved values:</p>
@@ -401,7 +401,7 @@ my-config      RemoteTool       CustomKeys  https://db.example.com
 <ul>
   <li><strong>Secrets are resolved at container start.</strong> Every new session picks up the latest values, which is what makes rotation seamless.</li>
   <li><strong>Template syntax is validated at agent creation.</strong> Typos in connection names or field paths fail fast, not at runtime.</li>
-  <li><strong>Plain environment variables still work.</strong> Templates are opt-in. You can mix <code class="language-plaintext highlighter-rouge">${VAR}</code> (azd-resolved) and <code class="language-plaintext highlighter-rouge">$</code> (platform-resolved) in the same <code class="language-plaintext highlighter-rouge">agent.yaml</code>.</li>
+  <li><strong>Plain environment variables still work.</strong> Templates are opt-in. You can mix <code class="language-plaintext highlighter-rouge">${VAR}</code> (azd-resolved) and <code class="language-plaintext highlighter-rouge">${{connections...}}</code> (platform-resolved) in the same <code class="language-plaintext highlighter-rouge">agent.yaml</code>.</li>
   <li><strong>Connection values are never stored in the agent definition.</strong> Only the template reference is persisted. The actual secret lives in the connection (backed by Key Vault).</li>
   <li><strong>CustomKeys can mix secret and non-secret keys.</strong> Secret keys go to <code class="language-plaintext highlighter-rouge">credentials</code>, non-secret keys go to <code class="language-plaintext highlighter-rouge">metadata</code>. Both are reachable via templates from the same connection.</li>
 </ul>
@@ -424,9 +424,9 @@ my-config      RemoteTool       CustomKeys  https://db.example.com
   <span class="pi">-</span> <span class="na">name</span><span class="pi">:</span> <span class="s">AZURE_AI_MODEL_DEPLOYMENT_NAME</span>
     <span class="na">value</span><span class="pi">:</span> <span class="s">${AZURE_AI_MODEL_DEPLOYMENT_NAME}</span>
   <span class="pi">-</span> <span class="na">name</span><span class="pi">:</span> <span class="s">API_KEY</span>
-    <span class="na">value</span><span class="pi">:</span> <span class="s">$</span>
+    <span class="na">value</span><span class="pi">:</span> <span class="s">${{connections.my-api.credentials.key}}</span>
   <span class="pi">-</span> <span class="na">name</span><span class="pi">:</span> <span class="s">API_ENDPOINT</span>
-    <span class="na">value</span><span class="pi">:</span> <span class="s">$</span>
+    <span class="na">value</span><span class="pi">:</span> <span class="s">${{connections.my-api.target}}</span>
 </code></pre></div></div>
 
 <p>And the corresponding code:</p>
@@ -456,13 +456,13 @@ my-config      RemoteTool       CustomKeys  https://db.example.com
 
 <ol>
   <li><strong>Azure resources</strong> → <code class="language-plaintext highlighter-rouge">DefaultAzureCredential()</code> + RBAC. No secrets anywhere. The platform delivers tokens automatically, and RBAC controls access.</li>
-  <li><strong>External services</strong> → Project connections with <code class="language-plaintext highlighter-rouge">$</code> template injection. Secrets live in Key Vault (via connections), get resolved at container start, and arrive as plain environment variables. Your code and container image never contain the actual secret.</li>
+  <li><strong>External services</strong> → Project connections with <code class="language-plaintext highlighter-rouge">${{connections...}}</code> template injection. Secrets live in Key Vault (via connections), get resolved at container start, and arrive as plain environment variables. Your code and container image never contain the actual secret.</li>
 </ol>
 
 <h2 id="security-best-practices">Security Best Practices</h2>
 
 <ul>
-  <li><strong>Never put secrets in images or plain environment variables</strong> — use project connections with <code class="language-plaintext highlighter-rouge">$</code> templates.</li>
+  <li><strong>Never put secrets in images or plain environment variables</strong> — use project connections with <code class="language-plaintext highlighter-rouge">${{connections...}}</code> templates.</li>
   <li><strong>Use <code class="language-plaintext highlighter-rouge">DefaultAzureCredential</code> for Azure resources</strong> — RBAC-based access is always better than connection strings or shared keys.</li>
   <li><strong>Assign least-privilege roles</strong> — give your agent only the permissions it needs, at the narrowest scope possible.</li>
   <li><strong>Rotate secrets by updating connections</strong> — new sessions pick up changes automatically. No redeployment needed.</li>
@@ -475,7 +475,7 @@ my-config      RemoteTool       CustomKeys  https://db.example.com
 <ul>
   <li><strong>Agent identity</strong> is a service principal in Entra ID, managed entirely by the platform. <code class="language-plaintext highlighter-rouge">DefaultAzureCredential()</code> just works — the platform handles token delivery to your sandbox.</li>
   <li><strong>Azure resources</strong> are accessed via RBAC roles assigned to the agent identity. No secrets needed.</li>
-  <li><strong>External secrets</strong> are managed through project connections with <code class="language-plaintext highlighter-rouge">$</code> templates. Secrets are resolved at session creation and injected as environment variables.</li>
+  <li><strong>External secrets</strong> are managed through project connections with <code class="language-plaintext highlighter-rouge">${{connections...}}</code> templates. Secrets are resolved at session creation and injected as environment variables.</li>
 </ul>
 
 <p>In the next post, we’ll explore tool integration — how to give your agent the ability to execute code, search the web, and interact with external systems using Foundry’s built-in and custom tool framework.</p>
