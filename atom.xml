@@ -4,13 +4,357 @@
  <title>F5 - Squashing Bugs</title>
  <link href="https://ankitbko.github.io/atom.xml" rel="self"/>
  <link href="https://ankitbko.github.io/"/>
- <updated>2026-05-10T06:13:23-05:00</updated>
+ <updated>2026-05-23T10:04:33-05:00</updated>
  <id>https://ankitbko.github.io</id>
  <author>
    <name>Ankit Sinha</name>
    <email></email>
  </author>
 
+ 
+ <entry>
+   <title>Foundry Hosted Agents - Agent Identity, Security & Secrets</title>
+   <link href="https://ankitbko.github.io/blog/2026/05/hosted-agents-part-3/"/>
+   <updated>2026-05-23T00:00:00-05:00</updated>
+   <id>https://ankitbko.github.io/blog/2026/05/hosted-agents-part-3</id>
+   <content type="html">&lt;p&gt;In &lt;a href=&quot;/blog/2026/05/hosted-agents-part-1/&quot;&gt;Part 1&lt;/a&gt; we deployed an agent and in &lt;a href=&quot;/blog/2026/05/hosted-agents-part-2/&quot;&gt;Part 2&lt;/a&gt; we explored the sandbox — sessions, persistence, and isolation. But our agents so far have only done one thing: call a Foundry model. What if your agent needs to read files from Azure Storage, query a Cosmos DB database, or call a third-party API that requires an API key? How does authentication work when your code runs inside an isolated microvm managed by the platform?&lt;/p&gt;
+
+&lt;p&gt;The answer is &lt;strong&gt;agent identity&lt;/strong&gt;. Every hosted agent gets its own identity in Microsoft Entra ID, and the platform handles the entire authentication chain for you. No hardcoded credentials, no manual token management, no certificate rotation. For external services that need API keys, Foundry provides &lt;strong&gt;project connections&lt;/strong&gt; — a secure, first-class way to inject secrets into your agent at runtime.&lt;/p&gt;
+
+&lt;p&gt;This is Part 3 of the series. We’ll cover how agent identity works, how to assign permissions to your agent, and how to securely manage secrets for third-party services.&lt;/p&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;Hosted Agents and &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;azd&lt;/code&gt; are in active development. Command surfaces are expected to evolve and new features will be added. If you see any discrepancies with the commands mentioned in this post, please comment below and I will update accordingly.&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;h2 id=&quot;agent-identity--what-your-agent-runs-as&quot;&gt;Agent Identity — What Your Agent Runs As&lt;/h2&gt;
+
+&lt;p&gt;Every Foundry project gets an &lt;strong&gt;agent identity&lt;/strong&gt; — a service principal in Microsoft Entra ID, created automatically by the platform. This is what your agent code authenticates as at runtime. It’s important to understand: this is &lt;strong&gt;not&lt;/strong&gt; the project’s managed identity — it’s a separate, agent-specific identity purpose-built for your agent workloads.&lt;/p&gt;
+
+&lt;p&gt;There are two concepts to understand here:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;&lt;strong&gt;Agent Identity Blueprint&lt;/strong&gt; — a governing template for a &lt;em&gt;class&lt;/em&gt; of agents. Think of it as a lifecycle and management construct. It defines the shape of identities that agents in your project will use.&lt;/li&gt;
+  &lt;li&gt;&lt;strong&gt;Agent Identity&lt;/strong&gt; — the actual service principal your agent code authenticates as at runtime. This is what gets RBAC role assignments and shows up in audit logs.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;We are going to ignore the blueprint for now and focus on the agent identity itself, since that’s what your code interacts with. Blueprints are for advanced use cases and as we build more features around it, we’ll cover it in a future post.&lt;/p&gt;
+
+&lt;h3 id=&quot;how-your-code-uses-it&quot;&gt;How Your Code Uses It&lt;/h3&gt;
+
+&lt;p&gt;From your agent code’s perspective, this is remarkably simple:&lt;/p&gt;
+
+&lt;div class=&quot;language-python highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;kn&quot;&gt;from&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;azure.identity&lt;/span&gt; &lt;span class=&quot;kn&quot;&gt;import&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;DefaultAzureCredential&lt;/span&gt;
+
+&lt;span class=&quot;n&quot;&gt;credential&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;DefaultAzureCredential&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;That’s it. &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;DefaultAzureCredential()&lt;/code&gt; just works. The platform handles token delivery to your agent’s sandbox — no configuration needed. The token identifies your agent (the service principal), not a human user. What your agent can actually access is controlled by RBAC role assignments on the target resources.&lt;/p&gt;
+
+&lt;h2 id=&quot;assigning-permissions-to-your-agent&quot;&gt;Assigning Permissions to Your Agent&lt;/h2&gt;
+
+&lt;p&gt;Now that you know your agent has an identity, you need to grant it access to the resources it needs. This is standard Azure RBAC — you assign roles on target resources to your agent’s service principal.&lt;/p&gt;
+
+&lt;h3 id=&quot;finding-your-agent-identity&quot;&gt;Finding Your Agent Identity&lt;/h3&gt;
+
+&lt;p&gt;First, get the principal ID of your agent’s identity:&lt;/p&gt;
+
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;nv&quot;&gt;AGENT_IDENTITY&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;si&quot;&gt;$(&lt;/span&gt;az rest &lt;span class=&quot;nt&quot;&gt;--method&lt;/span&gt; GET &lt;span class=&quot;se&quot;&gt;\&lt;/span&gt;
+    &lt;span class=&quot;nt&quot;&gt;--url&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;${&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;BASE_URL&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;}&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;/agents/&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;${&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;AGENT_NAME&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;}&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;?api-version=v1&quot;&lt;/span&gt; &lt;span class=&quot;se&quot;&gt;\&lt;/span&gt;
+    &lt;span class=&quot;nt&quot;&gt;--resource&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;https://ai.azure.com&quot;&lt;/span&gt; &lt;span class=&quot;se&quot;&gt;\&lt;/span&gt;
+    &lt;span class=&quot;nt&quot;&gt;--query&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;instance_identity.principal_id&quot;&lt;/span&gt; &lt;span class=&quot;se&quot;&gt;\&lt;/span&gt;
+    &lt;span class=&quot;nt&quot;&gt;--output&lt;/span&gt; tsv&lt;span class=&quot;si&quot;&gt;)&lt;/span&gt;
+
+&lt;span class=&quot;nb&quot;&gt;echo&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;Agent identity principal ID: &lt;/span&gt;&lt;span class=&quot;k&quot;&gt;${&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;AGENT_IDENTITY&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;}&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;ol&gt;
+  &lt;li&gt;We use &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;az rest&lt;/code&gt; to call the Foundry API and retrieve the agent’s metadata.&lt;/li&gt;
+  &lt;li&gt;The &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;instance_identity.principal_id&lt;/code&gt; field contains the Entra object ID of the agent’s service principal.&lt;/li&gt;
+  &lt;li&gt;This is the principal you’ll use for all RBAC role assignments.&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;Or you can also use &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;azd ai agent show&lt;/code&gt; to get the same information. The output includes &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Instance Identity Principal ID&lt;/code&gt; which is your agent identity.&lt;/p&gt;
+
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;azd ai agent show
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h3 id=&quot;assigning-rbac-roles&quot;&gt;Assigning RBAC Roles&lt;/h3&gt;
+
+&lt;p&gt;With the principal ID in hand, assign roles the same way you would for any Azure service principal:&lt;/p&gt;
+
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;az role assignment create &lt;span class=&quot;se&quot;&gt;\&lt;/span&gt;
+    &lt;span class=&quot;nt&quot;&gt;--assignee-object-id&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;$AGENT_IDENTITY&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt; &lt;span class=&quot;se&quot;&gt;\&lt;/span&gt;
+    &lt;span class=&quot;nt&quot;&gt;--assignee-principal-type&lt;/span&gt; ServicePrincipal &lt;span class=&quot;se&quot;&gt;\&lt;/span&gt;
+    &lt;span class=&quot;nt&quot;&gt;--role&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;Storage Blob Data Reader&quot;&lt;/span&gt; &lt;span class=&quot;se&quot;&gt;\&lt;/span&gt;
+    &lt;span class=&quot;nt&quot;&gt;--scope&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;/subscriptions/&amp;lt;sub-id&amp;gt;/resourceGroups/&amp;lt;rg&amp;gt;/providers/Microsoft.Storage/storageAccounts/&amp;lt;account&amp;gt;&quot;&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h3 id=&quot;what-azd-does-automatically&quot;&gt;What &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;azd&lt;/code&gt; Does Automatically&lt;/h3&gt;
+
+&lt;p&gt;When you deploy an agent with &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;azd deploy&lt;/code&gt;, it automatically assigns the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Foundry User&lt;/code&gt; role at the Foundry account scope — this is what lets your agent call Foundry models. For any other resources (storage, databases, etc.), you need to assign RBAC roles manually.&lt;/p&gt;
+
+&lt;p&gt;One thing to note: &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;ACRPull&lt;/code&gt; (used to pull your container image) is assigned to the &lt;strong&gt;project managed identity&lt;/strong&gt;, not your agent identity. Don’t confuse the two — they serve different purposes.&lt;/p&gt;
+
+&lt;h2 id=&quot;using-the-agent-identity-in-code&quot;&gt;Using the Agent Identity in Code&lt;/h2&gt;
+
+&lt;p&gt;Let’s see this in practice. Say your agent needs to list containers in an Azure Storage account:&lt;/p&gt;
+
+&lt;div class=&quot;language-python highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;kn&quot;&gt;from&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;azure.identity&lt;/span&gt; &lt;span class=&quot;kn&quot;&gt;import&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;DefaultAzureCredential&lt;/span&gt;
+&lt;span class=&quot;kn&quot;&gt;from&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;azure.storage.blob&lt;/span&gt; &lt;span class=&quot;kn&quot;&gt;import&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;BlobServiceClient&lt;/span&gt;
+
+&lt;span class=&quot;n&quot;&gt;credential&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;DefaultAzureCredential&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;blob_client&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;BlobServiceClient&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;account_url&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;https://mystorageaccount.blob.core.windows.net&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;credential&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;credential&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+
+&lt;span class=&quot;k&quot;&gt;for&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;container&lt;/span&gt; &lt;span class=&quot;ow&quot;&gt;in&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;blob_client&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;list_containers&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;():&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;print&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;container&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;name&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;ol&gt;
+  &lt;li&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;DefaultAzureCredential()&lt;/code&gt; picks up the agent identity automatically — no client IDs, no secrets, no configuration.&lt;/li&gt;
+  &lt;li&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;BlobServiceClient&lt;/code&gt; uses that credential to authenticate against Azure Storage.&lt;/li&gt;
+  &lt;li&gt;The call succeeds only if your agent identity has the appropriate RBAC role (e.g., &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Storage Blob Data Reader&lt;/code&gt;) on the storage account.&lt;/li&gt;
+  &lt;li&gt;The same code works locally (using your developer credentials) and in the hosted sandbox (using the agent identity). No code changes needed for either environment.&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;This is the beauty of the model — identity-based access with zero secrets in your code.&lt;/p&gt;
+
+&lt;h2 id=&quot;secrets-management--project-connections&quot;&gt;Secrets Management — Project Connections&lt;/h2&gt;
+
+&lt;p&gt;Your agent might need to call a third-party API — a weather service, a payment gateway, a CRM — that requires an API key. Where do you put that key?&lt;/p&gt;
+
+&lt;p&gt;Don’t put it as environment variables in &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;agent.yaml&lt;/code&gt; nor in your source code. All of those are discoverable, unauditable, and a rotation nightmare.&lt;/p&gt;
+
+&lt;p&gt;Foundry projects have &lt;strong&gt;connections&lt;/strong&gt; — a first-class concept for storing credentials securely. Connections are backed by Azure Key Vault behind the scenes, so you get enterprise-grade secret management without managing a Key Vault yourself. You can also bring your own key vault if you want.&lt;/p&gt;
+
+&lt;p&gt;The key idea is you &lt;strong&gt;reference&lt;/strong&gt; connections in your &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;agent.yaml&lt;/code&gt; using a template syntax, and the platform resolves them when the container starts. Your agent definition never contains the actual secret values — only template references.&lt;/p&gt;
+
+&lt;h3 id=&quot;connection-types&quot;&gt;Connection Types&lt;/h3&gt;
+
+&lt;p&gt;Two connection types are most relevant for secret injection:&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;ApiKey connections&lt;/strong&gt; is for services that use API key authentication. Each ApiKey connection stores a &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;target&lt;/code&gt; (endpoint URL) and a &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;key&lt;/code&gt; (the secret).&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;CustomKeys connections&lt;/strong&gt; is the flexible option. You define arbitrary key-value pairs, and for each key you choose whether it’s a &lt;strong&gt;secret&lt;/strong&gt; or &lt;strong&gt;plain&lt;/strong&gt; (non-secret). Secret keys land in &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;credentials&lt;/code&gt;; plain keys land in &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;metadata&lt;/code&gt; visible in plain text. A single CustomKeys connection can hold any mix of both.&lt;/p&gt;
+
+&lt;h3 id=&quot;the-template-syntax&quot;&gt;The Template Syntax&lt;/h3&gt;
+
+&lt;p&gt;The resolver supports three template paths, mapped to the three parts of a connection:&lt;/p&gt;
+
+&lt;table&gt;
+  &lt;thead&gt;
+    &lt;tr&gt;
+      &lt;th&gt;Path&lt;/th&gt;
+      &lt;th&gt;Template Syntax&lt;/th&gt;
+      &lt;th&gt;What It Resolves To&lt;/th&gt;
+    &lt;/tr&gt;
+  &lt;/thead&gt;
+  &lt;tbody&gt;
+    &lt;tr&gt;
+      &lt;td&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;credentials.&amp;lt;field&amp;gt;&lt;/code&gt;&lt;/td&gt;
+      &lt;td&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;$&lt;/code&gt; (ApiKey)&lt;br /&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;$&lt;/code&gt; (CustomKeys secret)&lt;/td&gt;
+      &lt;td&gt;The secret value from the connection’s secret store&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;target&lt;/code&gt;&lt;/td&gt;
+      &lt;td&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;$&lt;/code&gt;&lt;/td&gt;
+      &lt;td&gt;The connection’s endpoint URL&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;metadata.&amp;lt;key&amp;gt;&lt;/code&gt;&lt;/td&gt;
+      &lt;td&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;$&lt;/code&gt;&lt;/td&gt;
+      &lt;td&gt;A plain (non-secret) value from the connection’s metadata&lt;/td&gt;
+    &lt;/tr&gt;
+  &lt;/tbody&gt;
+&lt;/table&gt;
+
+&lt;h3 id=&quot;how-it-works&quot;&gt;How It Works&lt;/h3&gt;
+
+&lt;p&gt;The flow has three pieces — create the connection, reference it in your &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;agent.yaml&lt;/code&gt;, and read it in code. Let’s walk through it.&lt;/p&gt;
+
+&lt;p&gt;Say we want our agent to call two things: an external API that needs a key, and a database that needs a password and a (non-secret) region setting. That’s two connections — an &lt;strong&gt;ApiKey&lt;/strong&gt; connection for the external API, and a &lt;strong&gt;CustomKeys&lt;/strong&gt; connection for the database config.&lt;/p&gt;
+
+&lt;p&gt;Until recently, you had to create connections through the Foundry portal or Bicep. The &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;azd ai agent connection&lt;/code&gt; commands now give us a much faster path. Let’s create both connections from the CLI:&lt;/p&gt;
+
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;c&quot;&gt;# ApiKey connection — for the external API&lt;/span&gt;
+azd ai agent connection create my-api &lt;span class=&quot;se&quot;&gt;\&lt;/span&gt;
+    &lt;span class=&quot;nt&quot;&gt;--kind&lt;/span&gt; cognitive-search &lt;span class=&quot;se&quot;&gt;\&lt;/span&gt;
+    &lt;span class=&quot;nt&quot;&gt;--target&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;https://api.example.com&quot;&lt;/span&gt; &lt;span class=&quot;se&quot;&gt;\&lt;/span&gt;
+    &lt;span class=&quot;nt&quot;&gt;--auth-type&lt;/span&gt; api-key &lt;span class=&quot;se&quot;&gt;\&lt;/span&gt;
+    &lt;span class=&quot;nt&quot;&gt;--key&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;ab12-fake-test-key-value-xyz&quot;&lt;/span&gt;
+
+&lt;span class=&quot;c&quot;&gt;# CustomKeys connection — for the database config&lt;/span&gt;
+azd ai agent connection create my-config &lt;span class=&quot;se&quot;&gt;\&lt;/span&gt;
+    &lt;span class=&quot;nt&quot;&gt;--kind&lt;/span&gt; remote-tool &lt;span class=&quot;se&quot;&gt;\&lt;/span&gt;
+    &lt;span class=&quot;nt&quot;&gt;--target&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;https://db.example.com&quot;&lt;/span&gt; &lt;span class=&quot;se&quot;&gt;\&lt;/span&gt;
+    &lt;span class=&quot;nt&quot;&gt;--auth-type&lt;/span&gt; custom-keys &lt;span class=&quot;se&quot;&gt;\&lt;/span&gt;
+    &lt;span class=&quot;nt&quot;&gt;--custom-key&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;db-password=p@ssw0rd-test-value&quot;&lt;/span&gt; &lt;span class=&quot;se&quot;&gt;\&lt;/span&gt;
+    &lt;span class=&quot;nt&quot;&gt;--metadata&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;region=westus2&quot;&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;A couple of things worth pointing out:&lt;/p&gt;
+
+&lt;ol&gt;
+  &lt;li&gt;The &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;--key&lt;/code&gt; value on the ApiKey connection lands in the connection’s secret store. It will be reachable later via &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;credentials.key&lt;/code&gt;.&lt;/li&gt;
+  &lt;li&gt;On the CustomKeys connection, &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;--custom-key&lt;/code&gt; lands secret values in &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;credentials&lt;/code&gt; (where &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;db-password&lt;/code&gt; goes), while &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;--metadata&lt;/code&gt; lands non-secret values in &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;metadata&lt;/code&gt; (where &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;region&lt;/code&gt; goes). Both flags are repeatable, so you can have any combination of secret and plain keys on a single connection.&lt;/li&gt;
+  &lt;li&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;--kind&lt;/code&gt; describes what the connection points at (a remote tool, a search index, etc.) — it doesn’t change the template syntax. You reference connections by name and field path regardless of kind.&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;Let’s verify the connections landed:&lt;/p&gt;
+
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;azd ai agent connection list
+Name           Kind             Auth Type   Target
+&lt;span class=&quot;nt&quot;&gt;----&lt;/span&gt;           &lt;span class=&quot;nt&quot;&gt;----&lt;/span&gt;             &lt;span class=&quot;nt&quot;&gt;---------&lt;/span&gt;   &lt;span class=&quot;nt&quot;&gt;------&lt;/span&gt;
+my-api         CognitiveSearch  ApiKey      https://api.example.com
+my-config      RemoteTool       CustomKeys  https://db.example.com
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;With the connections in place, we reference them in &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;agent.yaml&lt;/code&gt;:&lt;/p&gt;
+
+&lt;div class=&quot;language-yaml highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;na&quot;&gt;environment_variables&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
+  &lt;span class=&quot;pi&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;na&quot;&gt;name&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;AZURE_AI_MODEL_DEPLOYMENT_NAME&lt;/span&gt;
+    &lt;span class=&quot;na&quot;&gt;value&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;${AZURE_AI_MODEL_DEPLOYMENT_NAME}&lt;/span&gt;
+  &lt;span class=&quot;c1&quot;&gt;# ApiKey connection — secret credential + non-secret target&lt;/span&gt;
+  &lt;span class=&quot;pi&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;na&quot;&gt;name&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;API_KEY&lt;/span&gt;
+    &lt;span class=&quot;na&quot;&gt;value&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;$&lt;/span&gt;
+  &lt;span class=&quot;pi&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;na&quot;&gt;name&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;API_ENDPOINT&lt;/span&gt;
+    &lt;span class=&quot;na&quot;&gt;value&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;$&lt;/span&gt;
+  &lt;span class=&quot;c1&quot;&gt;# CustomKeys connection — secret key + plain metadata key&lt;/span&gt;
+  &lt;span class=&quot;pi&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;na&quot;&gt;name&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;DB_PASSWORD&lt;/span&gt;
+    &lt;span class=&quot;na&quot;&gt;value&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;$&lt;/span&gt;
+  &lt;span class=&quot;pi&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;na&quot;&gt;name&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;REGION&lt;/span&gt;
+    &lt;span class=&quot;na&quot;&gt;value&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;$&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Each line maps cleanly to one part of one connection:&lt;/p&gt;
+
+&lt;ol&gt;
+  &lt;li&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;$&lt;/code&gt; — resolves the API key from the ApiKey connection’s secret store.&lt;/li&gt;
+  &lt;li&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;$&lt;/code&gt; — resolves the endpoint URL (not a secret, but kept portable via the template).&lt;/li&gt;
+  &lt;li&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;$&lt;/code&gt; — resolves a secret custom key from a CustomKeys connection.&lt;/li&gt;
+  &lt;li&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;$&lt;/code&gt; — resolves a plain (non-secret) custom key from the same connection.&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;When the container starts, the platform reads each named connection, resolves each placeholder, and injects the resulting values as environment variables. Your agent code never sees the template syntax — only the resolved values:&lt;/p&gt;
+
+&lt;div class=&quot;language-python highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;kn&quot;&gt;import&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;os&lt;/span&gt;
+
+&lt;span class=&quot;n&quot;&gt;api_key&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;os&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;environ&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;API_KEY&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;api_endpoint&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;os&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;environ&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;API_ENDPOINT&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;db_password&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;os&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;environ&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;DB_PASSWORD&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;region&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;os&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;environ&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;REGION&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h3 id=&quot;rotating-secrets&quot;&gt;Rotating Secrets&lt;/h3&gt;
+
+&lt;p&gt;When a secret needs to change — and they always do — you don’t redeploy your agent. You update the connection and the next session picks up the new value:&lt;/p&gt;
+
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;azd ai agent connection update my-api &lt;span class=&quot;nt&quot;&gt;--key&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;new-rotated-key-value&quot;&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;That’s the whole rotation story. The connection is the single source of truth for the secret. No image rebuilds, no environment variable churn, no restarting the agent. Just update the connection and move on.&lt;/p&gt;
+
+&lt;p&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;azd ai agent connection&lt;/code&gt; also has &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;show&lt;/code&gt; for inspecting a single connection’s details and &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;delete&lt;/code&gt; for cleanup when you’re done.&lt;/p&gt;
+
+&lt;h3 id=&quot;a-few-things-worth-remembering&quot;&gt;A Few Things Worth Remembering&lt;/h3&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;&lt;strong&gt;Secrets are resolved at container start.&lt;/strong&gt; Every new session picks up the latest values, which is what makes rotation seamless.&lt;/li&gt;
+  &lt;li&gt;&lt;strong&gt;Template syntax is validated at agent creation.&lt;/strong&gt; Typos in connection names or field paths fail fast, not at runtime.&lt;/li&gt;
+  &lt;li&gt;&lt;strong&gt;Plain environment variables still work.&lt;/strong&gt; Templates are opt-in. You can mix &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;${VAR}&lt;/code&gt; (azd-resolved) and &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;$&lt;/code&gt; (platform-resolved) in the same &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;agent.yaml&lt;/code&gt;.&lt;/li&gt;
+  &lt;li&gt;&lt;strong&gt;Connection values are never stored in the agent definition.&lt;/strong&gt; Only the template reference is persisted. The actual secret lives in the connection (backed by Key Vault).&lt;/li&gt;
+  &lt;li&gt;&lt;strong&gt;CustomKeys can mix secret and non-secret keys.&lt;/strong&gt; Secret keys go to &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;credentials&lt;/code&gt;, non-secret keys go to &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;metadata&lt;/code&gt;. Both are reachable via templates from the same connection.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;For more details on creating connections, see &lt;a href=&quot;https://learn.microsoft.com/en-us/azure/foundry/how-to/connections-add?tabs=foundry-portal&quot;&gt;Add Connections in Foundry&lt;/a&gt;.&lt;/p&gt;
+
+&lt;h2 id=&quot;putting-it-together&quot;&gt;Putting It Together&lt;/h2&gt;
+
+&lt;p&gt;Here’s a complete &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;agent.yaml&lt;/code&gt; combining both patterns — agent identity for Azure resources and project connections for external secrets:&lt;/p&gt;
+
+&lt;div class=&quot;language-yaml highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;na&quot;&gt;kind&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;hosted&lt;/span&gt;
+&lt;span class=&quot;na&quot;&gt;name&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;my-secure-agent&lt;/span&gt;
+&lt;span class=&quot;na&quot;&gt;protocols&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
+  &lt;span class=&quot;pi&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;na&quot;&gt;protocol&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;responses&lt;/span&gt;
+    &lt;span class=&quot;na&quot;&gt;version&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;1.0.0&lt;/span&gt;
+&lt;span class=&quot;na&quot;&gt;resources&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
+  &lt;span class=&quot;na&quot;&gt;cpu&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;0.25&quot;&lt;/span&gt;
+  &lt;span class=&quot;na&quot;&gt;memory&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;0.5Gi&lt;/span&gt;
+&lt;span class=&quot;na&quot;&gt;environment_variables&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
+  &lt;span class=&quot;pi&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;na&quot;&gt;name&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;AZURE_AI_MODEL_DEPLOYMENT_NAME&lt;/span&gt;
+    &lt;span class=&quot;na&quot;&gt;value&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;${AZURE_AI_MODEL_DEPLOYMENT_NAME}&lt;/span&gt;
+  &lt;span class=&quot;pi&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;na&quot;&gt;name&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;API_KEY&lt;/span&gt;
+    &lt;span class=&quot;na&quot;&gt;value&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;$&lt;/span&gt;
+  &lt;span class=&quot;pi&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;na&quot;&gt;name&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;API_ENDPOINT&lt;/span&gt;
+    &lt;span class=&quot;na&quot;&gt;value&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;$&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;And the corresponding code:&lt;/p&gt;
+
+&lt;div class=&quot;language-python highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;kn&quot;&gt;import&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;os&lt;/span&gt;
+&lt;span class=&quot;kn&quot;&gt;from&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;azure.identity&lt;/span&gt; &lt;span class=&quot;kn&quot;&gt;import&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;DefaultAzureCredential&lt;/span&gt;
+&lt;span class=&quot;kn&quot;&gt;from&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;azure.storage.blob&lt;/span&gt; &lt;span class=&quot;kn&quot;&gt;import&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;BlobServiceClient&lt;/span&gt;
+&lt;span class=&quot;kn&quot;&gt;import&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;requests&lt;/span&gt;
+
+&lt;span class=&quot;c1&quot;&gt;# Azure resources → agent identity + RBAC (no secrets)
+&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;credential&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;DefaultAzureCredential&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;blob_client&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;BlobServiceClient&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;account_url&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;https://mystorageaccount.blob.core.windows.net&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;credential&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;credential&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+
+&lt;span class=&quot;c1&quot;&gt;# External services → project connections (secrets injected as env vars)
+&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;api_key&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;os&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;environ&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;API_KEY&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;api_endpoint&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;os&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;environ&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;API_ENDPOINT&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;response&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;requests&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;get&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;
+    &lt;span class=&quot;s&quot;&gt;f&quot;&lt;/span&gt;&lt;span class=&quot;si&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;api_endpoint&lt;/span&gt;&lt;span class=&quot;si&quot;&gt;}&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;/data&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;headers&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;Authorization&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;f&quot;Bearer &lt;/span&gt;&lt;span class=&quot;si&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;api_key&lt;/span&gt;&lt;span class=&quot;si&quot;&gt;}&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;},&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Notice the two distinct patterns:&lt;/p&gt;
+
+&lt;ol&gt;
+  &lt;li&gt;&lt;strong&gt;Azure resources&lt;/strong&gt; → &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;DefaultAzureCredential()&lt;/code&gt; + RBAC. No secrets anywhere. The platform delivers tokens automatically, and RBAC controls access.&lt;/li&gt;
+  &lt;li&gt;&lt;strong&gt;External services&lt;/strong&gt; → Project connections with &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;$&lt;/code&gt; template injection. Secrets live in Key Vault (via connections), get resolved at container start, and arrive as plain environment variables. Your code and container image never contain the actual secret.&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;h2 id=&quot;security-best-practices&quot;&gt;Security Best Practices&lt;/h2&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;&lt;strong&gt;Never put secrets in images or plain environment variables&lt;/strong&gt; — use project connections with &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;$&lt;/code&gt; templates.&lt;/li&gt;
+  &lt;li&gt;&lt;strong&gt;Use &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;DefaultAzureCredential&lt;/code&gt; for Azure resources&lt;/strong&gt; — RBAC-based access is always better than connection strings or shared keys.&lt;/li&gt;
+  &lt;li&gt;&lt;strong&gt;Assign least-privilege roles&lt;/strong&gt; — give your agent only the permissions it needs, at the narrowest scope possible.&lt;/li&gt;
+  &lt;li&gt;&lt;strong&gt;Rotate secrets by updating connections&lt;/strong&gt; — new sessions pick up changes automatically. No redeployment needed.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h2 id=&quot;conclusion&quot;&gt;Conclusion&lt;/h2&gt;
+
+&lt;p&gt;In this post we covered the two pillars of agent security in Foundry Hosted Agents:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;&lt;strong&gt;Agent identity&lt;/strong&gt; is a service principal in Entra ID, managed entirely by the platform. &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;DefaultAzureCredential()&lt;/code&gt; just works — the platform handles token delivery to your sandbox.&lt;/li&gt;
+  &lt;li&gt;&lt;strong&gt;Azure resources&lt;/strong&gt; are accessed via RBAC roles assigned to the agent identity. No secrets needed.&lt;/li&gt;
+  &lt;li&gt;&lt;strong&gt;External secrets&lt;/strong&gt; are managed through project connections with &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;$&lt;/code&gt; templates. Secrets are resolved at session creation and injected as environment variables.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;In the next post, we’ll explore tool integration — how to give your agent the ability to execute code, search the web, and interact with external systems using Foundry’s built-in and custom tool framework.&lt;/p&gt;
+
+&lt;h2 id=&quot;references&quot;&gt;References&lt;/h2&gt;
+
+&lt;ol&gt;
+  &lt;li&gt;&lt;a href=&quot;https://learn.microsoft.com/en-us/azure/foundry/agents/concepts/agent-identity&quot;&gt;Agent Identity Concepts&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;https://learn.microsoft.com/en-us/azure/foundry/how-to/connections-add?tabs=foundry-portal&quot;&gt;Add Connections in Foundry&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;https://learn.microsoft.com/en-us/azure/foundry/agents/how-to/manage-hosted-agent&quot;&gt;Manage Hosted Agents&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;https://learn.microsoft.com/en-us/azure/foundry/concepts/rbac-foundry&quot;&gt;Azure RBAC in Foundry&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;/blog/2026/05/hosted-agents-part-1/&quot;&gt;Part 1 — What, Why, Protocols &amp;amp; Your First Deployment&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;/blog/2026/05/hosted-agents-part-2/&quot;&gt;Part 2 — Sessions, State &amp;amp; the Sandbox&lt;/a&gt;&lt;/li&gt;
+&lt;/ol&gt;
+</content>
+ </entry>
  
  <entry>
    <title>Foundry Hosted Agents - Sessions, State & the Sandbox</title>
