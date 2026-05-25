@@ -387,7 +387,7 @@ This is a powerful model. The chat key gives you conversation-level boundaries, 
 
 **Use `Entra` (default) when:**
 - Your end-users call the agent directly with their own Entra identity (e.g., a web app where each user signs in with Microsoft Entra)
-- Each user already has an `Azure AI User` role assignment on the Foundry project
+- Each user already has a `Foundry User` role assignment on the Foundry project
 - You want zero-config session scoping — the platform handles everything
 
 **Use `Header` when:**

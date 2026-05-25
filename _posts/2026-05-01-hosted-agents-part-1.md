@@ -271,7 +271,7 @@ Once you're happy with local testing, deploy to the cloud:
 azd deploy
 ```
 
-You would need either the `Azure AI Project Manager` or `Owner` role to assign the `Azure AI User` role to the newly created agent identity. We will explore more about agent identity in later posts.
+You would need either the `Foundry Project Manager` or `Owner` role to assign the `Foundry User` role to the newly created agent identity. We will explore more about agent identity in later posts.
 
 Once deployed, your agent gets a dedicated endpoint and you can access it through the Foundry UI or directly calling the REST API.
 
