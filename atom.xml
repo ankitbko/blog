@@ -4,7 +4,7 @@
  <title>F5 - Squashing Bugs</title>
  <link href="https://ankitbko.github.io/atom.xml" rel="self"/>
  <link href="https://ankitbko.github.io/"/>
- <updated>2026-05-25T08:44:03-05:00</updated>
+ <updated>2026-05-25T09:55:36-05:00</updated>
  <id>https://ankitbko.github.io</id>
  <author>
    <name>Ankit Sinha</name>
@@ -758,7 +758,7 @@ az rest &lt;span class=&quot;nt&quot;&gt;--method&lt;/span&gt; POST &lt;span cla
 &lt;p&gt;&lt;strong&gt;Use &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Entra&lt;/code&gt; (default) when:&lt;/strong&gt;&lt;/p&gt;
 &lt;ul&gt;
   &lt;li&gt;Your end-users call the agent directly with their own Entra identity (e.g., a web app where each user signs in with Microsoft Entra)&lt;/li&gt;
-  &lt;li&gt;Each user already has an &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Azure AI User&lt;/code&gt; role assignment on the Foundry project&lt;/li&gt;
+  &lt;li&gt;Each user already has a &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Foundry User&lt;/code&gt; role assignment on the Foundry project&lt;/li&gt;
   &lt;li&gt;You want zero-config session scoping — the platform handles everything&lt;/li&gt;
 &lt;/ul&gt;
 
@@ -1092,7 +1092,7 @@ Conversation: 5237226b-d0e5-4cc6-814a-893d0a4778b5
 &lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;azd deploy
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
 
-&lt;p&gt;You would need either the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Azure AI Project Manager&lt;/code&gt; or &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Owner&lt;/code&gt; role to assign the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Azure AI User&lt;/code&gt; role to the newly created agent identity. We will explore more about agent identity in later posts.&lt;/p&gt;
+&lt;p&gt;You would need either the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Foundry Project Manager&lt;/code&gt; or &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Owner&lt;/code&gt; role to assign the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Foundry User&lt;/code&gt; role to the newly created agent identity. We will explore more about agent identity in later posts.&lt;/p&gt;
 
 &lt;p&gt;Once deployed, your agent gets a dedicated endpoint and you can access it through the Foundry UI or directly calling the REST API.&lt;/p&gt;
 
