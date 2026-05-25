@@ -82,7 +82,7 @@ az role assignment create \
 
 ### What `azd` Does Automatically
 
-When you deploy an agent with `azd deploy`, it automatically assigns the `Foundry User` role at the Foundry account scope — this is what lets your agent call Foundry models. For any other resources (storage, databases, etc.), you need to assign RBAC roles manually.
+When you deploy an agent with `azd deploy`, it automatically assigns the `Foundry User` role at the Foundry project scope — this is what lets your agent call Foundry models. For any other resources (storage, databases, etc.), you need to assign RBAC roles manually.
 
 One thing to note: `ACRPull` (used to pull your container image) is assigned to the **project managed identity**, not your agent identity. Don't confuse the two — they serve different purposes.
 
