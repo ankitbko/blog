@@ -4,7 +4,7 @@
  <title>F5 - Squashing Bugs</title>
  <link href="https://ankitbko.github.io/atom.xml" rel="self"/>
  <link href="https://ankitbko.github.io/"/>
- <updated>2026-05-23T10:34:40-05:00</updated>
+ <updated>2026-05-25T08:44:03-05:00</updated>
  <id>https://ankitbko.github.io</id>
  <author>
    <name>Ankit Sinha</name>
@@ -92,7 +92,7 @@
 
 &lt;h3 id=&quot;what-azd-does-automatically&quot;&gt;What &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;azd&lt;/code&gt; Does Automatically&lt;/h3&gt;
 
-&lt;p&gt;When you deploy an agent with &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;azd deploy&lt;/code&gt;, it automatically assigns the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Foundry User&lt;/code&gt; role at the Foundry account scope — this is what lets your agent call Foundry models. For any other resources (storage, databases, etc.), you need to assign RBAC roles manually.&lt;/p&gt;
+&lt;p&gt;When you deploy an agent with &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;azd deploy&lt;/code&gt;, it automatically assigns the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Foundry User&lt;/code&gt; role at the Foundry project scope — this is what lets your agent call Foundry models. For any other resources (storage, databases, etc.), you need to assign RBAC roles manually.&lt;/p&gt;
 
 &lt;p&gt;One thing to note: &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;ACRPull&lt;/code&gt; (used to pull your container image) is assigned to the &lt;strong&gt;project managed identity&lt;/strong&gt;, not your agent identity. Don’t confuse the two — they serve different purposes.&lt;/p&gt;
 

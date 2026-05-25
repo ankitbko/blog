@@ -229,7 +229,7 @@ window.onload = wrap_img;
 
 <h3 id="what-azd-does-automatically">What <code class="language-plaintext highlighter-rouge">azd</code> Does Automatically</h3>
 
-<p>When you deploy an agent with <code class="language-plaintext highlighter-rouge">azd deploy</code>, it automatically assigns the <code class="language-plaintext highlighter-rouge">Foundry User</code> role at the Foundry account scope — this is what lets your agent call Foundry models. For any other resources (storage, databases, etc.), you need to assign RBAC roles manually.</p>
+<p>When you deploy an agent with <code class="language-plaintext highlighter-rouge">azd deploy</code>, it automatically assigns the <code class="language-plaintext highlighter-rouge">Foundry User</code> role at the Foundry project scope — this is what lets your agent call Foundry models. For any other resources (storage, databases, etc.), you need to assign RBAC roles manually.</p>
 
 <p>One thing to note: <code class="language-plaintext highlighter-rouge">ACRPull</code> (used to pull your container image) is assigned to the <strong>project managed identity</strong>, not your agent identity. Don’t confuse the two — they serve different purposes.</p>
 
