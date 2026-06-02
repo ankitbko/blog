@@ -179,9 +179,11 @@ Toolbox supports a growing set of tool types. This is what `azd` can declare in 
 The wiring pattern is the same across all of them. If a tool needs a credential, declare a project connection in the manifest first, then reference it by name from the toolbox tool entry. Tools without credentials — `web_search`, `code_interpreter`, `tool_search` — only need their `type`.
 
 MCP is the broadest of these, and it has the most auth flexibility. The next section covers each MCP auth mode.
+
 ## MCP Authentication Modes
-| Mode | `authType` | Identity represented downstream | Use when |
-|------|------------|----------------------------------|----------|
+
+| Mode | authType | Identity represented downstream | Use when |
+|------|----------|---------------------------------|----------|
 | No Auth | none | Nobody | Public MCP server |
 | API Key / CustomKeys | `ApiKey` / `CustomKeys` | Shared secret | PATs, API keys, static headers |
 | OAuth Managed | `OAuth2` + `connectorName` | Consenting user | Managed OAuth app exists |
@@ -189,6 +191,7 @@ MCP is the broadest of these, and it has the most auth flexibility. The next sec
 | Agent Identity | `AgenticIdentity` | Agent service principal | MCP server trusts the agent identity |
 | Project Managed Identity | `ManagedIdentity` | Project's MI | MCP server expects the project's MI rather than the per-agent identity |
 | Entra Passthrough | `UserEntraToken` | Calling user | M365 / WorkIQ / user-delegated tools |
+
 ### Each Mode In Practice
 Each mode below shows the same toolbox `mcp` tool wired with a different `authType`. The toolbox sits between the agent and the MCP server — the agent only sees the toolbox endpoint; the toolbox does the credential injection.
 
