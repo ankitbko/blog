@@ -320,10 +320,18 @@ The real value of Toolbox shows up when you combine tools.
 - kind: toolbox
   name: agent-tools
   tools:
-    - { type: web_search, name: public_web }
-    - { type: code_interpreter, name: python_sandbox }
-    - { type: mcp, server_label: github, server_url: https://api.githubcopilot.com/mcp, project_connection_id: github-mcp-conn }
-    - { type: azure_ai_search, name: product_docs, index_name: "{{ ai_search_index_name }}", project_connection_id: aisearch-conn }
+    - type: web_search
+      name: public_web
+    - type: code_interpreter
+      name: python_sandbox
+    - type: mcp
+      server_label: github
+      server_url: https://api.githubcopilot.com/mcp
+      project_connection_id: github-mcp-conn
+    - type: azure_ai_search
+      name: product_docs
+      index_name: "{{ ai_search_index_name }}"
+      project_connection_id: aisearch-conn
 ```
 The model chooses tools by name, description, and schema, so naming matters. `github` is better than `mcp1`. `product_docs` is better than `search`. If two tools do similar things, make the descriptions explicit: one reads internal docs, one searches the public web, one reads GitHub issues.
 
