@@ -4,7 +4,7 @@
  <title>F5 - Squashing Bugs</title>
  <link href="https://ankitbko.github.io/atom.xml" rel="self"/>
  <link href="https://ankitbko.github.io/"/>
- <updated>2026-06-02T09:36:56-05:00</updated>
+ <updated>2026-06-02T09:42:44-05:00</updated>
  <id>https://ankitbko.github.io</id>
  <author>
    <name>Ankit Sinha</name>
@@ -293,16 +293,64 @@
 &lt;p&gt;The wiring pattern is the same across all of them. If a tool needs a credential, declare a project connection in the manifest first, then reference it by name from the toolbox tool entry. Tools without credentials — &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;web_search&lt;/code&gt;, &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;code_interpreter&lt;/code&gt;, &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;tool_search&lt;/code&gt; — only need their &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;type&lt;/code&gt;.&lt;/p&gt;
 
 &lt;p&gt;MCP is the broadest of these, and it has the most auth flexibility. The next section covers each MCP auth mode.&lt;/p&gt;
+
 &lt;h2 id=&quot;mcp-authentication-modes&quot;&gt;MCP Authentication Modes&lt;/h2&gt;
-&lt;p&gt;| Mode | &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;authType&lt;/code&gt; | Identity represented downstream | Use when |
-|——|————|———————————-|———-|
-| No Auth | none | Nobody | Public MCP server |
-| API Key / CustomKeys | &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;ApiKey&lt;/code&gt; / &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;CustomKeys&lt;/code&gt; | Shared secret | PATs, API keys, static headers |
-| OAuth Managed | &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;OAuth2&lt;/code&gt; + &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;connectorName&lt;/code&gt; | Consenting user | Managed OAuth app exists |
-| OAuth Custom | &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;OAuth2&lt;/code&gt; + URLs/scopes | Consenting user | You own the OAuth app registration |
-| Agent Identity | &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;AgenticIdentity&lt;/code&gt; | Agent service principal | MCP server trusts the agent identity |
-| Project Managed Identity | &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;ManagedIdentity&lt;/code&gt; | Project’s MI | MCP server expects the project’s MI rather than the per-agent identity |
-| Entra Passthrough | &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;UserEntraToken&lt;/code&gt; | Calling user | M365 / WorkIQ / user-delegated tools |&lt;/p&gt;
+
+&lt;table&gt;
+  &lt;thead&gt;
+    &lt;tr&gt;
+      &lt;th&gt;Mode&lt;/th&gt;
+      &lt;th&gt;authType&lt;/th&gt;
+      &lt;th&gt;Identity represented downstream&lt;/th&gt;
+      &lt;th&gt;Use when&lt;/th&gt;
+    &lt;/tr&gt;
+  &lt;/thead&gt;
+  &lt;tbody&gt;
+    &lt;tr&gt;
+      &lt;td&gt;No Auth&lt;/td&gt;
+      &lt;td&gt;none&lt;/td&gt;
+      &lt;td&gt;Nobody&lt;/td&gt;
+      &lt;td&gt;Public MCP server&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;API Key / CustomKeys&lt;/td&gt;
+      &lt;td&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;ApiKey&lt;/code&gt; / &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;CustomKeys&lt;/code&gt;&lt;/td&gt;
+      &lt;td&gt;Shared secret&lt;/td&gt;
+      &lt;td&gt;PATs, API keys, static headers&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;OAuth Managed&lt;/td&gt;
+      &lt;td&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;OAuth2&lt;/code&gt; + &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;connectorName&lt;/code&gt;&lt;/td&gt;
+      &lt;td&gt;Consenting user&lt;/td&gt;
+      &lt;td&gt;Managed OAuth app exists&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;OAuth Custom&lt;/td&gt;
+      &lt;td&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;OAuth2&lt;/code&gt; + URLs/scopes&lt;/td&gt;
+      &lt;td&gt;Consenting user&lt;/td&gt;
+      &lt;td&gt;You own the OAuth app registration&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;Agent Identity&lt;/td&gt;
+      &lt;td&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;AgenticIdentity&lt;/code&gt;&lt;/td&gt;
+      &lt;td&gt;Agent service principal&lt;/td&gt;
+      &lt;td&gt;MCP server trusts the agent identity&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;Project Managed Identity&lt;/td&gt;
+      &lt;td&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;ManagedIdentity&lt;/code&gt;&lt;/td&gt;
+      &lt;td&gt;Project’s MI&lt;/td&gt;
+      &lt;td&gt;MCP server expects the project’s MI rather than the per-agent identity&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;Entra Passthrough&lt;/td&gt;
+      &lt;td&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;UserEntraToken&lt;/code&gt;&lt;/td&gt;
+      &lt;td&gt;Calling user&lt;/td&gt;
+      &lt;td&gt;M365 / WorkIQ / user-delegated tools&lt;/td&gt;
+    &lt;/tr&gt;
+  &lt;/tbody&gt;
+&lt;/table&gt;
+
 &lt;h3 id=&quot;each-mode-in-practice&quot;&gt;Each Mode In Practice&lt;/h3&gt;
 &lt;p&gt;Each mode below shows the same toolbox &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;mcp&lt;/code&gt; tool wired with a different &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;authType&lt;/code&gt;. The toolbox sits between the agent and the MCP server — the agent only sees the toolbox endpoint; the toolbox does the credential injection.&lt;/p&gt;
 

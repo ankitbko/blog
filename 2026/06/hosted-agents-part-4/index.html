@@ -442,16 +442,64 @@ window.onload = wrap_img;
 <p>The wiring pattern is the same across all of them. If a tool needs a credential, declare a project connection in the manifest first, then reference it by name from the toolbox tool entry. Tools without credentials — <code class="language-plaintext highlighter-rouge">web_search</code>, <code class="language-plaintext highlighter-rouge">code_interpreter</code>, <code class="language-plaintext highlighter-rouge">tool_search</code> — only need their <code class="language-plaintext highlighter-rouge">type</code>.</p>
 
 <p>MCP is the broadest of these, and it has the most auth flexibility. The next section covers each MCP auth mode.</p>
+
 <h2 id="mcp-authentication-modes">MCP Authentication Modes</h2>
-<p>| Mode | <code class="language-plaintext highlighter-rouge">authType</code> | Identity represented downstream | Use when |
-|——|————|———————————-|———-|
-| No Auth | none | Nobody | Public MCP server |
-| API Key / CustomKeys | <code class="language-plaintext highlighter-rouge">ApiKey</code> / <code class="language-plaintext highlighter-rouge">CustomKeys</code> | Shared secret | PATs, API keys, static headers |
-| OAuth Managed | <code class="language-plaintext highlighter-rouge">OAuth2</code> + <code class="language-plaintext highlighter-rouge">connectorName</code> | Consenting user | Managed OAuth app exists |
-| OAuth Custom | <code class="language-plaintext highlighter-rouge">OAuth2</code> + URLs/scopes | Consenting user | You own the OAuth app registration |
-| Agent Identity | <code class="language-plaintext highlighter-rouge">AgenticIdentity</code> | Agent service principal | MCP server trusts the agent identity |
-| Project Managed Identity | <code class="language-plaintext highlighter-rouge">ManagedIdentity</code> | Project’s MI | MCP server expects the project’s MI rather than the per-agent identity |
-| Entra Passthrough | <code class="language-plaintext highlighter-rouge">UserEntraToken</code> | Calling user | M365 / WorkIQ / user-delegated tools |</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>Mode</th>
+      <th>authType</th>
+      <th>Identity represented downstream</th>
+      <th>Use when</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>No Auth</td>
+      <td>none</td>
+      <td>Nobody</td>
+      <td>Public MCP server</td>
+    </tr>
+    <tr>
+      <td>API Key / CustomKeys</td>
+      <td><code class="language-plaintext highlighter-rouge">ApiKey</code> / <code class="language-plaintext highlighter-rouge">CustomKeys</code></td>
+      <td>Shared secret</td>
+      <td>PATs, API keys, static headers</td>
+    </tr>
+    <tr>
+      <td>OAuth Managed</td>
+      <td><code class="language-plaintext highlighter-rouge">OAuth2</code> + <code class="language-plaintext highlighter-rouge">connectorName</code></td>
+      <td>Consenting user</td>
+      <td>Managed OAuth app exists</td>
+    </tr>
+    <tr>
+      <td>OAuth Custom</td>
+      <td><code class="language-plaintext highlighter-rouge">OAuth2</code> + URLs/scopes</td>
+      <td>Consenting user</td>
+      <td>You own the OAuth app registration</td>
+    </tr>
+    <tr>
+      <td>Agent Identity</td>
+      <td><code class="language-plaintext highlighter-rouge">AgenticIdentity</code></td>
+      <td>Agent service principal</td>
+      <td>MCP server trusts the agent identity</td>
+    </tr>
+    <tr>
+      <td>Project Managed Identity</td>
+      <td><code class="language-plaintext highlighter-rouge">ManagedIdentity</code></td>
+      <td>Project’s MI</td>
+      <td>MCP server expects the project’s MI rather than the per-agent identity</td>
+    </tr>
+    <tr>
+      <td>Entra Passthrough</td>
+      <td><code class="language-plaintext highlighter-rouge">UserEntraToken</code></td>
+      <td>Calling user</td>
+      <td>M365 / WorkIQ / user-delegated tools</td>
+    </tr>
+  </tbody>
+</table>
+
 <h3 id="each-mode-in-practice">Each Mode In Practice</h3>
 <p>Each mode below shows the same toolbox <code class="language-plaintext highlighter-rouge">mcp</code> tool wired with a different <code class="language-plaintext highlighter-rouge">authType</code>. The toolbox sits between the agent and the MCP server — the agent only sees the toolbox endpoint; the toolbox does the credential injection.</p>
 
