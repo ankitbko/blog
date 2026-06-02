@@ -1,0 +1,887 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="twitter:card" content="summary_large_image" /><!-- Begin Jekyll SEO tag v2.6.1 -->
+<title>Foundry Hosted Agents - Tools &amp; Toolbox | F5 - Squashing Bugs</title>
+<meta name="generator" content="Jekyll v4.1.1" />
+<meta property="og:title" content="Foundry Hosted Agents - Tools &amp; Toolbox" />
+<meta name="author" content="<a href='https://twitter.com/ankitbko', target='_blank'>Ankit Sinha</a>" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="A walkthrough of giving hosted agents tools — from local @tool functions, through direct MCP, to Foundry Toolbox with versioning and multiple auth modes, ending with a working agent built on the GitHub Copilot SDK." />
+<meta property="og:description" content="A walkthrough of giving hosted agents tools — from local @tool functions, through direct MCP, to Foundry Toolbox with versioning and multiple auth modes, ending with a working agent built on the GitHub Copilot SDK." />
+<link rel="canonical" href="https://ankitbko.github.io/blog/2026/06/hosted-agents-part-4/" />
+<meta property="og:url" content="https://ankitbko.github.io/blog/2026/06/hosted-agents-part-4/" />
+<meta property="og:site_name" content="F5 - Squashing Bugs" />
+<meta property="og:image" content="https://ankitbko.github.io/blog/images/previews/ai-icon.png" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2026-06-02T00:00:00-05:00" />
+<script type="application/ld+json">
+{"url":"https://ankitbko.github.io/blog/2026/06/hosted-agents-part-4/","@type":"BlogPosting","headline":"Foundry Hosted Agents - Tools &amp; Toolbox","dateModified":"2026-06-02T00:00:00-05:00","datePublished":"2026-06-02T00:00:00-05:00","mainEntityOfPage":{"@type":"WebPage","@id":"https://ankitbko.github.io/blog/2026/06/hosted-agents-part-4/"},"image":"https://ankitbko.github.io/blog/images/previews/ai-icon.png","author":{"@type":"Person","name":"<a href='https://twitter.com/ankitbko', target='_blank'>Ankit Sinha</a>"},"description":"A walkthrough of giving hosted agents tools — from local @tool functions, through direct MCP, to Foundry Toolbox with versioning and multiple auth modes, ending with a working agent built on the GitHub Copilot SDK.","@context":"https://schema.org"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="stylesheet" href="/blog/assets/css/style.css"><link type="application/atom+xml" rel="alternate" href="https://ankitbko.github.io/blog/feed.xml" title="F5 - Squashing Bugs" /><!-- the google_analytics_id gets auto inserted from the config file -->
+
+
+
+<!-- Global site tag (gtag.js) - Google Analytics -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=UA-75679348-1"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'UA-75679348-1');
+</script>
+
+
+<link rel="shortcut icon" type="image/x-icon" href="/blog/images/favicon.ico"><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/Primer/15.2.0/primer.css" integrity="sha512-xTz2ys4coGAOz8vuV1NcQBkgVmKhsSEtjbqyMJbBHRplFuvKIUo6xhLHpAyPt9mfR6twHJgn9OgVLuqOvjeBhg==" crossorigin="anonymous" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.14.0/css/all.min.css" integrity="sha512-1PKOgIY59xJ8Co8+NE6FZ+LOAZKjy+KY8iq0G4B3CyeY6wYHN3yt9PW0XpSriVlkMXe40PTKnXrLnZ9+fkDaog==" crossorigin="anonymous" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.12.0/katex.min.css" integrity="sha512-h7nl+xz8wgDlNM4NqKEM4F1NkIRS17M9+uJwIGwuo8vGqIl4BhuCKdxjWEINm+xyrUjNCnK5dCrhM0sj+wTIXw==" crossorigin="anonymous" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.12.0/katex.min.js" integrity="sha512-/CMIhXiDA3m2c9kzRyd97MTb3MC6OVnx4TElQ7fkkoRghwDf6gi41gaT1PwF270W6+J60uTmwgeRpNpJdRV6sg==" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.12.0/contrib/auto-render.min.js" integrity="sha512-Do7uJAaHZm5OLrIv/yN4w0iG1dbu01kzdMNnFfu/mAqgUk6Nniv2JYHcwH+cNwjqgLcqcuBBk+JRvprLVI8azg==" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js" integrity="sha512-0doc9hKxR3PYwso42RD1p5ySZpzzuDiOwMrdCEh2WdJZCjcmFKc/wEnL+z8fBQrnHoiNWbo+3fiGkOYXBdQp4A==" crossorigin="anonymous"></script>
+    <script>
+    document.addEventListener("DOMContentLoaded", function() {
+        renderMathInElement( document.body, {
+        delimiters: [
+            {left: "$$", right: "$$", display: true},
+            {left: "[%", right: "%]", display: true},
+            {left: "$", right: "$", display: false}
+        ]}
+        );
+    });
+    </script>
+
+
+<script>
+function wrap_img(fn) {
+    if (document.attachEvent ? document.readyState === "complete" : document.readyState !== "loading") {
+        var elements = document.querySelectorAll(".post img");
+        Array.prototype.forEach.call(elements, function(el, i) {
+            if (el.getAttribute("title") && (el.className != "emoji")) {
+                const caption = document.createElement('figcaption');
+                var node = document.createTextNode(el.getAttribute("title"));
+                caption.appendChild(node);
+                const wrapper = document.createElement('figure');
+                wrapper.className = 'image';
+                el.parentNode.insertBefore(wrapper, el);
+                el.parentNode.removeChild(el);
+                wrapper.appendChild(el);
+                wrapper.appendChild(caption);
+            }
+        });
+    } else { document.addEventListener('DOMContentLoaded', fn); }
+}
+window.onload = wrap_img;
+</script>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function(){
+    // add link icon to anchor tags
+    var elem = document.querySelectorAll(".anchor-link")
+    elem.forEach(e => (e.innerHTML = '<i class="fas fa-link fa-xs"></i>'));
+    });
+</script>
+</head>
+<body><header class="site-header">
+
+  <div class="wrapper">
+    <a class="site-title" rel="author" href="/blog/">F5 - Squashing Bugs</a>
+      <nav class="site-nav">
+        <input type="checkbox" id="nav-trigger" />
+        <label for="nav-trigger">
+          <span class="menu-icon"></span>
+        </label>
+
+        <div class="nav-items">
+  <a class="nav-item" href="/blog/about/">About Me</a>
+  <a class="nav-item" href="/blog/search/">Search</a>
+  <a class="nav-item" href="/blog/categories/">Tags</a>
+</div>
+
+      </nav>
+  </div>
+</header>
+<main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title p-name" itemprop="name headline">Foundry Hosted Agents - Tools &amp; Toolbox</h1><p class="page-description">A walkthrough of giving hosted agents tools — from local @tool functions, through direct MCP, to Foundry Toolbox with versioning and multiple auth modes, ending with a working agent built on the GitHub Copilot SDK.</p><p class="post-meta post-meta-title"><time class="dt-published" datetime="2026-06-02T00:00:00-05:00" itemprop="datePublished">
+        Jun 2, 2026
+      </time>• 
+          <span itemprop="author" itemscope itemtype="http://schema.org/Person">
+            <span class="p-author h-card" itemprop="name"><a href='https://twitter.com/ankitbko', target='_blank'>Ankit Sinha</a></span></span>
+       • <span class="read-time" title="Estimated read time">
+    
+    
+      17 min read
+    
+</span></p>
+
+    
+      <p class="category-tags"><i class="fas fa-tags category-tags-icon"></i></i> 
+      
+        <a class="category-tags-link" href="/blog/categories/#Azure">Azure</a>
+        &nbsp;
+      
+        <a class="category-tags-link" href="/blog/categories/#AI">AI</a>
+        &nbsp;
+      
+        <a class="category-tags-link" href="/blog/categories/#Foundry">Foundry</a>
+        &nbsp;
+      
+        <a class="category-tags-link" href="/blog/categories/#Hosted Agents">Hosted Agents</a>
+        &nbsp;
+      
+        <a class="category-tags-link" href="/blog/categories/#Tools">Tools</a>
+        &nbsp;
+      
+        <a class="category-tags-link" href="/blog/categories/#Toolbox">Toolbox</a>
+        &nbsp;
+      
+        <a class="category-tags-link" href="/blog/categories/#MCP">MCP</a>
+        &nbsp;
+      
+        <a class="category-tags-link" href="/blog/categories/#GitHub Copilot">GitHub Copilot</a>
+        
+      
+      </p>
+    
+
+    
+		<div class="d-flex flex-wrap flex-justify-start flex-items-center">
+			<p class="page-description" style="margin-right: .5rem;">Source Code </p>
+			<div class="page-description">
+				<div class="px-2">
+    <a href="https://github.com/ankitbko/hosted-agents-daily-standup" role="button" target="_blank">
+        <img class="notebook-badge-image" src="/blog/assets/badges/github.svg" alt="View On GitHub">
+    </a>
+</div>
+
+			</div>
+		</div>
+	
+  </header>
+
+  <div class="post-content e-content" itemprop="articleBody">
+    <p>In <a href="/blog/2026/05/hosted-agents-part-1/">Part 1</a> we deployed a hosted agent. In <a href="/blog/2026/05/hosted-agents-part-2/">Part 2</a> we explored sessions, state, and the sandbox. In <a href="/blog/2026/05/hosted-agents-part-3/">Part 3</a> we gave the agent an identity and a safe way to handle secrets.</p>
+
+<p>Now comes the part where the agent stops being a chatbot and starts doing work.</p>
+
+<p>Tools are how agents get work done. A tool can be a local Python function, a remote MCP server, web search, file search, code interpreter, an OpenAPI endpoint, or even another agent. The idea is simple. The wiring is where things get interesting.</p>
+
+<p>I’ll start with a tiny <code class="language-plaintext highlighter-rouge">@tool</code> function, then move through direct MCP, Foundry Toolbox, versioning, MCP auth, approval gates, multi-tool composition, and finally a working Daily Standup Agent powered by the GitHub Copilot SDK.</p>
+
+<blockquote>
+  <p>Hosted Agents, Foundry Toolbox, WorkIQ, and <code class="language-plaintext highlighter-rouge">azd</code> are in active development. Command surfaces and YAML shapes may evolve. If you see drift from the commands here, please comment and I will update the post.</p>
+</blockquote>
+
+<h2 id="the-mental-model">The Mental Model</h2>
+<p>There are two paths for giving a hosted agent tools:</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>Path</th>
+      <th>Where tools live</th>
+      <th>Best for</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><strong>In-code tools</strong></td>
+      <td>Inside your agent container</td>
+      <td>Quick prototypes, local business logic, one-off tools</td>
+    </tr>
+    <tr>
+      <td><strong>Foundry Toolbox</strong></td>
+      <td>In Foundry as a managed toolbox</td>
+      <td>Shared tools, enterprise governance, versioning, auth management</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>Both are valid. I still use in-code tools when I’m building a small agent and the tool really belongs with that agent’s code. But once the same tool is shared by more than one agent, or owned by a platform team, I want it outside the container.</p>
+
+<p>That’s what Foundry Toolbox gives us: define tools once, expose them through an MCP endpoint, and let agents consume that toolbox wherever they need it.</p>
+
+<h2 id="in-code-tools-the-fast-path">In-Code Tools: The Fast Path</h2>
+<p>Most agent frameworks expose a way to declare a tool inline — Microsoft Agent Framework uses <code class="language-plaintext highlighter-rouge">@tool</code>, others have their own decorators or registration calls. The examples in this section use Agent Framework, but the shape is the same elsewhere.</p>
+
+<p>Let’s start with the smallest useful version: a Python function decorated as a tool.</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kn">from</span> <span class="nn">random</span> <span class="kn">import</span> <span class="n">randint</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Annotated</span>
+<span class="kn">from</span> <span class="nn">agent_framework</span> <span class="kn">import</span> <span class="n">Agent</span><span class="p">,</span> <span class="n">tool</span>
+<span class="kn">from</span> <span class="nn">pydantic</span> <span class="kn">import</span> <span class="n">Field</span>
+
+<span class="o">@</span><span class="n">tool</span><span class="p">(</span><span class="n">approval_mode</span><span class="o">=</span><span class="s">"never_require"</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">get_weather</span><span class="p">(</span>
+    <span class="n">location</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Field</span><span class="p">(</span><span class="n">description</span><span class="o">=</span><span class="s">"The location to get the weather for."</span><span class="p">)],</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+    <span class="s">"""Get the weather for a given location."""</span>
+    <span class="n">conditions</span> <span class="o">=</span> <span class="p">[</span><span class="s">"sunny"</span><span class="p">,</span> <span class="s">"cloudy"</span><span class="p">,</span> <span class="s">"rainy"</span><span class="p">,</span> <span class="s">"stormy"</span><span class="p">]</span>
+    <span class="k">return</span> <span class="s">f"The weather in </span><span class="si">{</span><span class="n">location</span><span class="si">}</span><span class="s"> is </span><span class="si">{</span><span class="n">conditions</span><span class="p">[</span><span class="n">randint</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">3</span><span class="p">)]</span><span class="si">}</span><span class="s"> with a high of </span><span class="si">{</span><span class="n">randint</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">30</span><span class="p">)</span><span class="si">}</span><span class="s">°C."</span>
+
+<span class="n">agent</span> <span class="o">=</span> <span class="n">Agent</span><span class="p">(</span>
+    <span class="n">client</span><span class="o">=</span><span class="n">client</span><span class="p">,</span>
+    <span class="n">instructions</span><span class="o">=</span><span class="s">"You are a friendly assistant. Keep your answers brief."</span><span class="p">,</span>
+    <span class="n">tools</span><span class="o">=</span><span class="p">[</span><span class="n">get_weather</span><span class="p">],</span>
+    <span class="n">default_options</span><span class="o">=</span><span class="p">{</span><span class="s">"store"</span><span class="p">:</span> <span class="bp">False</span><span class="p">},</span>
+<span class="p">)</span>
+</code></pre></div></div>
+
+<ol>
+  <li>The <code class="language-plaintext highlighter-rouge">@tool</code> decorator turns the Python function into a model-callable tool.</li>
+  <li>The function name becomes the tool name.</li>
+  <li>The docstring becomes the natural-language description.</li>
+  <li>Type hints and <code class="language-plaintext highlighter-rouge">Field(...)</code> descriptions become the input schema.</li>
+  <li><code class="language-plaintext highlighter-rouge">approval_mode="never_require"</code> tells the runtime this tool can run without a human approval step.</li>
+</ol>
+
+<p>This works well for domain logic that belongs next to the agent: pricing calculation, internal data normalization, template rendering, policy checks, or a wrapper around a private library already in your container.</p>
+
+<h3 id="direct-mcp-from-code">Direct MCP From Code</h3>
+<p>The next step is direct MCP. Instead of writing a function, the agent connects to an MCP server and imports whatever tools that server exposes. In Agent Framework, <code class="language-plaintext highlighter-rouge">FoundryChatClient</code> has a <code class="language-plaintext highlighter-rouge">get_mcp_tool</code> helper that wraps a remote MCP server as a tool you can hand to an <code class="language-plaintext highlighter-rouge">Agent</code>:</p>
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kn">from</span> <span class="nn">agent_framework.foundry</span> <span class="kn">import</span> <span class="n">FoundryChatClient</span>
+
+<span class="n">client</span> <span class="o">=</span> <span class="n">FoundryChatClient</span><span class="p">(</span>
+    <span class="n">project_endpoint</span><span class="o">=</span><span class="n">os</span><span class="p">.</span><span class="n">environ</span><span class="p">[</span><span class="s">"FOUNDRY_PROJECT_ENDPOINT"</span><span class="p">],</span>
+    <span class="n">model</span><span class="o">=</span><span class="n">os</span><span class="p">.</span><span class="n">environ</span><span class="p">[</span><span class="s">"AZURE_AI_MODEL_DEPLOYMENT_NAME"</span><span class="p">],</span>
+    <span class="n">credential</span><span class="o">=</span><span class="n">DefaultAzureCredential</span><span class="p">(),</span>
+<span class="p">)</span>
+
+<span class="n">github_pat</span> <span class="o">=</span> <span class="n">os</span><span class="p">.</span><span class="n">environ</span><span class="p">[</span><span class="s">"GITHUB_PAT"</span><span class="p">]</span>
+<span class="n">tools</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="n">client</span><span class="p">.</span><span class="n">get_mcp_tool</span><span class="p">(</span>
+        <span class="n">name</span><span class="o">=</span><span class="s">"GitHub"</span><span class="p">,</span>
+        <span class="n">url</span><span class="o">=</span><span class="s">"https://api.githubcopilot.com/mcp/"</span><span class="p">,</span>
+        <span class="n">headers</span><span class="o">=</span><span class="p">{</span><span class="s">"Authorization"</span><span class="p">:</span> <span class="s">f"Bearer </span><span class="si">{</span><span class="n">github_pat</span><span class="si">}</span><span class="s">"</span><span class="p">},</span>
+        <span class="n">approval_mode</span><span class="o">=</span><span class="s">"never_require"</span><span class="p">,</span>
+    <span class="p">)</span>
+<span class="p">]</span>
+</code></pre></div></div>
+
+<ol>
+  <li>The hosted agent owns the MCP URL.</li>
+  <li>The hosted agent owns the headers.</li>
+  <li>The hosted agent decides whether the tool requires approval.</li>
+  <li>The tool list is fixed at deploy time.</li>
+</ol>
+
+<p>That is fine for prototypes. It gets painful when several agents need the same GitHub, WorkIQ, Salesforce, or internal MCP server.</p>
+<h3 id="why-in-code-stops-scaling">Why In-Code Stops Scaling</h3>
+<p>Here’s the thing — tools are rarely owned by one agent forever.</p>
+
+<p>If every agent wires tools directly, credentials get copied around, tool changes require redeploys, and nobody has a single inventory. Moving a tool definition from dev to prod also becomes a per-agent exercise.</p>
+
+<p>Once you have more than one agent or team, the tools should live somewhere else.</p>
+
+<p>That somewhere else is Foundry Toolbox.</p>
+
+<h2 id="foundry-toolbox">Foundry Toolbox</h2>
+<p>A <strong>Foundry Toolbox</strong> is a tool registry in your Foundry project. You define a set of tools, Foundry exposes them through an MCP endpoint, and hosted agents consume that endpoint.</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>Concern</th>
+      <th>In-code tools</th>
+      <th>Foundry Toolbox</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Tool definition</td>
+      <td>Agent code</td>
+      <td>Foundry resource</td>
+    </tr>
+    <tr>
+      <td>Tool endpoint</td>
+      <td>Inside container</td>
+      <td>Toolbox MCP endpoint</td>
+    </tr>
+    <tr>
+      <td>Credentials</td>
+      <td>Agent env vars / code</td>
+      <td>Project connections</td>
+    </tr>
+    <tr>
+      <td>Changes</td>
+      <td>Redeploy agent</td>
+      <td>Create/promote toolbox version</td>
+    </tr>
+    <tr>
+      <td>Reuse</td>
+      <td>Copy code/config</td>
+      <td>Multiple agents consume same endpoint</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>At runtime, the toolbox still looks like MCP. Your agent connects to a toolbox MCP endpoint, calls <code class="language-plaintext highlighter-rouge">tools/list</code>, and later calls <code class="language-plaintext highlighter-rouge">tools/call</code>. The toolbox owns the backend catalog and auth configuration.</p>
+<h3 id="toolbox-versioning">Toolbox Versioning</h3>
+<p>Toolboxes are versioned. Each version snapshots the toolset. The first version becomes the default; later versions can be promoted explicitly.</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>Role</th>
+      <th>Endpoint</th>
+      <th>Use for</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><strong>Consumer endpoint</strong></td>
+      <td><code class="language-plaintext highlighter-rouge">{project}/toolboxes/{name}/mcp?api-version=v1</code></td>
+      <td>Production agents; follows the toolbox default version</td>
+    </tr>
+    <tr>
+      <td><strong>Version endpoint</strong></td>
+      <td><code class="language-plaintext highlighter-rouge">{project}/toolboxes/{name}/versions/{version}/mcp?api-version=v1</code></td>
+      <td>Validate a specific version before promotion</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>Every toolbox MCP request also needs this preview header:</p>
+<div class="language-http highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="err">Foundry-Features: Toolboxes=V1Preview
+</span></code></pre></div></div>
+<h3 id="creating-a-toolbox-with-azd">Creating A Toolbox With <code class="language-plaintext highlighter-rouge">azd</code></h3>
+<p>Declare the toolbox and its connections in <code class="language-plaintext highlighter-rouge">agent.manifest.yaml</code> under <code class="language-plaintext highlighter-rouge">resources:</code>, then deploy with <code class="language-plaintext highlighter-rouge">azd ai agent init</code> followed by <code class="language-plaintext highlighter-rouge">azd provision</code>. <code class="language-plaintext highlighter-rouge">azd</code> provisions the connections, creates the toolbox version, and binds it to the agent from the same manifest.</p>
+<div class="language-yaml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="na">resources</span><span class="pi">:</span>
+  <span class="pi">-</span> <span class="na">kind</span><span class="pi">:</span> <span class="s">connection</span>
+    <span class="na">name</span><span class="pi">:</span> <span class="s">github-mcp-conn</span>
+    <span class="na">category</span><span class="pi">:</span> <span class="s">RemoteTool</span>
+    <span class="na">authType</span><span class="pi">:</span> <span class="s">CustomKeys</span>
+    <span class="na">target</span><span class="pi">:</span> <span class="s">https://api.githubcopilot.com/mcp</span>
+    <span class="na">credentials</span><span class="pi">:</span>
+      <span class="na">type</span><span class="pi">:</span> <span class="s">CustomKeys</span>
+      <span class="na">keys</span><span class="pi">:</span>
+        <span class="na">Authorization</span><span class="pi">:</span> <span class="s2">"</span><span class="s">Bearer</span><span class="nv"> </span><span class="s">{{</span><span class="nv"> </span><span class="s">github_pat</span><span class="nv"> </span><span class="s">}}"</span>
+  <span class="pi">-</span> <span class="na">kind</span><span class="pi">:</span> <span class="s">toolbox</span>
+    <span class="na">name</span><span class="pi">:</span> <span class="s">agent-tools</span>
+    <span class="na">tools</span><span class="pi">:</span>
+      <span class="pi">-</span> <span class="na">type</span><span class="pi">:</span> <span class="s">web_search</span>
+      <span class="pi">-</span> <span class="na">type</span><span class="pi">:</span> <span class="s">mcp</span>
+        <span class="na">server_label</span><span class="pi">:</span> <span class="s">github</span>
+        <span class="na">server_url</span><span class="pi">:</span> <span class="s">https://api.githubcopilot.com/mcp</span>
+        <span class="na">project_connection_id</span><span class="pi">:</span> <span class="s">github-mcp-conn</span>
+</code></pre></div></div>
+
+<p>A few things to know:</p>
+
+<ul>
+  <li>Each tool entry in <code class="language-plaintext highlighter-rouge">tools:</code> becomes a separately addressable tool source inside the toolbox.</li>
+  <li>Connections referenced by <code class="language-plaintext highlighter-rouge">project_connection_id</code> must be declared in the same <code class="language-plaintext highlighter-rouge">resources:</code> block so <code class="language-plaintext highlighter-rouge">azd</code> can provision them in dependency order.</li>
+  <li>Secrets like <code class="language-plaintext highlighter-rouge">{{ github_pat }}</code> come from manifest parameters and never land in the file you commit. <code class="language-plaintext highlighter-rouge">azd ai agent init</code> prompts you for them interactively or reads them from your <code class="language-plaintext highlighter-rouge">azd</code> environment.</li>
+  <li>Each <code class="language-plaintext highlighter-rouge">azd provision</code> after a change to the toolbox config creates a new toolbox <strong>version</strong>. The versions need to be promoted explicitly to be <code class="language-plaintext highlighter-rouge">default</code>.</li>
+</ul>
+
+<h2 id="the-tool-catalog">The Tool Catalog</h2>
+<p>Toolbox supports a growing set of tool types. This is what <code class="language-plaintext highlighter-rouge">azd</code> can declare in a manifest today — see the <a href="https://learn.microsoft.com/en-us/azure/foundry/agents/how-to/tools/toolbox?pivots=azd#feature-support">feature support matrix</a> for the current list.</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>Tool type</th>
+      <th>What it does</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">mcp</code></td>
+      <td>Proxy an MCP server (see the next section for auth modes)</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">web_search</code></td>
+      <td>Bing-grounded web search</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">azure_ai_search</code></td>
+      <td>Query an Azure AI Search index</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">code_interpreter</code></td>
+      <td>Sandboxed Python execution</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">file_search</code></td>
+      <td>Vector store retrieval</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">openapi</code></td>
+      <td>Call REST APIs from an OpenAPI spec</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">a2a_preview</code></td>
+      <td>Delegate to another agent</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">fabric_iq</code></td>
+      <td>Query Fabric data through Fabric IQ</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">tool_search</code></td>
+      <td>Search and discover other tools</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">work_iq</code></td>
+      <td>Access Work IQ knowledge</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">browser_automation</code></td>
+      <td>Drive a browser session</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>The wiring pattern is the same across all of them. If a tool needs a credential, declare a project connection in the manifest first, then reference it by name from the toolbox tool entry. Tools without credentials — <code class="language-plaintext highlighter-rouge">web_search</code>, <code class="language-plaintext highlighter-rouge">code_interpreter</code>, <code class="language-plaintext highlighter-rouge">tool_search</code> — only need their <code class="language-plaintext highlighter-rouge">type</code>.</p>
+
+<p>MCP is the broadest of these, and it has the most auth flexibility. The next section covers each MCP auth mode.</p>
+<h2 id="mcp-authentication-modes">MCP Authentication Modes</h2>
+<p>| Mode | <code class="language-plaintext highlighter-rouge">authType</code> | Identity represented downstream | Use when |
+|——|————|———————————-|———-|
+| No Auth | none | Nobody | Public MCP server |
+| API Key / CustomKeys | <code class="language-plaintext highlighter-rouge">ApiKey</code> / <code class="language-plaintext highlighter-rouge">CustomKeys</code> | Shared secret | PATs, API keys, static headers |
+| OAuth Managed | <code class="language-plaintext highlighter-rouge">OAuth2</code> + <code class="language-plaintext highlighter-rouge">connectorName</code> | Consenting user | Managed OAuth app exists |
+| OAuth Custom | <code class="language-plaintext highlighter-rouge">OAuth2</code> + URLs/scopes | Consenting user | You own the OAuth app registration |
+| Agent Identity | <code class="language-plaintext highlighter-rouge">AgenticIdentity</code> | Agent service principal | MCP server trusts the agent identity |
+| Project Managed Identity | <code class="language-plaintext highlighter-rouge">ManagedIdentity</code> | Project’s MI | MCP server expects the project’s MI rather than the per-agent identity |
+| Entra Passthrough | <code class="language-plaintext highlighter-rouge">UserEntraToken</code> | Calling user | M365 / WorkIQ / user-delegated tools |</p>
+<h3 id="each-mode-in-practice">Each Mode In Practice</h3>
+<p>Each mode below shows the same toolbox <code class="language-plaintext highlighter-rouge">mcp</code> tool wired with a different <code class="language-plaintext highlighter-rouge">authType</code>. The toolbox sits between the agent and the MCP server — the agent only sees the toolbox endpoint; the toolbox does the credential injection.</p>
+
+<p><strong>No Auth — public MCP server.</strong> No connection needed; the tool points straight at the server.</p>
+<div class="language-yaml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="pi">-</span> <span class="na">type</span><span class="pi">:</span> <span class="s">mcp</span>
+  <span class="na">server_label</span><span class="pi">:</span> <span class="s">public-docs</span>
+  <span class="na">server_url</span><span class="pi">:</span> <span class="s2">"</span><span class="s">{{</span><span class="nv"> </span><span class="s">mcp_endpoint</span><span class="nv"> </span><span class="s">}}"</span>
+</code></pre></div></div>
+
+<p><strong>CustomKeys (API key or PAT) — static header injected by the toolbox.</strong> Common for GitHub PATs and similar long-lived tokens. Store the <strong>whole header value</strong> (including <code class="language-plaintext highlighter-rouge">Bearer </code>), not just the token.</p>
+<div class="language-yaml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="pi">-</span> <span class="na">kind</span><span class="pi">:</span> <span class="s">connection</span>
+  <span class="na">name</span><span class="pi">:</span> <span class="s">github-mcp-conn</span>
+  <span class="na">category</span><span class="pi">:</span> <span class="s">RemoteTool</span>
+  <span class="na">authType</span><span class="pi">:</span> <span class="s">CustomKeys</span>
+  <span class="na">target</span><span class="pi">:</span> <span class="s">https://api.githubcopilot.com/mcp</span>
+  <span class="na">credentials</span><span class="pi">:</span>
+    <span class="na">type</span><span class="pi">:</span> <span class="s">CustomKeys</span>
+    <span class="na">keys</span><span class="pi">:</span>
+      <span class="na">Authorization</span><span class="pi">:</span> <span class="s2">"</span><span class="s">Bearer</span><span class="nv"> </span><span class="s">{{</span><span class="nv"> </span><span class="s">github_pat</span><span class="nv"> </span><span class="s">}}"</span>
+<span class="pi">-</span> <span class="na">type</span><span class="pi">:</span> <span class="s">mcp</span>
+  <span class="na">server_label</span><span class="pi">:</span> <span class="s">github</span>
+  <span class="na">server_url</span><span class="pi">:</span> <span class="s">https://api.githubcopilot.com/mcp</span>
+  <span class="na">project_connection_id</span><span class="pi">:</span> <span class="s">github-mcp-conn</span>
+</code></pre></div></div>
+
+<p><strong>OAuth Managed</strong> The first time a user invokes this tool, Foundry returns a consent link in the response (as an <code class="language-plaintext highlighter-rouge">oauth_consent_request</code> output item). Your app surfaces the link, the user signs in once, and from then on the user’s token is reused. Add <code class="language-plaintext highlighter-rouge">offline_access</code> to scopes so the token auto-refreshes.</p>
+<div class="language-yaml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="pi">-</span> <span class="na">kind</span><span class="pi">:</span> <span class="s">connection</span>
+  <span class="na">name</span><span class="pi">:</span> <span class="s">github-oauth-conn</span>
+  <span class="na">category</span><span class="pi">:</span> <span class="s">RemoteTool</span>
+  <span class="na">authType</span><span class="pi">:</span> <span class="s">OAuth2</span>
+  <span class="na">target</span><span class="pi">:</span> <span class="s">https://api.githubcopilot.com/mcp</span>
+  <span class="na">connectorName</span><span class="pi">:</span> <span class="s">foundrygithubmcp</span>
+  <span class="na">credentials</span><span class="pi">:</span> <span class="pi">{</span> <span class="nv">type</span><span class="pi">:</span> <span class="nv">OAuth2</span><span class="pi">,</span> <span class="nv">clientId</span><span class="pi">:</span> <span class="nv">managed</span><span class="pi">,</span> <span class="nv">clientSecret</span><span class="pi">:</span> <span class="nv">managed</span> <span class="pi">}</span>
+</code></pre></div></div>
+
+<p><strong>OAuth Custom — you own the OAuth app registration.</strong> Same runtime flow as OAuth Managed, but you provide the client ID, secret, and OAuth URLs. Foundry returns a redirect URL after configuration that you add to your app registration.</p>
+<div class="language-yaml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="pi">-</span> <span class="na">kind</span><span class="pi">:</span> <span class="s">connection</span>
+  <span class="na">name</span><span class="pi">:</span> <span class="s">github-oauth-custom-conn</span>
+  <span class="na">category</span><span class="pi">:</span> <span class="s">RemoteTool</span>
+  <span class="na">authType</span><span class="pi">:</span> <span class="s">OAuth2</span>
+  <span class="na">target</span><span class="pi">:</span> <span class="s">https://api.githubcopilot.com/mcp</span>
+  <span class="na">credentials</span><span class="pi">:</span> <span class="pi">{</span> <span class="nv">type</span><span class="pi">:</span> <span class="nv">OAuth2</span><span class="pi">,</span> <span class="nv">clientId</span><span class="pi">:</span> <span class="s2">"</span><span class="s">{{</span><span class="nv"> </span><span class="s">your_client_id</span><span class="nv"> </span><span class="s">}}"</span><span class="pi">,</span> <span class="nv">clientSecret</span><span class="pi">:</span> <span class="s2">"</span><span class="s">{{</span><span class="nv"> </span><span class="s">your_client_secret</span><span class="nv"> </span><span class="s">}}"</span> <span class="pi">}</span>
+  <span class="na">authorizationUrl</span><span class="pi">:</span> <span class="s2">"</span><span class="s">https://github.com/login/oauth/authorize"</span>
+  <span class="na">tokenUrl</span><span class="pi">:</span> <span class="s2">"</span><span class="s">https://github.com/login/oauth/access_token"</span>
+  <span class="na">refreshUrl</span><span class="pi">:</span> <span class="s2">"</span><span class="s">https://github.com/login/oauth/access_token"</span>
+  <span class="na">scopes</span><span class="pi">:</span> <span class="pi">[</span><span class="nv">repo</span><span class="pi">,</span> <span class="nv">read</span><span class="pi">:</span><span class="nv">user</span><span class="pi">,</span> <span class="nv">offline_access</span><span class="pi">]</span>
+</code></pre></div></div>
+
+<p><strong>Agent Identity — the MCP server trusts the agent’s managed identity.</strong> No user context; the agent acts as itself. The MCP server (or the resource behind it) needs an RBAC assignment on the agent identity before this works.</p>
+<div class="language-yaml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="pi">-</span> <span class="na">kind</span><span class="pi">:</span> <span class="s">connection</span>
+  <span class="na">name</span><span class="pi">:</span> <span class="s">language-mcp-conn</span>
+  <span class="na">category</span><span class="pi">:</span> <span class="s">RemoteTool</span>
+  <span class="na">authType</span><span class="pi">:</span> <span class="s">AgenticIdentity</span>
+  <span class="na">audience</span><span class="pi">:</span> <span class="s2">"</span><span class="s">{{</span><span class="nv"> </span><span class="s">entra_audience</span><span class="nv"> </span><span class="s">}}"</span>
+  <span class="na">target</span><span class="pi">:</span> <span class="s2">"</span><span class="s">{{</span><span class="nv"> </span><span class="s">mcp_target_url</span><span class="nv"> </span><span class="s">}}"</span>
+</code></pre></div></div>
+
+<p><strong>Entra Passthrough — the caller’s user token is forwarded to the MCP server.</strong> This is how Microsoft 365 MCP servers (Outlook Mail, Calendar, Teams, etc.) work. The <code class="language-plaintext highlighter-rouge">audience</code> is the <strong>Agent 365 first-party app GUID</strong> (<code class="language-plaintext highlighter-rouge">ea9ffc3e-8a23-4a7d-836d-234d7c7565c1</code>), not the server URL. Using the URL there will cause the toolbox to return zero tools.</p>
+<div class="language-yaml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="pi">-</span> <span class="na">kind</span><span class="pi">:</span> <span class="s">connection</span>
+  <span class="na">name</span><span class="pi">:</span> <span class="s">workiq-mail-conn</span>
+  <span class="na">category</span><span class="pi">:</span> <span class="s">RemoteTool</span>
+  <span class="na">authType</span><span class="pi">:</span> <span class="s">UserEntraToken</span>
+  <span class="na">audience</span><span class="pi">:</span> <span class="s">ea9ffc3e-8a23-4a7d-836d-234d7c7565c1</span>
+  <span class="na">target</span><span class="pi">:</span> <span class="s">https://agent365.svc.cloud.microsoft/agents/servers/mcp_MailTools</span>
+<span class="pi">-</span> <span class="na">type</span><span class="pi">:</span> <span class="s">mcp</span>
+  <span class="na">server_label</span><span class="pi">:</span> <span class="s">workiq-mail</span>
+  <span class="na">server_url</span><span class="pi">:</span> <span class="s">https://agent365.svc.cloud.microsoft/agents/servers/mcp_MailTools</span>
+  <span class="na">project_connection_id</span><span class="pi">:</span> <span class="s">workiq-mail-conn</span>
+</code></pre></div></div>
+
+<h3 id="picking-a-mode">Picking A Mode</h3>
+<p>The first question is whether you need per-user identity:</p>
+
+<ul>
+  <li><strong>Shared identity is fine</strong> (every caller hits the MCP server as the same principal) — pick <strong>No Auth</strong> for public servers, <strong>CustomKeys</strong> for static keys, <strong>Agent Identity</strong> for first-party services that can trust the agent, or <strong>Project Managed Identity</strong> when the MCP server expects the project’s identity rather than the per-agent one.</li>
+  <li><strong>You need per-user identity</strong> (consent, audit, or downstream permissions follow the actual user) — pick <strong>OAuth Managed</strong> if Foundry already has a connector for the service, <strong>OAuth Custom</strong> if you want your own app registration (control, branding, custom scopes), or <strong>Entra Passthrough</strong> for Microsoft 365 / WorkIQ tools.</li>
+</ul>
+
+<p>When in doubt and the MCP server supports Entra, start with <strong>Agent Identity</strong>. It avoids secret management and rotation entirely.</p>
+
+<h2 id="consuming-a-toolbox-from-a-hosted-agent">Consuming A Toolbox From A Hosted Agent</h2>
+<p>At runtime, a toolbox is just an MCP server from the agent’s point of view. The agent needs the endpoint URL, a Foundry bearer token, the preview header, and an MCP client.</p>
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">def</span> <span class="nf">toolbox_url</span><span class="p">(</span><span class="n">project_endpoint</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">toolbox_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+    <span class="k">return</span> <span class="s">f"</span><span class="si">{</span><span class="n">project_endpoint</span><span class="p">.</span><span class="n">rstrip</span><span class="p">(</span><span class="s">'/'</span><span class="p">)</span><span class="si">}</span><span class="s">/toolboxes/</span><span class="si">{</span><span class="n">toolbox_name</span><span class="si">}</span><span class="s">/mcp?api-version=v1"</span>
+
+<span class="n">credential</span> <span class="o">=</span> <span class="n">DefaultAzureCredential</span><span class="p">()</span>
+<span class="n">token_provider</span> <span class="o">=</span> <span class="n">get_bearer_token_provider</span><span class="p">(</span><span class="n">credential</span><span class="p">,</span> <span class="s">"https://ai.azure.com/.default"</span><span class="p">)</span>
+</code></pre></div></div>
+
+<p>In Agent Framework, use <code class="language-plaintext highlighter-rouge">MCPStreamableHTTPTool</code>. Create an <code class="language-plaintext highlighter-rouge">httpx.AsyncClient</code> that injects a fresh Foundry bearer token and the <code class="language-plaintext highlighter-rouge">Foundry-Features: Toolboxes=V1Preview</code> header. Pass that client to <code class="language-plaintext highlighter-rouge">MCPStreamableHTTPTool(name="agent-tools", url=toolbox_endpoint, http_client=http_client)</code>, then give the tool object to the <code class="language-plaintext highlighter-rouge">Agent</code>.</p>
+
+<ol>
+  <li><code class="language-plaintext highlighter-rouge">httpx.Auth</code> injects a fresh token on each request.</li>
+  <li>The toolbox preview header is attached to every MCP call.</li>
+  <li><code class="language-plaintext highlighter-rouge">MCPStreamableHTTPTool</code> handles the MCP handshake and tool wrapping.</li>
+  <li>The agent receives the toolbox as its tool set.
+    <h3 id="standard-mcpjson-for-other-frameworks">Standard <code class="language-plaintext highlighter-rouge">mcp.json</code> For Other Frameworks</h3>
+    <p>Frameworks that already speak MCP — including the GitHub Copilot SDK — accept a standard <code class="language-plaintext highlighter-rouge">mcp.json</code> file:</p>
+    <div class="language-json highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="p">{</span><span class="w">
+  </span><span class="nl">"mcpServers"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+ </span><span class="nl">"toolbox"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+   </span><span class="nl">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"http"</span><span class="p">,</span><span class="w">
+   </span><span class="nl">"url"</span><span class="p">:</span><span class="w"> </span><span class="s2">"&lt;toolbox-mcp-endpoint&gt;"</span><span class="p">,</span><span class="w">
+   </span><span class="nl">"headers"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+     </span><span class="nl">"Authorization"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Bearer &lt;fresh-mi-token&gt;"</span><span class="p">,</span><span class="w">
+     </span><span class="nl">"Foundry-Features"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Toolboxes=V1Preview"</span><span class="w">
+   </span><span class="p">},</span><span class="w">
+   </span><span class="nl">"tools"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">"*"</span><span class="p">]</span><span class="w">
+ </span><span class="p">}</span><span class="w">
+  </span><span class="p">}</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span></code></pre></div>    </div>
+  </li>
+</ol>
+
+<p>Mint the bearer token from <code class="language-plaintext highlighter-rouge">DefaultAzureCredential</code> at session creation, substitute it into the headers, and hand the config to the SDK. The SDK handles the MCP handshake, discovery, and tool calls. The Daily Standup Agent below uses this pattern.</p>
+
+<h2 id="multi-tool-composition">Multi-Tool Composition</h2>
+<p>The real value of Toolbox shows up when you combine tools.</p>
+<div class="language-yaml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="pi">-</span> <span class="na">kind</span><span class="pi">:</span> <span class="s">toolbox</span>
+  <span class="na">name</span><span class="pi">:</span> <span class="s">agent-tools</span>
+  <span class="na">tools</span><span class="pi">:</span>
+    <span class="pi">-</span> <span class="pi">{</span> <span class="nv">type</span><span class="pi">:</span> <span class="nv">web_search</span><span class="pi">,</span> <span class="nv">name</span><span class="pi">:</span> <span class="nv">public_web</span> <span class="pi">}</span>
+    <span class="pi">-</span> <span class="pi">{</span> <span class="nv">type</span><span class="pi">:</span> <span class="nv">code_interpreter</span><span class="pi">,</span> <span class="nv">name</span><span class="pi">:</span> <span class="nv">python_sandbox</span> <span class="pi">}</span>
+    <span class="pi">-</span> <span class="pi">{</span> <span class="nv">type</span><span class="pi">:</span> <span class="nv">mcp</span><span class="pi">,</span> <span class="nv">server_label</span><span class="pi">:</span> <span class="nv">github</span><span class="pi">,</span> <span class="nv">server_url</span><span class="pi">:</span> <span class="nv">https</span><span class="pi">:</span><span class="nv">//api.githubcopilot.com/mcp</span><span class="pi">,</span> <span class="nv">project_connection_id</span><span class="pi">:</span> <span class="nv">github-mcp-conn</span> <span class="pi">}</span>
+    <span class="pi">-</span> <span class="pi">{</span> <span class="nv">type</span><span class="pi">:</span> <span class="nv">azure_ai_search</span><span class="pi">,</span> <span class="nv">name</span><span class="pi">:</span> <span class="nv">product_docs</span><span class="pi">,</span> <span class="nv">index_name</span><span class="pi">:</span> <span class="s2">"</span><span class="s">{{</span><span class="nv"> </span><span class="s">ai_search_index_name</span><span class="nv"> </span><span class="s">}}"</span><span class="pi">,</span> <span class="nv">project_connection_id</span><span class="pi">:</span> <span class="nv">aisearch-conn</span> <span class="pi">}</span>
+</code></pre></div></div>
+<p>The model chooses tools by name, description, and schema, so naming matters. <code class="language-plaintext highlighter-rouge">github</code> is better than <code class="language-plaintext highlighter-rouge">mcp1</code>. <code class="language-plaintext highlighter-rouge">product_docs</code> is better than <code class="language-plaintext highlighter-rouge">search</code>. If two tools do similar things, make the descriptions explicit: one reads internal docs, one searches the public web, one reads GitHub issues.</p>
+
+<h2 id="putting-it-together-a-daily-standup-agent">Putting It Together: A Daily Standup Agent</h2>
+<p>Let’s combine everything into a <strong>Daily Standup Agent</strong>. It pulls today’s meetings, overnight email threads, and assigned GitHub work, then turns that into a standup brief.</p>
+
+<p>The sample is here: <a href="https://github.com/ankitbko/hosted-agents-daily-standup">ankitbko/hosted-agents-daily-standup</a>.</p>
+
+<p>It uses the GitHub Copilot SDK as the agent loop, the Invocations protocol with plain-text input, and Foundry Toolbox with three MCP tools. GitHub MCP uses CustomKeys auth. WorkIQ Mail and Calendar use Entra Passthrough. A small <code class="language-plaintext highlighter-rouge">SKILL.md</code> defines the brief format.</p>
+
+<h3 id="the-manifest">The Manifest</h3>
+<p>Here’s the full <code class="language-plaintext highlighter-rouge">agent.manifest.yaml</code> from the sample.</p>
+<div class="language-yaml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1"># yaml-language-server: $schema=https://raw.githubusercontent.com/microsoft/AgentSchema/refs/heads/main/schemas/v1.0/AgentManifest.yaml</span>
+<span class="na">name</span><span class="pi">:</span> <span class="s">daily-standup-agent</span>
+<span class="na">displayName</span><span class="pi">:</span> <span class="s2">"</span><span class="s">Daily</span><span class="nv"> </span><span class="s">Standup</span><span class="nv"> </span><span class="s">Agent"</span>
+<span class="na">description</span><span class="pi">:</span> <span class="pi">&gt;</span>
+  <span class="s">A hosted agent that uses the GitHub Copilot SDK as its loop and connects</span>
+  <span class="s">to a Foundry Toolbox with three MCP tools — GitHub MCP, WorkIQ Mail, and</span>
+  <span class="s">WorkIQ Calendar — to generate a personalized standup brief from your M365</span>
+  <span class="s">and GitHub activity.</span>
+<span class="na">metadata</span><span class="pi">:</span>
+  <span class="na">tags</span><span class="pi">:</span>
+    <span class="pi">-</span> <span class="s">AI Agent Hosting</span>
+    <span class="pi">-</span> <span class="s">GitHub Copilot SDK</span>
+    <span class="pi">-</span> <span class="s">Foundry Toolbox</span>
+    <span class="pi">-</span> <span class="s">WorkIQ</span>
+    <span class="pi">-</span> <span class="s">Invocations Protocol</span>
+<span class="na">parameters</span><span class="pi">:</span>
+  <span class="na">properties</span><span class="pi">:</span>
+    <span class="pi">-</span> <span class="na">name</span><span class="pi">:</span> <span class="s">github_pat</span>
+      <span class="na">secret</span><span class="pi">:</span> <span class="no">true</span>
+      <span class="na">description</span><span class="pi">:</span> <span class="s">GitHub Personal Access Token (fine-grained github_pat_... preferred) with repo + read:user scopes</span>
+<span class="na">template</span><span class="pi">:</span>
+  <span class="na">name</span><span class="pi">:</span> <span class="s">daily-standup-agent</span>
+  <span class="na">kind</span><span class="pi">:</span> <span class="s">hosted</span>
+  <span class="na">protocols</span><span class="pi">:</span>
+    <span class="pi">-</span> <span class="na">protocol</span><span class="pi">:</span> <span class="s">invocations</span>
+      <span class="na">version</span><span class="pi">:</span> <span class="s">1.0.0</span>
+  <span class="na">environment_variables</span><span class="pi">:</span>
+    <span class="pi">-</span> <span class="na">name</span><span class="pi">:</span> <span class="s">AZURE_AI_MODEL_DEPLOYMENT_NAME</span>
+      <span class="na">value</span><span class="pi">:</span> <span class="s2">"</span><span class="s">{{AZURE_AI_MODEL_DEPLOYMENT_NAME}}"</span>
+    <span class="pi">-</span> <span class="na">name</span><span class="pi">:</span> <span class="s">TOOLBOX_NAME</span>
+      <span class="na">value</span><span class="pi">:</span> <span class="s2">"</span><span class="s">daily-standup-tools"</span>
+<span class="na">resources</span><span class="pi">:</span>
+  <span class="pi">-</span> <span class="na">kind</span><span class="pi">:</span> <span class="s">model</span>
+    <span class="na">id</span><span class="pi">:</span> <span class="s">gpt-5.4</span>
+    <span class="na">name</span><span class="pi">:</span> <span class="s">AZURE_AI_MODEL_DEPLOYMENT_NAME</span>
+  <span class="pi">-</span> <span class="na">kind</span><span class="pi">:</span> <span class="s">connection</span>
+    <span class="na">name</span><span class="pi">:</span> <span class="s">github-mcp-conn</span>
+    <span class="na">category</span><span class="pi">:</span> <span class="s">RemoteTool</span>
+    <span class="na">authType</span><span class="pi">:</span> <span class="s">CustomKeys</span>
+    <span class="na">target</span><span class="pi">:</span> <span class="s">https://api.githubcopilot.com/mcp</span>
+    <span class="na">credentials</span><span class="pi">:</span>
+      <span class="na">type</span><span class="pi">:</span> <span class="s">CustomKeys</span>
+      <span class="na">keys</span><span class="pi">:</span>
+        <span class="na">Authorization</span><span class="pi">:</span> <span class="s2">"</span><span class="s">Bearer</span><span class="nv"> </span><span class="s">{{</span><span class="nv"> </span><span class="s">github_pat</span><span class="nv"> </span><span class="s">}}"</span>
+  <span class="pi">-</span> <span class="na">kind</span><span class="pi">:</span> <span class="s">connection</span>
+    <span class="na">name</span><span class="pi">:</span> <span class="s">workiq-mail-conn</span>
+    <span class="na">category</span><span class="pi">:</span> <span class="s">RemoteTool</span>
+    <span class="na">authType</span><span class="pi">:</span> <span class="s">UserEntraToken</span>
+    <span class="na">audience</span><span class="pi">:</span> <span class="s">ea9ffc3e-8a23-4a7d-836d-234d7c7565c1</span>
+    <span class="na">target</span><span class="pi">:</span> <span class="s">https://agent365.svc.cloud.microsoft/agents/servers/mcp_MailTools</span>
+  <span class="pi">-</span> <span class="na">kind</span><span class="pi">:</span> <span class="s">connection</span>
+    <span class="na">name</span><span class="pi">:</span> <span class="s">workiq-calendar-conn</span>
+    <span class="na">category</span><span class="pi">:</span> <span class="s">RemoteTool</span>
+    <span class="na">authType</span><span class="pi">:</span> <span class="s">UserEntraToken</span>
+    <span class="na">audience</span><span class="pi">:</span> <span class="s">ea9ffc3e-8a23-4a7d-836d-234d7c7565c1</span>
+    <span class="na">target</span><span class="pi">:</span> <span class="s">https://agent365.svc.cloud.microsoft/agents/servers/mcp_CalendarTools</span>
+  <span class="pi">-</span> <span class="na">kind</span><span class="pi">:</span> <span class="s">toolbox</span>
+    <span class="na">name</span><span class="pi">:</span> <span class="s">daily-standup-tools</span>
+    <span class="na">tools</span><span class="pi">:</span>
+      <span class="pi">-</span> <span class="na">type</span><span class="pi">:</span> <span class="s">mcp</span>
+        <span class="na">server_label</span><span class="pi">:</span> <span class="s">github</span>
+        <span class="na">server_url</span><span class="pi">:</span> <span class="s">https://api.githubcopilot.com/mcp</span>
+        <span class="na">project_connection_id</span><span class="pi">:</span> <span class="s">github-mcp-conn</span>
+      <span class="pi">-</span> <span class="na">type</span><span class="pi">:</span> <span class="s">mcp</span>
+        <span class="na">server_label</span><span class="pi">:</span> <span class="s">workiq-mail</span>
+        <span class="na">server_url</span><span class="pi">:</span> <span class="s">https://agent365.svc.cloud.microsoft/agents/servers/mcp_MailTools</span>
+        <span class="na">project_connection_id</span><span class="pi">:</span> <span class="s">workiq-mail-conn</span>
+      <span class="pi">-</span> <span class="na">type</span><span class="pi">:</span> <span class="s">mcp</span>
+        <span class="na">server_label</span><span class="pi">:</span> <span class="s">workiq-calendar</span>
+        <span class="na">server_url</span><span class="pi">:</span> <span class="s">https://agent365.svc.cloud.microsoft/agents/servers/mcp_CalendarTools</span>
+        <span class="na">project_connection_id</span><span class="pi">:</span> <span class="s">workiq-calendar-conn</span>
+</code></pre></div></div>
+
+<h3 id="wiring-the-toolbox-with-mcpjson">Wiring The Toolbox With <code class="language-plaintext highlighter-rouge">mcp.json</code></h3>
+
+<p>The Copilot SDK speaks MCP natively. It already knows how to handshake with a remote MCP server, discover tools, and forward tool calls. Our job is to point it at the toolbox endpoint with a valid bearer token.</p>
+
+<p>The simplest way to do that is the standard <code class="language-plaintext highlighter-rouge">mcp.json</code> file — the same shape every Copilot SDK consumer uses. We declare the toolbox as one MCP server with <code class="language-plaintext highlighter-rouge">${VAR}</code> placeholders that get substituted at startup.</p>
+<div class="language-json highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="p">{</span><span class="w">
+  </span><span class="nl">"mcpServers"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="nl">"toolbox"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="nl">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"http"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"url"</span><span class="p">:</span><span class="w"> </span><span class="s2">"${TOOLBOX_ENDPOINT}"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"headers"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+        </span><span class="nl">"Authorization"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Bearer ${TOOLBOX_BEARER_TOKEN}"</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"Foundry-Features"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Toolboxes=V1Preview"</span><span class="w">
+      </span><span class="p">},</span><span class="w">
+      </span><span class="nl">"tools"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">"*"</span><span class="p">]</span><span class="w">
+    </span><span class="p">}</span><span class="w">
+  </span><span class="p">}</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span></code></pre></div></div>
+
+<p>Two placeholders matter:</p>
+
+<ul>
+  <li><code class="language-plaintext highlighter-rouge">${TOOLBOX_ENDPOINT}</code> — the toolbox MCP URL, constructed at runtime from <code class="language-plaintext highlighter-rouge">FOUNDRY_PROJECT_ENDPOINT</code> + <code class="language-plaintext highlighter-rouge">TOOLBOX_NAME</code>.</li>
+  <li><code class="language-plaintext highlighter-rouge">${TOOLBOX_BEARER_TOKEN}</code> — a <strong>fresh Entra token</strong> minted at session creation via the agent’s Managed Identity.</li>
+</ul>
+
+<p>Substitution is a small helper:</p>
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">_VAR_RE</span> <span class="o">=</span> <span class="n">re</span><span class="p">.</span><span class="nb">compile</span><span class="p">(</span><span class="s">r"\$\{([A-Z0-9_]+)\}"</span><span class="p">)</span>
+
+<span class="k">def</span> <span class="nf">_load_mcp_servers</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+    <span class="n">raw</span> <span class="o">=</span> <span class="n">_mcp_json_path</span><span class="p">.</span><span class="n">read_text</span><span class="p">(</span><span class="n">encoding</span><span class="o">=</span><span class="s">"utf-8"</span><span class="p">)</span>
+    <span class="n">substitutions</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s">"TOOLBOX_ENDPOINT"</span><span class="p">:</span> <span class="n">_toolbox_url</span><span class="p">(),</span>
+        <span class="s">"TOOLBOX_BEARER_TOKEN"</span><span class="p">:</span> <span class="n">_foundry_token</span><span class="p">(),</span>
+    <span class="p">}</span>
+    <span class="k">def</span> <span class="nf">repl</span><span class="p">(</span><span class="n">m</span><span class="p">:</span> <span class="n">re</span><span class="p">.</span><span class="n">Match</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="n">key</span> <span class="o">=</span> <span class="n">m</span><span class="p">.</span><span class="n">group</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">substitutions</span><span class="p">.</span><span class="n">get</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">os</span><span class="p">.</span><span class="n">environ</span><span class="p">.</span><span class="n">get</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="s">""</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">json</span><span class="p">.</span><span class="n">loads</span><span class="p">(</span><span class="n">_VAR_RE</span><span class="p">.</span><span class="n">sub</span><span class="p">(</span><span class="n">repl</span><span class="p">,</span> <span class="n">raw</span><span class="p">)).</span><span class="n">get</span><span class="p">(</span><span class="s">"mcpServers"</span><span class="p">,</span> <span class="p">{})</span>
+</code></pre></div></div>
+
+<p>That is the whole integration. The toolbox namespaces tools as <code class="language-plaintext highlighter-rouge">&lt;server_label&gt;___&lt;tool_name&gt;</code> (e.g., <code class="language-plaintext highlighter-rouge">github___list_pull_requests</code>, <code class="language-plaintext highlighter-rouge">workiq-mail___GetMessage</code>), and the Copilot SDK accepts those names directly.</p>
+
+<h3 id="wiring-the-copilot-session">Wiring The Copilot Session</h3>
+<p>With the toolbox declared in <code class="language-plaintext highlighter-rouge">mcp.json</code>, the session-creation code becomes pretty small:</p>
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">async</span> <span class="k">def</span> <span class="nf">_ensure_session</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="bp">None</span><span class="p">:</span>
+    <span class="k">global</span> <span class="n">_client</span><span class="p">,</span> <span class="n">_session</span><span class="p">,</span> <span class="n">_session_id</span>
+    <span class="k">if</span> <span class="n">_session</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="k">return</span>
+    <span class="n">_session_id</span> <span class="o">=</span> <span class="n">os</span><span class="p">.</span><span class="n">environ</span><span class="p">.</span><span class="n">get</span><span class="p">(</span><span class="s">"FOUNDRY_AGENT_SESSION_ID"</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">str</span><span class="p">(</span><span class="n">uuid</span><span class="p">.</span><span class="n">uuid4</span><span class="p">())</span>
+
+    <span class="n">mcp_servers</span> <span class="o">=</span> <span class="n">_load_mcp_servers</span><span class="p">()</span>
+    <span class="n">logger</span><span class="p">.</span><span class="n">info</span><span class="p">(</span><span class="s">"Loaded %d MCP server(s) from mcp.json: %s"</span><span class="p">,</span>
+                <span class="nb">len</span><span class="p">(</span><span class="n">mcp_servers</span><span class="p">),</span> <span class="nb">list</span><span class="p">(</span><span class="n">mcp_servers</span><span class="p">))</span>
+
+    <span class="n">provider</span><span class="p">,</span> <span class="n">model</span> <span class="o">=</span> <span class="n">_byok_provider</span><span class="p">()</span>
+    <span class="n">_client</span> <span class="o">=</span> <span class="n">CopilotClient</span><span class="p">(</span><span class="n">auto_start</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+    <span class="k">await</span> <span class="n">_client</span><span class="p">.</span><span class="n">start</span><span class="p">()</span>
+
+    <span class="n">common</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span>
+        <span class="n">on_permission_request</span><span class="o">=</span><span class="n">PermissionHandler</span><span class="p">.</span><span class="n">approve_all</span><span class="p">,</span>
+        <span class="n">streaming</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span>
+        <span class="n">skill_directories</span><span class="o">=</span><span class="p">[</span><span class="n">_skills_dir</span><span class="p">],</span>
+        <span class="n">working_directory</span><span class="o">=</span><span class="n">os</span><span class="p">.</span><span class="n">environ</span><span class="p">.</span><span class="n">get</span><span class="p">(</span><span class="s">"HOME"</span><span class="p">,</span> <span class="s">"/home"</span><span class="p">),</span>
+        <span class="n">provider</span><span class="o">=</span><span class="n">provider</span><span class="p">,</span>
+        <span class="n">model</span><span class="o">=</span><span class="n">model</span><span class="p">,</span>
+        <span class="n">mcp_servers</span><span class="o">=</span><span class="n">mcp_servers</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">_session</span> <span class="o">=</span> <span class="k">await</span> <span class="n">_client</span><span class="p">.</span><span class="n">resume_session</span><span class="p">(</span><span class="n">_session_id</span><span class="p">,</span> <span class="o">**</span><span class="n">common</span><span class="p">)</span>
+    <span class="k">except</span> <span class="nb">Exception</span><span class="p">:</span>
+        <span class="n">_session</span> <span class="o">=</span> <span class="k">await</span> <span class="n">_client</span><span class="p">.</span><span class="n">create_session</span><span class="p">(</span><span class="n">session_id</span><span class="o">=</span><span class="n">_session_id</span><span class="p">,</span> <span class="o">**</span><span class="n">common</span><span class="p">)</span>
+</code></pre></div></div>
+
+<h3 id="the-skill">The Skill</h3>
+<p>The behavior lives in <code class="language-plaintext highlighter-rouge">skills/standup/SKILL.md</code>. A truncated view:</p>
+<div class="language-markdown highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nn">---</span>
+<span class="na">name</span><span class="pi">:</span> <span class="s">standup</span>
+<span class="na">description</span><span class="pi">:</span> <span class="s">Generate a structured daily standup brief from the user's calendar, mail, and GitHub activity.</span>
+<span class="nn">---</span>
+<span class="gh"># Daily Standup Skill</span>
+You are an engineering assistant whose only job is to generate a concise daily
+standup brief. You have three tool sources via the Foundry Toolbox:
+<span class="p">-</span> <span class="gs">**WorkIQ Calendar**</span> — today's meetings
+<span class="p">-</span> <span class="gs">**WorkIQ Mail**</span> — overnight unread / mentioned threads
+<span class="p">-</span> <span class="gs">**GitHub MCP**</span> — assigned PRs and issues
+
+When the user asks for their standup brief, call each tool, then synthesize a
+brief in the documented format. Be concise. Use 24-hour times. If a tool fails,
+list it under Blockers and continue.
+</code></pre></div></div>
+<p>The full skill file with the output format and style rules lives in <a href="https://github.com/ankitbko/hosted-agents-daily-standup/blob/main/skills/standup/SKILL.md">the sample repo</a>. This is one reason I like using the Copilot SDK here: the skill file gives the agent a clear operating procedure without burying behavior in Python strings.</p>
+
+<h3 id="invoking-it">Invoking It</h3>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>azd ai agent invoke <span class="s2">"Give me my standup brief"</span>
+</code></pre></div></div>
+
+<p>Abbreviated streamed output:</p>
+<div class="language-text highlighter-rouge"><div class="highlight"><pre class="highlight"><code>❯ azd ai agent invoke "Give me my standup brief"
+data: {"type":"session.created","session_id":"standup-7f1c..."}
+data: {"type":"tool.call.started","name":"outlook_calendar_get_events"}
+data: {"type":"tool.call.completed","name":"outlook_calendar_get_events"}
+data: {"type":"tool.call.started","name":"outlook_mail_search"}
+data: {"type":"tool.call.completed","name":"outlook_mail_search"}
+data: {"type":"tool.call.started","name":"github_search_issues"}
+data: {"type":"tool.call.completed","name":"github_search_issues"}
+data: {"type":"message.delta","text":"☀️  Daily Standup — Monday, May 24\n\n"}
+event: done
+data: {"invocation_id":"inv_...","session_id":"standup-7f1c..."}
+</code></pre></div></div>
+
+<p>And the brief follows the skill format:</p>
+<div class="language-text highlighter-rouge"><div class="highlight"><pre class="highlight"><code>☀️  Daily Standup — Monday, May 24
+
+🗓️  Today's Schedule
+- 09:30  Hosted Agents sync  (30m, Priya)
+- 13:00  Agent toolbox review  (60m, Foundry team)
+
+📥  Overnight Threads (most relevant 3-5)
+- Toolbox auth review — final question on WorkIQ audience  (Maya, 7h ago)
+- Daily standup sample — deployment status and README update  (GitHub, 10h ago)
+
+🔧  GitHub
+- PRs awaiting your review: 2
+  - #184  hosted-agents-daily-standup — Add retry around tools/list
+  - #201  foundry-samples — Document UserEntraToken toolbox scenario
+- PRs you authored (open): 1
+- Issues assigned to you: 3
+  - #87  hosted-agents-blog — Publish tools/toolbox post
+
+⚠️  Blockers / Heads-up
+- WorkIQ Mail returned one thread without sender metadata; included subject only.
+</code></pre></div></div>
+
+<p>For hosted agents that share tools, Toolbox is the right abstraction: the agent gets one tool surface, and the platform owns credential storage, policy, and discovery.</p>
+
+<h2 id="conclusion">Conclusion</h2>
+<p>Tools are what move an agent from a chat window to something useful. Foundry Toolbox is what keeps that surface manageable as more agents and more tools pile up — one MCP endpoint, one place to set auth, one config the agent loads. Once that piece clicks into place, the agent code shrinks back down to what it should be: the agent.</p>
+
+<p>Next up — knowledge and memory. FoundryIQ, WorkIQ, and what it actually means for an agent to remember things worth remembering.</p>
+<h2 id="references">References</h2>
+<ol>
+  <li><a href="/blog/2026/05/hosted-agents-part-1/">Part 1 — What, Why, Protocols &amp; Your First Deployment</a></li>
+  <li><a href="/blog/2026/05/hosted-agents-part-2/">Part 2 — Sessions, State &amp; the Sandbox</a></li>
+  <li><a href="/blog/2026/05/hosted-agents-part-3/">Part 3 — Agent Identity, Security &amp; Secrets</a></li>
+  <li><a href="https://learn.microsoft.com/en-us/azure/foundry/agents/how-to/tools/toolbox">Foundry Toolbox documentation</a></li>
+  <li><a href="https://github.com/microsoft-foundry/foundry-samples/tree/main/samples/python/hosted-agents/agent-framework">Agent Framework hosted agent samples</a></li>
+  <li><a href="https://github.com/microsoft-foundry/foundry-samples/blob/main/samples/python/hosted-agents/SUPPORTED_TOOLBOX_SCENARIOS.md">SUPPORTED_TOOLBOX_SCENARIOS.md</a></li>
+  <li><a href="https://github.com/ankitbko/hosted-agents-daily-standup">Daily Standup Agent sample</a></li>
+</ol>
+
+  </div>
+  <div class="PageNavigation">
+  
+  <div class="prevDiv">
+    <a class="prev" href="/blog/2026/05/hosted-agents-part-3/">&laquo; Foundry Hosted Agents - Agent Identity, Security & Secrets</a>
+  </div>
+  
+  
+</div>
+<!-- from https://github.com/utterance/utterances -->
+<script src="https://utteranc.es/client.js"
+        repo="ankitbko/blog"
+        issue-term="title"
+        label="blogpost-comment"
+        theme="github-light"
+        crossorigin="anonymous"
+        async>
+</script><a class="u-url" href="/blog/2026/06/hosted-agents-part-4/" hidden></a>
+</article>
+      </div>
+    </main><link id="fa-stylesheet" rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@7.0.0/css/all.min.css">
+
+<footer class="site-footer h-card">
+  <data class="u-url" value="/blog/"></data>
+
+  <div class="wrapper">
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col">
+        <ul class="contact-list">
+          <li class="p-name">Ankit Sinha</li>
+          
+        </ul>
+      </div>
+      <div class="footer-col">
+        <p>A technology blog focusing on random stuff</p>
+      </div>
+    </div>
+
+    <div class="social-links"><ul class="social-media-list"><li>
+    <a rel="me" href="" target="_blank" title="">
+      <span class="grey fa-brands fa- fa-lg"></span>
+    </a>
+  </li><li>
+    <a rel="me" href="" target="_blank" title="">
+      <span class="grey fa-brands fa- fa-lg"></span>
+    </a>
+  </li>
+  <li>
+    <a href="https://ankitbko.github.io/blog/feed.xml" target="_blank" title="Subscribe to syndication feed">
+      <svg class="svg-icon grey" viewbox="0 0 16 16">
+        <path d="M12.8 16C12.8 8.978 7.022 3.2 0 3.2V0c8.777 0 16 7.223 16 16h-3.2zM2.194
+          11.61c1.21 0 2.195.985 2.195 2.196 0 1.21-.99 2.194-2.2 2.194C.98 16 0 15.017 0
+          13.806c0-1.21.983-2.195 2.194-2.195zM10.606
+          16h-3.11c0-4.113-3.383-7.497-7.496-7.497v-3.11c5.818 0 10.606 4.79 10.606 10.607z"
+        />
+      </svg>
+    </a>
+  </li>
+</ul>
+</div>
+
+  </div>
+
+</footer>
+
+</body>
+
+</html>
