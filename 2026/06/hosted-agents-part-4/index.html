@@ -622,10 +622,18 @@ window.onload = wrap_img;
 <div class="language-yaml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="pi">-</span> <span class="na">kind</span><span class="pi">:</span> <span class="s">toolbox</span>
   <span class="na">name</span><span class="pi">:</span> <span class="s">agent-tools</span>
   <span class="na">tools</span><span class="pi">:</span>
-    <span class="pi">-</span> <span class="pi">{</span> <span class="nv">type</span><span class="pi">:</span> <span class="nv">web_search</span><span class="pi">,</span> <span class="nv">name</span><span class="pi">:</span> <span class="nv">public_web</span> <span class="pi">}</span>
-    <span class="pi">-</span> <span class="pi">{</span> <span class="nv">type</span><span class="pi">:</span> <span class="nv">code_interpreter</span><span class="pi">,</span> <span class="nv">name</span><span class="pi">:</span> <span class="nv">python_sandbox</span> <span class="pi">}</span>
-    <span class="pi">-</span> <span class="pi">{</span> <span class="nv">type</span><span class="pi">:</span> <span class="nv">mcp</span><span class="pi">,</span> <span class="nv">server_label</span><span class="pi">:</span> <span class="nv">github</span><span class="pi">,</span> <span class="nv">server_url</span><span class="pi">:</span> <span class="nv">https</span><span class="pi">:</span><span class="nv">//api.githubcopilot.com/mcp</span><span class="pi">,</span> <span class="nv">project_connection_id</span><span class="pi">:</span> <span class="nv">github-mcp-conn</span> <span class="pi">}</span>
-    <span class="pi">-</span> <span class="pi">{</span> <span class="nv">type</span><span class="pi">:</span> <span class="nv">azure_ai_search</span><span class="pi">,</span> <span class="nv">name</span><span class="pi">:</span> <span class="nv">product_docs</span><span class="pi">,</span> <span class="nv">index_name</span><span class="pi">:</span> <span class="s2">"</span><span class="s">{{</span><span class="nv"> </span><span class="s">ai_search_index_name</span><span class="nv"> </span><span class="s">}}"</span><span class="pi">,</span> <span class="nv">project_connection_id</span><span class="pi">:</span> <span class="nv">aisearch-conn</span> <span class="pi">}</span>
+    <span class="pi">-</span> <span class="na">type</span><span class="pi">:</span> <span class="s">web_search</span>
+      <span class="na">name</span><span class="pi">:</span> <span class="s">public_web</span>
+    <span class="pi">-</span> <span class="na">type</span><span class="pi">:</span> <span class="s">code_interpreter</span>
+      <span class="na">name</span><span class="pi">:</span> <span class="s">python_sandbox</span>
+    <span class="pi">-</span> <span class="na">type</span><span class="pi">:</span> <span class="s">mcp</span>
+      <span class="na">server_label</span><span class="pi">:</span> <span class="s">github</span>
+      <span class="na">server_url</span><span class="pi">:</span> <span class="s">https://api.githubcopilot.com/mcp</span>
+      <span class="na">project_connection_id</span><span class="pi">:</span> <span class="s">github-mcp-conn</span>
+    <span class="pi">-</span> <span class="na">type</span><span class="pi">:</span> <span class="s">azure_ai_search</span>
+      <span class="na">name</span><span class="pi">:</span> <span class="s">product_docs</span>
+      <span class="na">index_name</span><span class="pi">:</span> <span class="s2">"</span><span class="s">{{</span><span class="nv"> </span><span class="s">ai_search_index_name</span><span class="nv"> </span><span class="s">}}"</span>
+      <span class="na">project_connection_id</span><span class="pi">:</span> <span class="s">aisearch-conn</span>
 </code></pre></div></div>
 <p>The model chooses tools by name, description, and schema, so naming matters. <code class="language-plaintext highlighter-rouge">github</code> is better than <code class="language-plaintext highlighter-rouge">mcp1</code>. <code class="language-plaintext highlighter-rouge">product_docs</code> is better than <code class="language-plaintext highlighter-rouge">search</code>. If two tools do similar things, make the descriptions explicit: one reads internal docs, one searches the public web, one reads GitHub issues.</p>
 
